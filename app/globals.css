@@ -1,26 +1,282 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Nexo brand colors (static) */
+  --color-nexo-blue:   #1B4FFF;
+  --color-nexo-orange: #FF5C1A;
+  --color-nexo-dark:   #0F0F0F;
+  --color-nexo-cream:  #F5F5F3;
+  --color-nexo-gray:   #6B7280;
+
+  /* shadcn/ui token mapping */
+  --color-background:                var(--background);
+  --color-foreground:                var(--foreground);
+  --color-primary:                   var(--primary);
+  --color-primary-foreground:        var(--primary-foreground);
+  --color-secondary:                 var(--secondary);
+  --color-secondary-foreground:      var(--secondary-foreground);
+  --color-accent:                    var(--accent);
+  --color-accent-foreground:         var(--accent-foreground);
+  --color-muted:                     var(--muted);
+  --color-muted-foreground:          var(--muted-foreground);
+  --color-card:                      var(--card);
+  --color-card-foreground:           var(--card-foreground);
+  --color-popover:                   var(--popover);
+  --color-popover-foreground:        var(--popover-foreground);
+  --color-destructive:               var(--destructive);
+  --color-border:                    var(--border);
+  --color-input:                     var(--input);
+  --color-ring:                      var(--ring);
+  --color-sidebar:                   var(--sidebar);
+  --color-sidebar-foreground:        var(--sidebar-foreground);
+  --color-sidebar-primary:           var(--sidebar-primary);
+  --color-sidebar-primary-foreground:var(--sidebar-primary-foreground);
+  --color-sidebar-accent:            var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border:            var(--sidebar-border);
+  --color-sidebar-ring:              var(--sidebar-ring);
+  --color-chart-1:                   var(--chart-1);
+  --color-chart-2:                   var(--chart-2);
+  --color-chart-3:                   var(--chart-3);
+  --color-chart-4:                   var(--chart-4);
+  --color-chart-5:                   var(--chart-5);
+
+  /* Typography */
+  --font-sans:    var(--font-jakarta);
+  --font-heading: var(--font-sora);
+  --font-mono:    ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Border radius — más redondeado, más boutique */
+  --radius-sm:  calc(var(--radius) * 0.6);
+  --radius-md:  calc(var(--radius) * 0.9);
+  --radius-lg:  var(--radius);
+  --radius-xl:  calc(var(--radius) * 1.5);
+  --radius-2xl: calc(var(--radius) * 2);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ============================================================
+   TEMA: Nexo Azul (default)
+   ============================================================ */
+:root {
+  --background:       oklch(0.969 0.002 106);   /* #F5F5F3 crema suave */
+  --foreground:       oklch(0.082 0 0);           /* #0F0F0F casi negro */
+
+  --card:             oklch(1 0 0);
+  --card-foreground:  oklch(0.082 0 0);
+
+  --popover:          oklch(1 0 0);
+  --popover-foreground: oklch(0.082 0 0);
+
+  --primary:          oklch(0.50 0.265 264);      /* #1B4FFF azul Nexo */
+  --primary-foreground: oklch(0.985 0 0);
+
+  --secondary:        oklch(0.96 0.004 264);
+  --secondary-foreground: oklch(0.15 0 0);
+
+  --muted:            oklch(0.94 0.003 264);
+  --muted-foreground: oklch(0.52 0.008 264);
+
+  --accent:           oklch(0.675 0.215 34);      /* #FF5C1A naranja CTA */
+  --accent-foreground: oklch(0.985 0 0);
+
+  --destructive:      oklch(0.577 0.245 27.325);
+  --border:           oklch(0.90 0.004 264);
+  --input:            oklch(0.90 0.004 264);
+  --ring:             oklch(0.50 0.265 264);
+
+  --radius:           0.75rem;                    /* un poco más redondeado */
+
+  --chart-1: oklch(0.50 0.265 264);
+  --chart-2: oklch(0.675 0.215 34);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+
+  --sidebar:          oklch(1 0 0);
+  --sidebar-foreground: oklch(0.082 0 0);
+  --sidebar-primary:  oklch(0.50 0.265 264);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent:   oklch(0.96 0.003 264);
+  --sidebar-accent-foreground: oklch(0.082 0 0);
+  --sidebar-border:   oklch(0.90 0.004 264);
+  --sidebar-ring:     oklch(0.50 0.265 264);
+}
+
+/* ============================================================
+   TEMA: Rosa Boutique
+   Tailwind v4 usa --color-* para sus utilities — hay que
+   sobreescribir esos tokens, no los alias intermedios.
+   ============================================================ */
+[data-theme="rosa"] {
+  --primary:                    oklch(0.48 0.22 355);
+  --primary-foreground:         oklch(0.985 0 0);
+  --accent:                     oklch(0.72 0.16 15);
+  --accent-foreground:          oklch(0.985 0 0);
+  --ring:                       oklch(0.48 0.22 355);
+  --secondary:                  oklch(0.96 0.01 355);
+  --muted:                      oklch(0.95 0.008 355);
+  --sidebar-primary:            oklch(0.48 0.22 355);
+  --sidebar-ring:               oklch(0.48 0.22 355);
+  --background:                 oklch(0.975 0.005 355);
+
+  /* Tokens que Tailwind v4 usa directamente en utilities */
+  --color-primary:              oklch(0.48 0.22 355);
+  --color-primary-foreground:   oklch(0.985 0 0);
+  --color-accent:               oklch(0.72 0.16 15);
+  --color-accent-foreground:    oklch(0.985 0 0);
+  --color-ring:                 oklch(0.48 0.22 355);
+  --color-background:           oklch(0.975 0.005 355);
+  --color-secondary:            oklch(0.96 0.01 355);
+  --color-muted:                oklch(0.95 0.008 355);
+  --color-sidebar-primary:      oklch(0.48 0.22 355);
+  --color-sidebar-ring:         oklch(0.48 0.22 355);
+}
+
+/* ============================================================
+   TEMA: Esmeralda
+   ============================================================ */
+[data-theme="esmeralda"] {
+  --primary:                    oklch(0.50 0.14 165);
+  --primary-foreground:         oklch(0.985 0 0);
+  --accent:                     oklch(0.70 0.12 145);
+  --accent-foreground:          oklch(0.985 0 0);
+  --ring:                       oklch(0.50 0.14 165);
+  --secondary:                  oklch(0.95 0.02 165);
+  --muted:                      oklch(0.94 0.015 165);
+  --sidebar-primary:            oklch(0.50 0.14 165);
+  --sidebar-ring:               oklch(0.50 0.14 165);
+  --background:                 oklch(0.97 0.006 165);
+
+  --color-primary:              oklch(0.50 0.14 165);
+  --color-primary-foreground:   oklch(0.985 0 0);
+  --color-accent:               oklch(0.70 0.12 145);
+  --color-accent-foreground:    oklch(0.985 0 0);
+  --color-ring:                 oklch(0.50 0.14 165);
+  --color-background:           oklch(0.97 0.006 165);
+  --color-secondary:            oklch(0.95 0.02 165);
+  --color-muted:                oklch(0.94 0.015 165);
+  --color-sidebar-primary:      oklch(0.50 0.14 165);
+  --color-sidebar-ring:         oklch(0.50 0.14 165);
+}
+
+/* ============================================================
+   TEMA: Ciruelo
+   ============================================================ */
+[data-theme="ciruelo"] {
+  --primary:                    oklch(0.40 0.19 305);
+  --primary-foreground:         oklch(0.985 0 0);
+  --accent:                     oklch(0.72 0.13 310);
+  --accent-foreground:          oklch(0.985 0 0);
+  --ring:                       oklch(0.40 0.19 305);
+  --secondary:                  oklch(0.96 0.01 305);
+  --muted:                      oklch(0.95 0.008 305);
+  --sidebar-primary:            oklch(0.40 0.19 305);
+  --sidebar-ring:               oklch(0.40 0.19 305);
+  --background:                 oklch(0.975 0.005 305);
+
+  --color-primary:              oklch(0.40 0.19 305);
+  --color-primary-foreground:   oklch(0.985 0 0);
+  --color-accent:               oklch(0.72 0.13 310);
+  --color-accent-foreground:    oklch(0.985 0 0);
+  --color-ring:                 oklch(0.40 0.19 305);
+  --color-background:           oklch(0.975 0.005 305);
+  --color-secondary:            oklch(0.96 0.01 305);
+  --color-muted:                oklch(0.95 0.008 305);
+  --color-sidebar-primary:      oklch(0.40 0.19 305);
+  --color-sidebar-ring:         oklch(0.40 0.19 305);
+}
+
+/* ============================================================
+   MODO OSCURO — aplica sobre cualquier tema
+   ============================================================ */
+.dark {
+  /* Fondos */
+  --background:       oklch(0.16 0.006 264);
+  --foreground:       oklch(0.95 0 0);
+  --card:             oklch(0.20 0.006 264);
+  --card-foreground:  oklch(0.95 0 0);
+  --popover:          oklch(0.20 0.006 264);
+  --popover-foreground: oklch(0.95 0 0);
+
+  /* Secundarios */
+  --secondary:        oklch(0.26 0.005 264);
+  --secondary-foreground: oklch(0.95 0 0);
+  --muted:            oklch(0.23 0.005 264);
+  --muted-foreground: oklch(0.60 0 0);
+
+  /* Bordes e inputs */
+  --border:           oklch(0.30 0.005 264);
+  --input:            oklch(0.26 0.005 264);
+
+  /* Destructivo más visible en dark */
+  --destructive:      oklch(0.65 0.22 25);
+
+  /* Sidebar */
+  --sidebar:          oklch(0.18 0.006 264);
+  --sidebar-foreground: oklch(0.95 0 0);
+  --sidebar-accent:   oklch(0.23 0.005 264);
+  --sidebar-accent-foreground: oklch(0.95 0 0);
+  --sidebar-border:   oklch(0.30 0.005 264);
+
+  /* Tokens directos para Tailwind v4 */
+  --color-background:       oklch(0.16 0.006 264);
+  --color-foreground:       oklch(0.95 0 0);
+  --color-card:             oklch(0.20 0.006 264);
+  --color-card-foreground:  oklch(0.95 0 0);
+  --color-popover:          oklch(0.20 0.006 264);
+  --color-popover-foreground: oklch(0.95 0 0);
+  --color-secondary:        oklch(0.26 0.005 264);
+  --color-secondary-foreground: oklch(0.95 0 0);
+  --color-muted:            oklch(0.23 0.005 264);
+  --color-muted-foreground: oklch(0.60 0 0);
+  --color-border:           oklch(0.30 0.005 264);
+  --color-input:            oklch(0.26 0.005 264);
+  --color-sidebar:          oklch(0.18 0.006 264);
+}
+
+/* Dark + tema: ajustar fondos */
+.dark[data-theme="rosa"] {
+  --background: oklch(0.13 0.010 355); --card: oklch(0.18 0.010 355);
+  --color-background: oklch(0.13 0.010 355); --color-card: oklch(0.18 0.010 355);
+}
+.dark[data-theme="esmeralda"] {
+  --background: oklch(0.13 0.010 165); --card: oklch(0.18 0.010 165);
+  --color-background: oklch(0.13 0.010 165); --color-card: oklch(0.18 0.010 165);
+}
+.dark[data-theme="ciruelo"] {
+  --background: oklch(0.13 0.010 305); --card: oklch(0.18 0.010 305);
+  --color-background: oklch(0.13 0.010 305); --color-card: oklch(0.18 0.010 305);
+}
+
+/* ============================================================
+   BASE GLOBAL
+   ============================================================ */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
   }
-}
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* Transición suave solo en los elementos relevantes */
+  html {
+    transition: background-color 0.25s ease, color 0.15s ease;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-sora), sans-serif;
+    @apply tracking-tight;
+  }
+
+  /* Scrollbar refinada */
+  ::-webkit-scrollbar       { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { @apply bg-transparent; }
+  ::-webkit-scrollbar-thumb { @apply bg-border rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-muted-foreground/40; }
 }
