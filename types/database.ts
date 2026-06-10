@@ -352,6 +352,55 @@ export type Database = {
           { foreignKeyName: "settlements_organization_id_fkey"; columns: ["organization_id"]; isOneToOne: false; referencedRelation: "organizations"; referencedColumns: ["id"] },
         ];
       };
+      // ── cash_closures ───────────────────────────────────────
+      cash_closures: {
+        Row: {
+          id:                string;
+          organization_id:   string;
+          closure_date:      string;
+          expected_cash:     number;
+          counted_cash:      number;
+          expected_pos:      number;
+          expected_transfer: number;
+          expected_mixed:    number;
+          difference:        number;
+          notes:             string | null;
+          closed_by:         string | null;
+          created_at:        string;
+        };
+        Insert: {
+          id?:                string;
+          organization_id:    string;
+          closure_date:       string;
+          expected_cash?:     number;
+          counted_cash?:      number;
+          expected_pos?:      number;
+          expected_transfer?: number;
+          expected_mixed?:    number;
+          difference?:        number;
+          notes?:             string | null;
+          closed_by?:         string | null;
+          created_at?:        string;
+        };
+        Update: {
+          id?:                string;
+          organization_id?:   string;
+          closure_date?:      string;
+          expected_cash?:     number;
+          counted_cash?:      number;
+          expected_pos?:      number;
+          expected_transfer?: number;
+          expected_mixed?:    number;
+          difference?:        number;
+          notes?:             string | null;
+          closed_by?:         string | null;
+          created_at?:        string;
+        };
+        Relationships: [
+          { foreignKeyName: "cash_closures_organization_id_fkey"; columns: ["organization_id"]; isOneToOne: false; referencedRelation: "organizations"; referencedColumns: ["id"] },
+          { foreignKeyName: "cash_closures_closed_by_fkey"; columns: ["closed_by"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {

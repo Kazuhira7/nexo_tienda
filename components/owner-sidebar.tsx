@@ -12,6 +12,7 @@ import {
   StoreIcon,
   UploadIcon,
   SettingsIcon,
+  CalculatorIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import UserMenu from "@/components/user-menu";
@@ -34,6 +35,7 @@ const NAV_SECTIONS = [
   {
     label: "Clientes y Finanzas",
     items: [
+      { href: "/caja",          label: "Cierre de caja", icon: CalculatorIcon },
       { href: "/clientes",      label: "Clientes",      icon: UsersIcon },
       { href: "/liquidaciones", label: "Liquidaciones", icon: WalletIcon },
     ],

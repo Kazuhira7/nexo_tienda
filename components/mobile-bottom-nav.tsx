@@ -14,6 +14,7 @@ import {
   UploadIcon,
   UserIcon,
   SettingsIcon,
+  CalculatorIcon,
 } from "lucide-react";
 import { useState } from "react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -26,6 +27,7 @@ const PRIMARY = [
 ];
 
 const MORE = [
+  { href: "/caja",          label: "Cierre de caja", icon: CalculatorIcon },
   { href: "/liquidaciones", label: "Liquidaciones", icon: WalletIcon },
   { href: "/clientes",      label: "Clientes",      icon: UsersIcon },
   { href: "/marcas",        label: "Marcas",         icon: StoreIcon },
