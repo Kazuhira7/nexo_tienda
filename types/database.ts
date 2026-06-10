@@ -12,6 +12,7 @@ export type SettlementStatus = "pending" | "paid";
 export type SettlementModel  = "commission" | "space_fee" | "both" | "none";
 export type SettlementPeriod = "quincenal" | "mensual";
 export type CurrencyCode     = "NIO" | "USD";
+export type BrandPaymentType = "payout" | "fee_charge" | "fee_payment";
 
 export type Database = {
   public: {
@@ -399,6 +400,50 @@ export type Database = {
         Relationships: [
           { foreignKeyName: "cash_closures_organization_id_fkey"; columns: ["organization_id"]; isOneToOne: false; referencedRelation: "organizations"; referencedColumns: ["id"] },
           { foreignKeyName: "cash_closures_closed_by_fkey"; columns: ["closed_by"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+        ];
+      };
+      // ── brand_payments ──────────────────────────────────────
+      brand_payments: {
+        Row: {
+          id:              string;
+          organization_id: string;
+          brand_id:        string;
+          settlement_id:   string | null;
+          amount:          number;
+          type:            BrandPaymentType;
+          method:          PaymentMethod | null;
+          occurred_on:     string;
+          notes:           string | null;
+          created_at:      string;
+        };
+        Insert: {
+          id?:              string;
+          organization_id:  string;
+          brand_id:         string;
+          settlement_id?:   string | null;
+          amount:           number;
+          type:             BrandPaymentType;
+          method?:          PaymentMethod | null;
+          occurred_on?:     string;
+          notes?:           string | null;
+          created_at?:      string;
+        };
+        Update: {
+          id?:              string;
+          organization_id?: string;
+          brand_id?:        string;
+          settlement_id?:   string | null;
+          amount?:          number;
+          type?:            BrandPaymentType;
+          method?:          PaymentMethod | null;
+          occurred_on?:     string;
+          notes?:           string | null;
+          created_at?:      string;
+        };
+        Relationships: [
+          { foreignKeyName: "brand_payments_organization_id_fkey"; columns: ["organization_id"]; isOneToOne: false; referencedRelation: "organizations"; referencedColumns: ["id"] },
+          { foreignKeyName: "brand_payments_brand_id_fkey"; columns: ["brand_id"]; isOneToOne: false; referencedRelation: "brands"; referencedColumns: ["id"] },
+          { foreignKeyName: "brand_payments_settlement_id_fkey"; columns: ["settlement_id"]; isOneToOne: false; referencedRelation: "settlements"; referencedColumns: ["id"] },
         ];
       };
     };

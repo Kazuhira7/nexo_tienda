@@ -72,6 +72,9 @@ export default async function MarcasPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
+                        <Link href={`/marcas/${brand.id}`}>
+                          <Button variant="ghost" size="sm" className="text-primary">Estado de cuenta</Button>
+                        </Link>
                         <UserDialog brandId={brand.id} brandName={brand.name}
                           trigger={<Button variant="ghost" size="sm" className="text-muted-foreground">+ Usuario</Button>} />
                         <BrandDialog brand={brand}
@@ -100,6 +103,9 @@ export default async function MarcasPage() {
                   {brand.phone && <span>{brand.phone}</span>}
                   {brand.space_fee > 0 && <span className="font-medium text-foreground">{fmt(brand.space_fee)}/período</span>}
                 </div>
+                <Link href={`/marcas/${brand.id}`} className="block">
+                  <Button variant="outline" size="sm" className="w-full text-primary">Estado de cuenta</Button>
+                </Link>
                 <div className="flex gap-2 pt-1 border-t">
                   <UserDialog brandId={brand.id} brandName={brand.name}
                     trigger={<Button variant="outline" size="sm" className="flex-1">+ Usuario</Button>} />
