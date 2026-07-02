@@ -3,11 +3,13 @@
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { VERTICAL_PRESETS } from "@/lib/modules";
 import { z } from "zod";
 
 const OrgSchema = z.object({
   name:               z.string().min(2, "Nombre mínimo 2 caracteres"),
   slug:               z.string().min(2).regex(/^[a-z0-9-]+$/, "Solo letras minúsculas, números y guiones"),
+  vertical:           z.enum(["colectivo", "retail", "restaurante"]),
   currency:           z.enum(["NIO", "USD"]),
   settlement_model:   z.enum(["commission", "space_fee", "both", "none"]),
   settlement_period:  z.enum(["quincenal", "mensual"]),
@@ -28,12 +30,16 @@ export async function createOrganization(formData: FormData) {
   if (profile?.role !== "superadmin") return { error: "Sin permisos" };
 
   const admin = createAdminClient();
-  const { name, slug, currency, settlement_model, settlement_period, owner_email, owner_password, owner_name } = parsed.data;
+  const { name, slug, vertical, currency, settlement_model, settlement_period, owner_email, owner_password, owner_name } = parsed.data;
 
-  // Create organization
+  // Create organization — the vertical decides the initial module preset
   const { data: org, error: orgError } = await admin
     .from("organizations")
-    .insert({ name, slug, currency, settlement_model, settlement_period })
+    .insert({
+      name, slug, currency, settlement_model, settlement_period,
+      vertical,
+      enabled_modules: VERTICAL_PRESETS[vertical],
+    })
     .select("id")
     .single();
 

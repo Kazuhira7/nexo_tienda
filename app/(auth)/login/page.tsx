@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { homeRoute } from "@/lib/home-route";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,7 +40,7 @@ export default function LoginPage() {
         .single();
 
       // Full page reload so the server proxy reads the new session cookie
-      window.location.href = profile?.role === "owner" ? "/dashboard" : "/mi-tienda";
+      window.location.href = homeRoute(profile?.role);
     }
   }
 

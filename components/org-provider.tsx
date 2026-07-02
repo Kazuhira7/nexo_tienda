@@ -1,19 +1,23 @@
 "use client";
 
 import { createContext, useContext } from "react";
-import type { CurrencyCode } from "@/types/database";
+import type { CurrencyCode, ModuleId, VerticalType } from "@/types/database";
 import { formatMoney, DEFAULT_EXCHANGE_RATE } from "@/lib/money";
 
 interface OrgContextValue {
   currency:     CurrencyCode;
   exchangeRate: number;
   orgName:      string;
+  vertical:     VerticalType;
+  modules:      readonly string[];
 }
 
 const OrgContext = createContext<OrgContextValue>({
   currency:     "NIO",
   exchangeRate: DEFAULT_EXCHANGE_RATE,
   orgName:      "",
+  vertical:     "colectivo",
+  modules:      [],
 });
 
 export function OrgProvider({
@@ -21,14 +25,18 @@ export function OrgProvider({
   currency,
   exchangeRate,
   orgName,
+  vertical = "colectivo",
+  modules = [],
 }: {
   children:     React.ReactNode;
   currency:     CurrencyCode;
   exchangeRate: number;
   orgName:      string;
+  vertical?:    VerticalType;
+  modules?:     readonly string[];
 }) {
   return (
-    <OrgContext.Provider value={{ currency, exchangeRate, orgName }}>
+    <OrgContext.Provider value={{ currency, exchangeRate, orgName, vertical, modules }}>
       {children}
     </OrgContext.Provider>
   );
@@ -36,6 +44,12 @@ export function OrgProvider({
 
 export function useOrg() {
   return useContext(OrgContext);
+}
+
+/** Hook para saber si un módulo está activo en la org (componentes cliente). */
+export function useHasModule(id: ModuleId) {
+  const { modules } = useOrg();
+  return modules.includes(id);
 }
 
 /**

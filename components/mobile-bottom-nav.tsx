@@ -18,40 +18,54 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import type { ModuleId } from "@/types/database";
 
-const PRIMARY = [
-  { href: "/dashboard",    label: "Inicio",   icon: LayoutDashboardIcon },
-  { href: "/ventas/nueva", label: "Vender",    icon: ShoppingCartIcon },
-  { href: "/ventas",       label: "Ventas",    icon: ReceiptIcon },
-  { href: "/inventario",   label: "Inventario",icon: PackageIcon },
+interface NavItem {
+  href:    string;
+  label:   string;
+  icon:    typeof LayoutDashboardIcon;
+  module?: ModuleId; // undefined = always visible
+}
+
+const PRIMARY: NavItem[] = [
+  { href: "/dashboard",    label: "Inicio",     icon: LayoutDashboardIcon },
+  { href: "/ventas/nueva", label: "Vender",     icon: ShoppingCartIcon, module: "pos" },
+  { href: "/ventas",       label: "Ventas",     icon: ReceiptIcon,      module: "pos" },
+  { href: "/inventario",   label: "Inventario", icon: PackageIcon,      module: "inventory" },
 ];
 
-const MORE = [
-  { href: "/caja",          label: "Cierre de caja", icon: CalculatorIcon },
-  { href: "/liquidaciones", label: "Liquidaciones", icon: WalletIcon },
-  { href: "/clientes",      label: "Clientes",      icon: UsersIcon },
-  { href: "/marcas",        label: "Marcas",         icon: StoreIcon },
-  { href: "/importar",      label: "Importar CSV",   icon: UploadIcon },
+const MORE: NavItem[] = [
+  { href: "/caja",          label: "Cierre de caja", icon: CalculatorIcon, module: "cash" },
+  { href: "/liquidaciones", label: "Liquidaciones",  icon: WalletIcon,     module: "settlements" },
+  { href: "/clientes",      label: "Clientes",       icon: UsersIcon,      module: "customers" },
+  { href: "/marcas",        label: "Marcas",         icon: StoreIcon,      module: "brands" },
+  { href: "/importar",      label: "Importar CSV",   icon: UploadIcon,     module: "inventory" },
   { href: "/perfil",        label: "Mi perfil",      icon: UserIcon },
   { href: "/configuracion", label: "Configuración",  icon: SettingsIcon },
 ];
 
-export default function MobileBottomNav() {
+export default function MobileBottomNav({ modules }: { modules: readonly string[] }) {
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
+
+  const enabled = (items: NavItem[]) =>
+    items.filter((i) => !i.module || modules.includes(i.module));
+
+  const primary = enabled(PRIMARY);
+  const more = enabled(MORE);
 
   const isActive = (href: string) =>
     href === "/ventas/nueva"
       ? pathname === href
       : pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
 
-  const isMoreActive = MORE.some((l) => isActive(l.href));
+  const isMoreActive = more.some((l) => isActive(l.href));
 
   return (
     <>
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-card border-t shadow-2xl">
         <div className="flex items-stretch h-16">
-          {PRIMARY.map(({ href, label, icon: Icon }) => (
+          {primary.map(({ href, label, icon: Icon }) => (
             <Link
               key={href}
               href={href}
@@ -86,7 +100,7 @@ export default function MobileBottomNav() {
           <div className="pt-2 pb-4">
             <div className="w-10 h-1 rounded-full bg-muted mx-auto mb-5" />
             <div className="grid grid-cols-3 gap-2 px-2">
-              {MORE.map(({ href, label, icon: Icon }) => (
+              {more.map(({ href, label, icon: Icon }) => (
                 <Link
                   key={href}
                   href={href}

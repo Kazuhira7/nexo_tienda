@@ -33,6 +33,33 @@ export async function updateOrganization(orgId: string, formData: FormData) {
   return { success: true };
 }
 
+// ── Módulos activos de una org ────────────────────────────────
+const ModulesSchema = z.array(
+  z.enum(["pos", "inventory", "customers", "cash", "brands", "settlements"])
+);
+
+export async function updateOrgModules(orgId: string, modules: string[]) {
+  const parsed = ModulesSchema.safeParse(modules);
+  if (!parsed.success) return { error: "Módulos inválidos" };
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "No autenticado" };
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+  if (profile?.role !== "superadmin") return { error: "Sin permisos" };
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("organizations")
+    .update({ enabled_modules: parsed.data })
+    .eq("id", orgId);
+  if (error) return { error: error.message };
+
+  revalidatePath(`/admin/${orgId}`);
+  revalidatePath("/admin");
+  return { success: true };
+}
+
 // ── Crear usuario para una org ────────────────────────────────
 const CreateUserSchema = z.object({
   full_name: z.string().min(1),

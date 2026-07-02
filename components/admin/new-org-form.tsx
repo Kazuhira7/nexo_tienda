@@ -9,10 +9,13 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { createOrganization } from "@/app/(admin)/admin/actions";
+import { VERTICAL_INFO, VERTICAL_PRESETS, MODULES } from "@/lib/modules";
+import type { VerticalType } from "@/types/database";
 
 export default function NewOrgForm() {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [vertical, setVertical] = useState<VerticalType>("colectivo");
   const [currency, setCurrency] = useState("NIO");
   const [model, setModel] = useState("space_fee");
   const [period, setPeriod] = useState("quincenal");
@@ -21,6 +24,7 @@ export default function NewOrgForm() {
     e.preventDefault();
     setError(null);
     const formData = new FormData(e.currentTarget);
+    formData.set("vertical", vertical);
     formData.set("currency", currency);
     formData.set("settlement_model", model);
     formData.set("settlement_period", period);
@@ -36,6 +40,31 @@ export default function NewOrgForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Tipo de negocio (vertical) */}
+      <div className="rounded-xl border bg-card p-5 space-y-4">
+        <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Tipo de negocio</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          {(Object.entries(VERTICAL_INFO) as [VerticalType, { label: string; description: string }][]).map(([key, info]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setVertical(key)}
+              className={`p-3 rounded-xl border-2 text-left transition-all ${
+                vertical === key ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+              }`}
+            >
+              <p className="font-semibold text-sm">{info.label}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{info.description}</p>
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Módulos incluidos:{" "}
+          {VERTICAL_PRESETS[vertical].map((m) => MODULES[m].label).join(" · ")}
+          . Se pueden ajustar después por negocio.
+        </p>
+      </div>
+
       {/* Datos del negocio */}
       <div className="rounded-xl border bg-card p-5 space-y-4">
         <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Negocio</h2>

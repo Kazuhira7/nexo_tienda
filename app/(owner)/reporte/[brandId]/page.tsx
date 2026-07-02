@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import PrintButton from "@/components/reporte/print-button";
 import { getMoney } from "@/lib/get-currency";
+import { requireModule } from "@/lib/require-module";
 
 const PAYMENT_LABELS: Record<string, string> = {
   cash: "Efectivo",
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export default async function ReportePage({ params, searchParams }: Props) {
+  await requireModule("brands");
   const fmt = await getMoney();
   const { brandId } = await params;
   const { from, to } = await searchParams;

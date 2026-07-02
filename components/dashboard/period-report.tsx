@@ -24,15 +24,18 @@ type PeriodItem = {
 
 interface Props {
   fmt: (amount: number) => string;
+  showBrands?: boolean; // false = org without the brands module (e.g. retail)
 }
 
-export default async function PeriodReport({ fmt }: Props) {
+export default async function PeriodReport({ fmt, showBrands = true }: Props) {
   const supabase = await createClient();
   const { start, end } = getPeriodRange();
 
   const [{ data: brands }, { data: periodSalesData }, { data: allActiveProducts }] =
     await Promise.all([
-      supabase.from("brands").select("id, name, space_fee").eq("active", true).order("name"),
+      showBrands
+        ? supabase.from("brands").select("id, name, space_fee").eq("active", true).order("name")
+        : Promise.resolve({ data: [] as { id: string; name: string; space_fee: number }[] }),
       supabase
         .from("sales")
         .select("sale_items(brand_id, line_total, quantity, product_id, products(name))")
@@ -83,6 +86,7 @@ export default async function PeriodReport({ fmt }: Props) {
 
   return (
     <div className="space-y-4">
+      {showBrands && (
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
@@ -105,7 +109,7 @@ export default async function PeriodReport({ fmt }: Props) {
                     <p className="font-medium text-sm">{brand.name}</p>
                     {brand.space_fee > 0 && (
                       <p className="text-xs text-muted-foreground">
-                        Cuota: C${brand.space_fee.toFixed(2)}
+                        Cuota: {fmt(brand.space_fee)}
                       </p>
                     )}
                   </div>
@@ -121,6 +125,7 @@ export default async function PeriodReport({ fmt }: Props) {
           </div>
         </CardContent>
       </Card>
+      )}
 
       {topProducts.length > 0 && (
         <Card>

@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { homeRoute } from "@/lib/home-route";
 
-// Root route: redirect authenticated users to their dashboard,
+// Root route: redirect authenticated users to their role's home,
 // unauthenticated users to login.
 export default async function RootPage() {
   const supabase = await createClient();
@@ -17,6 +18,5 @@ export default async function RootPage() {
     .eq("id", user.id)
     .single();
 
-  if (profile?.role === "owner") redirect("/dashboard");
-  redirect("/mi-tienda");
+  redirect(homeRoute(profile?.role));
 }

@@ -13,6 +13,8 @@ export type SettlementModel  = "commission" | "space_fee" | "both" | "none";
 export type SettlementPeriod = "quincenal" | "mensual";
 export type CurrencyCode     = "NIO" | "USD";
 export type BrandPaymentType = "payout" | "fee_charge" | "fee_payment";
+export type VerticalType     = "colectivo" | "retail" | "restaurante";
+export type ModuleId         = "pos" | "inventory" | "customers" | "cash" | "brands" | "settlements";
 
 export type Database = {
   public: {
@@ -27,6 +29,8 @@ export type Database = {
           settlement_model:   SettlementModel;
           settlement_period:  SettlementPeriod;
           exchange_rate:      number;
+          vertical:           VerticalType;
+          enabled_modules:    ModuleId[];
           active:             boolean;
           created_at:         string;
         };
@@ -38,6 +42,8 @@ export type Database = {
           settlement_model?:  SettlementModel;
           settlement_period?: SettlementPeriod;
           exchange_rate?:     number;
+          vertical?:          VerticalType;
+          enabled_modules?:   ModuleId[];
           active?:            boolean;
           created_at?:        string;
         };
@@ -49,6 +55,8 @@ export type Database = {
           settlement_model?:  SettlementModel;
           settlement_period?: SettlementPeriod;
           exchange_rate?:     number;
+          vertical?:          VerticalType;
+          enabled_modules?:   ModuleId[];
           active?:            boolean;
           created_at?:        string;
         };

@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PlusIcon, StoreIcon } from "lucide-react";
+import { VERTICAL_INFO } from "@/lib/modules";
 
 const CURRENCY_LABEL: Record<string, string> = { NIO: "C$ Córdoba", USD: "$ Dólar" };
 const MODEL_LABEL: Record<string, { label: string; color: string }> = {
@@ -101,6 +102,9 @@ export default async function AdminPage() {
                     <h2 className="font-semibold text-lg">{org.name}</h2>
                     <Badge variant={org.active ? "outline" : "secondary"} className="text-xs">
                       {org.active ? "Activo" : "Inactivo"}
+                    </Badge>
+                    <Badge variant="outline" className="text-xs text-primary border-primary/40">
+                      {VERTICAL_INFO[org.vertical]?.label ?? org.vertical}
                     </Badge>
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${model.color}`}>
                       {model.label}

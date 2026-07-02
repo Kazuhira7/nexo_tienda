@@ -6,10 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUpIcon, StoreIcon, PackageIcon } from "lucide-react";
 import { getMoney } from "@/lib/get-currency";
+import { getOrgContext } from "@/lib/org-context";
+import { hasModule } from "@/lib/modules";
 import PeriodReport from "@/components/dashboard/period-report";
 
 export default async function OwnerDashboard() {
   const fmt = await getMoney();
+  const { modules } = await getOrgContext();
+  const showBrands = hasModule(modules, "brands");
   const supabase = await createClient();
   const today = new Date().toISOString().split("T")[0];
 
@@ -65,6 +69,7 @@ export default async function OwnerDashboard() {
             <p className="text-2xl font-bold">{fmt(totalHoy)}</p>
           </CardContent>
         </Card>
+        {showBrands && (
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
@@ -76,6 +81,7 @@ export default async function OwnerDashboard() {
             <p className="text-2xl font-bold">{brandsCount ?? 0}</p>
           </CardContent>
         </Card>
+        )}
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
@@ -89,6 +95,7 @@ export default async function OwnerDashboard() {
         </Card>
       </div>
 
+      {/* Alertas de stock bajo */}
       {(lowStockProducts?.length ?? 0) > 0 && (
         <Card className="border-destructive/50">
           <CardHeader className="pb-3">
@@ -113,7 +120,7 @@ export default async function OwnerDashboard() {
       )}
 
       <Suspense fallback={<PeriodSkeleton />}>
-        <PeriodReport fmt={fmt} />
+        <PeriodReport fmt={fmt} showBrands={showBrands} />
       </Suspense>
     </div>
   );

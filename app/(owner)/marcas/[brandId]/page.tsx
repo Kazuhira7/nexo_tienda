@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronLeftIcon, PlusIcon } from "lucide-react";
 import { getMoney } from "@/lib/get-currency";
+import { requireModule } from "@/lib/require-module";
 import PaymentDialog from "@/components/marcas/payment-dialog";
 import DeletePaymentButton from "@/components/marcas/delete-payment-button";
 import type { BrandPaymentType } from "@/types/database";
@@ -25,6 +26,7 @@ interface Props {
 }
 
 export default async function BrandAccountPage({ params }: Props) {
+  await requireModule("brands");
   const { brandId } = await params;
   const fmt = await getMoney();
   const supabase = await createClient();

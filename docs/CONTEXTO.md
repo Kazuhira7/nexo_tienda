@@ -1,153 +1,91 @@
-# CLAUDE.md — Nexo Colectivo (v2)
+# CONTEXTO.md — Nexo (v3)
 
 > Contexto maestro del proyecto. Léelo completo antes de escribir código.
 > Toda la **UI en español**. Código y comentarios en **inglés**.
-> Esta versión reemplaza a la anterior: el sistema ya tiene un MVP funcional y ahora entra en fase de **profundidad + arquitectura de plataforma**.
+> v3 reemplaza a v2: la visión pasa de "profundidad para un cliente" a **plataforma SaaS multi-vertical**. La clienta original del colectivo dejó de responder; el colectivo queda como primer vertical terminado y vendible, y el foco es la maquinaria de plataforma.
 
 ---
 
-## 1. Estado actual del proyecto
+## 1. La visión
 
-El MVP está construido y funcionando (Next.js 15 + Supabase + Vercel):
-
-- Login con roles (dueña / marca) y RLS
-- Dashboard: ventas del día, marcas activas, productos activos, reporte quincenal, top productos
-- Punto de venta: búsqueda por código o nombre, carrito, descuentos por línea y total, método de pago (efectivo/POS/transferencia), venta atómica vía RPC `register_sale`
-- Inventario: CRUD de productos por marca, toggle activo, ajuste de stock
-- Liquidaciones: reporte quincenal por marca con PDF imprimible, incluye **cuota por espacio**
-- Clientes: registro básico
-- Marcas: gestión básica
-
-**Dato clave del negocio real:** la clienta NO cobra comisión por venta. Cobra una **cuota fija por espacio** (ej. C$740 por quincena) a cada marca. El sistema ya lo refleja. Sin embargo, el modelo de cobro debe seguir siendo **configurable** (cuota fija, comisión %, o mixto) porque futuros clientes usarán otros modelos.
-
----
-
-## 2. La visión: Nexo como plataforma
-
-Este proyecto no es un sistema para una tienda. Es el primer vertical de una plataforma:
+Nexo es un SaaS de gestión para PYMEs de **cualquier rubro**: tiendas colectivas (consignación), tiendas de conveniencia/ropa (retail, con catálogo web), restaurantes (mesas, comandas, cocina). No se construye "un sistema para todo negocio": se construye un **core común + módulos activables**, y cada vertical es solo un *preset* de módulos + configuración + sus pantallas propias.
 
 ```
-NEXO CORE (común a todo negocio)
-├── productos, inventario, POS, ventas, clientes
-├── usuarios, roles, organizaciones (multi-tenant)
-├── reportes y dashboard
-│
-├── NEXO COLECTIVO  ← estamos aquí
-│   └── marcas, liquidaciones, cuotas/comisiones, portal de marca
-├── NEXO RESTAURANTE (futuro)
-│   └── mesas, comandas, cocina, menú QR
-└── NEXO COURIER (futuro)
-    └── paquetes, tracking, estados de envío
+NEXO CORE (se construye una vez)
+  organizaciones y roles · productos e inventario · POS y ventas
+  clientes · caja y cierres · reportes · facturación (futuro) · catálogo web (futuro)
+
+VERTICALES (presets de módulos + pantallas propias)
+  colectivo    → + marcas, liquidaciones, cuotas      [EN PRODUCCIÓN]
+  retail       → + variantes, e-commerce, tienda web  [SIGUIENTE]
+  restaurante  → + mesas, comandas, cocina, delivery  [DESPUÉS]
 ```
 
-Implicaciones para CADA decisión de código:
-
-1. **Multi-tenant desde ya.** Toda tabla de datos de negocio lleva `organization_id`. Hoy existe una sola organización (la tienda de la clienta), pero el segundo cliente debe poder montarse sin tocar código.
-2. **Separación Core vs. Vertical.** Lo genérico (productos, ventas, POS) no debe importar nada de lo específico de colectivos (marcas, liquidaciones). Estructura de carpetas refleja esto.
-3. **Configuración sobre código.** Moneda, modelo de cobro, periodo de liquidación, nombre y logo del negocio viven en `organization_settings`, nunca hardcodeados.
-
----
-
-## 3. Principio rector: profundidad antes que anchura
-
-El MVP registra datos. La fase actual lo convierte en algo por lo que vale la pena pagar mensualidad. La vara para cada feature:
-
-> ¿Esto le evita a la dueña una tarea que odia, o le da información que la hace ganar dinero?
-
-Un CRUD no pasa la vara. Un cierre de caja que cuadra solo, sí. Una alerta de "esta marca no vende hace 20 días", sí.
+Reglas de arquitectura:
+1. **Multi-tenant siempre**: toda tabla de negocio lleva `organization_id`; RLS en dos niveles (organización → rol). Cruzar datos entre orgs o entre marcas = bug crítico de seguridad.
+2. **Módulos sobre silos**: `organizations.enabled_modules` (text[]) decide qué ve cada negocio. La navegación se genera desde los módulos (`lib/modules.ts`), no hay sidebars hardcodeados por tipo de negocio. `organizations.vertical` es solo el preset inicial.
+3. **La redirección la decide la organización, no el usuario**: login → profile (rol) → org (vertical/módulos) → home (`lib/home-route.ts`). El rol decide qué puede hacer dentro.
+4. **Configuración sobre código**: moneda, tasa de cambio, modelo de cobro, periodo, módulos — todo vive en `organizations`, nada hardcodeado.
+5. **Core no importa del vertical.** Un archivo genérico jamás importa lógica de colectivo/restaurante.
 
 ---
 
-## 4. Stack (sin cambios)
+## 2. Estado actual (jun 2026)
 
-Next.js 15 (App Router) · TypeScript strict · Supabase (Postgres, Auth, RLS, Storage) · Tailwind + shadcn/ui · Vercel · Zod · Sora + Plus Jakarta Sans · Tokens Nexo: azul #1B4FFF, naranja #FF5C1A (solo CTAs), casi negro #0F0F0F, blanco hueso #F5F5F3, gris #6B7280. Mobile-first siempre (el POS se usa en el mostrador desde tablet/celular).
+**Construido y en producción** (https://nexo-tienda.vercel.app):
+- Multi-tenant completo: `organizations`, RLS por org, roles `superadmin | owner | brand`, panel superadmin (`app/(admin)`) con creación de negocios y usuarios.
+- Colectivo completo: POS con venta atómica (`register_sale`), inventario, clientes, reportes por marca, liquidaciones con PDF, **cierre de caja diario** (A1), **estado de cuenta por marca** con `brand_payments` (A2).
+- Moneda configurable con conversión real NIO↔USD (`lib/money.ts`, `getMoney()`/`useMoney()`).
+- **Sistema de módulos** (Fase B parcial): registro en `lib/modules.ts`, contexto en `lib/org-context.ts`, guards `requireModule()`, navegación dinámica, gestión de módulos por org en el admin.
 
----
+**Deuda / pendientes conocidos:**
+- La clienta nunca definió la regla de cobro de cuotas → `brand_payments` es un libro manual flexible; automatizar cuando haya regla.
+- `products.brand_id` y `sale_items.brand_id` son NOT NULL (herencia colectivo). Para retail hay que hacerlos nullable y ajustar POS/formularios. **Hacerlo al construir retail, no antes.**
+- Separación física `lib/core/` vs `lib/colectivo/` aún no hecha (la separación lógica vía módulos sí).
+- Portal de marca (A3) incompleto; alertas de stock en dashboard sí existen.
+- ⚠️ El proyecto Supabase es plan gratuito y **se pausa por inactividad** → producción se cae. Para vender esto se necesita plan Pro.
 
-## 5. Arquitectura multi-tenant
-
-### Modelo
-- **organizations** — cada negocio que usa Nexo. Campos: `id`, `name`, `slug`, `vertical` (`colectivo` | `restaurante` | `courier`), `active`.
-- **organization_settings** — configuración por negocio: `currency` (`NIO`|`USD`), `billing_model` (`space_fee`|`commission`|`mixed`), `space_fee_amount`, `settlement_period` (`biweekly`|`monthly`), `logo_url`, etc.
-- **profiles** gana `organization_id`. Un usuario pertenece a una organización.
-- Todas las tablas de negocio (`brands`, `products`, `customers`, `sales`, `sale_items`, `settlements`) ganan `organization_id not null`.
-
-### RLS en dos niveles
-1. **Nivel organización:** nadie ve datos de otra organización. Helper `current_org_id()` lee el `organization_id` del profile del usuario autenticado; toda policy lo filtra.
-2. **Nivel rol (dentro de la org):** owner ve todo lo de su org; brand ve solo lo suyo (igual que hoy).
-
-> Regla de oro ampliada: cruzar datos entre organizaciones o entre marcas es bug crítico de seguridad. Toda policy filtra primero por `organization_id`, luego por rol.
-
-### Migración
-El SQL de migración está en `migration_001_multitenant.sql`. Pasos: crear `organizations` y `organization_settings` → insertar la organización de la clienta actual → agregar `organization_id` a todas las tablas con backfill a esa organización → `not null` + índices → reescribir las policies con el filtro de organización → actualizar `register_sale` para recibir/validar `organization_id`.
-
-### Estructura de carpetas objetivo
-```
-app/
-  (auth)/            login, recuperación
-  (owner)/           rutas de la dueña
-  (brand)/           portal de marca
-lib/
-  core/              lógica genérica (productos, ventas, clientes, caja)
-  colectivo/         lógica del vertical (marcas, liquidaciones, cuotas)
-  supabase/          clientes server/browser, tipos generados
-components/
-  core/ · colectivo/ · ui/
-```
+**Historia de BD** en `docs/db/` (correr en orden en una base nueva): `000_schema_base` → `001_multitenant` → `002_cash_closures` → `003_brand_payments` → `004_platform_modules`.
 
 ---
 
-## 6. Roadmap (en orden estricto)
+## 3. Stack
 
-### Fase A — Profundidad para la clienta actual ⬅ EMPEZAR AQUÍ
-Es lo que justifica el precio. En orden de impacto:
+Next.js 16 (App Router, proxy en vez de middleware) · TypeScript strict · Supabase (Postgres + Auth + RLS) · Tailwind v4 + shadcn/ui (**base-ui**: inputs controlados, sin `asChild`) · Vercel (auto-deploy desde `main`) · Zod · Sora + Plus Jakarta Sans · Tokens: azul #1B4FFF, naranja #FF5C1A (solo CTAs). Mobile-first siempre.
 
-**A1. Cierre de caja diario.**
-Ritual de fin de día: el sistema muestra lo esperado por método de pago (efectivo / POS / transferencia) según las ventas del día; la dueña ingresa lo contado real; el sistema marca diferencia (cuadre/descuadre) y guarda el cierre con nota opcional. Tabla `cash_closures`: `id, organization_id, date, expected_cash, counted_cash, expected_pos, expected_transfer, difference, notes, closed_by, created_at`. Vista de historial de cierres. Si hay descuadre, mostrarlo en rojo con el monto.
-
-**A2. Estado de cuenta por marca.**
-Convertir la pestaña Marcas en mini-CRM: por cada marca, saldo acumulado — ventas del periodo, cuotas generadas, cuotas pagadas, saldo pendiente — e historial de liquidaciones y pagos. Tabla `brand_payments`: `id, organization_id, brand_id, settlement_id (nullable), amount, type ('payout'|'fee_charge'|'fee_payment'), method, notes, created_at`. La dueña registra cuándo la marca pagó su cuota y cuándo ella le pagó a la marca lo vendido.
-
-**A3. Portal de marca (activar/completar).**
-Login por marca con dashboard: sus ventas en tiempo real, su stock, sus liquidaciones, su estado de cuenta. Solo lectura excepto su inventario (puede editar sus productos). Validar RLS a fondo: una marca jamás ve otra marca.
-
-**A4. Alertas de stock bajo en dashboard.**
-Card en el panel de la dueña y en el portal de cada marca: productos con `stock <= low_stock_threshold`. (WhatsApp viene en Fase C, no ahora.)
-
-### Fase B — Refactor multi-tenant
-Ejecutar `migration_001_multitenant.sql`, actualizar tipos, helpers RLS, queries y la función `register_sale`. Probar exhaustivamente que la app sigue funcionando igual para la clienta. Construir `organization_settings` y reemplazar todo valor hardcodeado (moneda, cuota, periodo) por lecturas de settings.
-
-> ¿Por qué B después de A? La clienta necesita valor YA para validar el producto y pagar. El refactor es invisible para ella. Pero NO empieces la Fase C sin haber hecho B: cada feature nueva post-B nace multi-tenant.
-
-### Fase C — Inteligencia y retención
-- **C1. Dashboard inteligente:** comparativa mes actual vs. anterior, marcas sin ventas en 15/30 días, productos sin rotación en 30 días.
-- **C2. WhatsApp (Twilio):** liquidación lista → link a la marca; resumen semanal a la dueña; alerta de stock crítico. Plantillas configurables por organización.
-- **C3. Exportar a Excel** además de PDF.
-
-### Fase D — Plataforma
-- **D1. Onboarding wizard:** crear organización nueva (nombre, vertical, moneda, modelo de cobro) sin tocar código.
-- **D2. Panel super-admin** para Nexo (ver organizaciones, activar/desactivar).
-- Solo cuando haya 2-3 colectivos pagando se evalúa el segundo vertical.
+Convenciones: Server Components para lectura; mutaciones críticas = funciones Postgres atómicas o Server Actions con `getOrgId()`; tipos de BD mantenidos a mano en `types/database.ts`; montos siempre en NIO en la BD y formateados con `fmt()`.
 
 ---
 
-## 7. Convenciones (sin cambios + adiciones)
+## 4. Roadmap por compuertas (no fechas)
 
-- TypeScript strict, sin `any`. Tipos generados con `supabase gen types`.
-- Server Components para lectura; Client solo para interactividad.
+No se pasa de etapa sin cruzar la compuerta. Esto protege el foco.
+
+**Etapa 1 — Cerrar Colectivo como producto vendible**
+Terminar A3 (portal de marca) y pulir onboarding. Ya no depende de la clienta original: el vertical queda listo para venderse a cualquier colectivo.
+→ *Compuerta: montar un colectivo demo completo sin tocar código.*
+
+**Etapa 2 — Maquinaria de plataforma (Fase B)** ← EN CURSO
+Sistema de módulos ✔ · navegación dinámica ✔ · admin de módulos ✔ · redirect central ✔. Falta: signup self-service (registro → crea org → elige tipo de negocio), facturación básica core, separación física core/vertical.
+→ *Compuerta: un desconocido puede registrarse y operar su negocio sin intervención manual.*
+
+**Etapa 3 — Vender**
+2–3 clientes pagando (colectivos u otros que quepan en los módulos actuales). En paralelo: catálogo web público como módulo transversal.
+→ *Compuerta: ingreso mensual estable.*
+
+**Etapa 4 — Vertical retail completo**
+Variantes de producto (talla/color), `brand_id` nullable, catálogo web con carrito, códigos de barras. Reutiliza ~80% del core.
+
+**Etapa 5 — Vertical restaurante**
+POS propio (mesas, comandas, cocina en tiempo real, delivery). Solo con ingresos/equipo — es casi otro producto.
+
+---
+
+## 5. Guardrails
+
+- RLS activo en toda tabla nueva, con policies owner/brand/superadmin filtrando por `organization_id`.
 - `service_role key` jamás al navegador.
-- Mutaciones críticas (ventas, cierres, liquidaciones, pagos) = funciones Postgres atómicas llamadas desde el servidor.
-- Validación con Zod en todo formulario.
-- Montos siempre redondeados a 2 decimales al mostrar; usar `Intl.NumberFormat('es-NI', { style: 'currency', currency: settings.currency })`.
-- Toda query de negocio filtra por `organization_id` (post Fase B). Nunca confiar solo en RLS: defensa en profundidad.
-- Después de cada fase: detenerse, resumir lo construido, listar qué validar con la clienta.
-
----
-
-## 8. Guardrails
-
-- RLS siempre activo, en dos niveles (organización → rol).
-- `billing_model` configurable: cuota fija, comisión % o mixto. La clienta actual usa cuota fija; no asumir que todos los clientes serán así.
-- Core no importa de Colectivo. Si un archivo en `lib/core/` importa algo de `lib/colectivo/`, está mal diseñado.
-- No construir features del vertical Restaurante/Courier "ya que estamos". Foco.
-- Preguntar antes de asumir reglas de negocio no documentadas aquí.
+- Toda pantalla de módulo lleva `requireModule()` además del filtro de navegación (defensa en profundidad).
+- No construir features de un vertical futuro "ya que estamos".
+- Preguntar antes de asumir reglas de negocio no documentadas.
+- Después de cada etapa: detenerse, resumir, actualizar este documento.

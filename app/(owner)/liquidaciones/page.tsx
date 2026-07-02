@@ -8,6 +8,7 @@ import LiquidarButton from "@/components/liquidaciones/liquidar-button";
 import MarkPaidButton from "@/components/liquidaciones/mark-paid-button";
 import PeriodoSelector from "@/components/liquidaciones/periodo-selector";
 import { getMoney } from "@/lib/get-currency";
+import { requireModule } from "@/lib/require-module";
 
 function getCurrentPeriod() {
   const now = new Date();
@@ -29,6 +30,7 @@ interface Props {
 }
 
 export default async function LiquidacionesPage({ searchParams }: Props) {
+  await requireModule("settlements");
   const fmt = await getMoney();
   const { from, to } = await searchParams;
   const supabase = await createClient();

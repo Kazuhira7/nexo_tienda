@@ -3,10 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BanknoteIcon, CreditCardIcon, ArrowLeftRightIcon } from "lucide-react";
 import { getMoney } from "@/lib/get-currency";
+import { requireModule } from "@/lib/require-module";
 import CashClosureForm from "@/components/caja/cash-closure-form";
 import type { PaymentMethod } from "@/types/database";
 
 export default async function CajaPage() {
+  await requireModule("cash");
   const fmt = await getMoney();
   const supabase = await createClient();
   const today = new Date().toISOString().split("T")[0];

@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import EditOrgForm from "@/components/admin/edit-org-form";
 import CreateOrgUserForm from "@/components/admin/create-org-user-form";
+import OrgModulesForm from "@/components/admin/org-modules-form";
+import { VERTICAL_INFO } from "@/lib/modules";
 
 const CURRENCY_LABEL: Record<string, string> = { NIO: "C$ Córdoba", USD: "$ Dólar" };
 const MODEL_LABEL: Record<string, string> = {
@@ -54,6 +56,9 @@ export default async function OrgDetailPage({ params }: Props) {
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             <span className="font-mono text-xs bg-muted px-2 py-0.5 rounded">/{org.slug}</span>
             <Badge variant={org.active ? "outline" : "secondary"}>{org.active ? "Activo" : "Inactivo"}</Badge>
+            <Badge variant="outline" className="text-primary border-primary/40">
+              {VERTICAL_INFO[org.vertical]?.label ?? org.vertical}
+            </Badge>
             <span className="text-sm text-muted-foreground">{CURRENCY_LABEL[org.currency]}</span>
             <span className="text-sm text-muted-foreground">{MODEL_LABEL[org.settlement_model]}</span>
           </div>
@@ -65,6 +70,8 @@ export default async function OrgDetailPage({ params }: Props) {
         <div className="space-y-4">
           <h2 className="font-semibold text-base">Configuración</h2>
           <EditOrgForm org={org} />
+          <h2 className="font-semibold text-base pt-2">Módulos activos</h2>
+          <OrgModulesForm orgId={orgId} enabled={org.enabled_modules ?? []} />
         </div>
 
         {/* Usuarios */}

@@ -10,8 +10,10 @@ import ToggleBrandActive from "@/components/marcas/toggle-active";
 import UserDialog from "@/components/marcas/user-dialog";
 import EmptyState from "@/components/empty-state";
 import { getMoney } from "@/lib/get-currency";
+import { requireModule } from "@/lib/require-module";
 
 export default async function MarcasPage() {
+  await requireModule("brands");
   const fmt = await getMoney();
   const supabase = await createClient();
   const { data: brands } = await supabase

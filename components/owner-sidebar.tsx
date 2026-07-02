@@ -16,8 +16,16 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import UserMenu from "@/components/user-menu";
+import type { ModuleId } from "@/types/database";
 
-const NAV_SECTIONS = [
+interface NavItem {
+  href:    string;
+  label:   string;
+  icon:    typeof LayoutDashboardIcon;
+  module?: ModuleId; // undefined = always visible
+}
+
+const NAV_SECTIONS: { label?: string; items: NavItem[] }[] = [
   {
     items: [
       { href: "/dashboard",    label: "Inicio",        icon: LayoutDashboardIcon },
@@ -26,18 +34,18 @@ const NAV_SECTIONS = [
   {
     label: "Operaciones",
     items: [
-      { href: "/ventas",        label: "Ventas",        icon: ReceiptIcon },
-      { href: "/inventario",    label: "Inventario",    icon: PackageIcon },
-      { href: "/marcas",        label: "Marcas",        icon: StoreIcon },
-      { href: "/importar",      label: "Importar CSV",  icon: UploadIcon },
+      { href: "/ventas",        label: "Ventas",        icon: ReceiptIcon,    module: "pos" },
+      { href: "/inventario",    label: "Inventario",    icon: PackageIcon,    module: "inventory" },
+      { href: "/marcas",        label: "Marcas",        icon: StoreIcon,      module: "brands" },
+      { href: "/importar",      label: "Importar CSV",  icon: UploadIcon,     module: "inventory" },
     ],
   },
   {
     label: "Clientes y Finanzas",
     items: [
-      { href: "/caja",          label: "Cierre de caja", icon: CalculatorIcon },
-      { href: "/clientes",      label: "Clientes",      icon: UsersIcon },
-      { href: "/liquidaciones", label: "Liquidaciones", icon: WalletIcon },
+      { href: "/caja",          label: "Cierre de caja", icon: CalculatorIcon, module: "cash" },
+      { href: "/clientes",      label: "Clientes",      icon: UsersIcon,      module: "customers" },
+      { href: "/liquidaciones", label: "Liquidaciones", icon: WalletIcon,     module: "settlements" },
     ],
   },
 ];
@@ -45,9 +53,10 @@ const NAV_SECTIONS = [
 interface Props {
   userName: string;
   orgName?: string;
+  modules:  readonly string[];
 }
 
-export default function OwnerSidebar({ userName, orgName }: Props) {
+export default function OwnerSidebar({ userName, orgName, modules }: Props) {
   const pathname = usePathname();
 
   const isActive = (href: string) =>
@@ -59,6 +68,13 @@ export default function OwnerSidebar({ userName, orgName }: Props) {
         ? "bg-primary/10 text-primary"
         : "text-muted-foreground hover:text-foreground hover:bg-muted"
     }`;
+
+  const sections = NAV_SECTIONS
+    .map((s) => ({
+      ...s,
+      items: s.items.filter((i) => !i.module || modules.includes(i.module)),
+    }))
+    .filter((s) => s.items.length > 0);
 
   return (
     <aside className="hidden lg:flex flex-col fixed inset-y-0 left-0 w-56 border-r bg-card z-40">
@@ -73,22 +89,24 @@ export default function OwnerSidebar({ userName, orgName }: Props) {
       </div>
 
       {/* Botón Vender — CTA prominente */}
-      <div className="px-3 pt-4 pb-2">
-        <Link href="/ventas/nueva">
-          <Button
-            variant="cta"
-            className="w-full gap-2 font-semibold"
-            size="default"
-          >
-            <ShoppingCartIcon className="size-4" />
-            Nueva venta
-          </Button>
-        </Link>
-      </div>
+      {modules.includes("pos") && (
+        <div className="px-3 pt-4 pb-2">
+          <Link href="/ventas/nueva">
+            <Button
+              variant="cta"
+              className="w-full gap-2 font-semibold"
+              size="default"
+            >
+              <ShoppingCartIcon className="size-4" />
+              Nueva venta
+            </Button>
+          </Link>
+        </div>
+      )}
 
       {/* Navegación */}
       <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-5">
-        {NAV_SECTIONS.map((section, si) => (
+        {sections.map((section, si) => (
           <div key={si}>
             {section.label && (
               <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest px-3 mb-1">
