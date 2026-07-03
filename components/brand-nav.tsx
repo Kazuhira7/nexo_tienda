@@ -11,6 +11,7 @@ import {
   LayoutDashboardIcon,
   PackageIcon,
   ReceiptIcon,
+  WalletIcon,
 } from "lucide-react";
 import ThemeControls from "@/components/theme-controls";
 
@@ -18,6 +19,7 @@ const NAV_LINKS = [
   { href: "/mi-tienda",     label: "Inicio",        icon: LayoutDashboardIcon },
   { href: "/mi-inventario", label: "Mi inventario", icon: PackageIcon },
   { href: "/mis-ventas",    label: "Mis ventas",    icon: ReceiptIcon },
+  { href: "/mi-cuenta",     label: "Mi cuenta",     icon: WalletIcon },
 ];
 
 export default function BrandNav({

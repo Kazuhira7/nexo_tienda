@@ -21,7 +21,7 @@ export default async function OwnerDashboard() {
     { count: brandsCount },
     { count: productsCount },
     { data: todaySales },
-    { data: lowStockProducts },
+    { data: activeProductsStock },
   ] = await Promise.all([
     supabase.from("brands").select("*", { count: "exact", head: true }).eq("active", true),
     supabase.from("products").select("*", { count: "exact", head: true }).eq("active", true),
@@ -34,12 +34,15 @@ export default async function OwnerDashboard() {
     supabase
       .from("products")
       .select("id, name, stock_quantity, low_stock_threshold, brands(name)")
-      .eq("active", true)
-      .filter("stock_quantity", "lte", "low_stock_threshold")
-      .limit(5),
+      .eq("active", true),
   ]);
 
   const totalHoy = todaySales?.reduce((sum, s) => sum + s.total, 0) ?? 0;
+
+  // PostgREST can't compare two columns in a filter (22P02) — do it in JS
+  const lowStockProducts = (activeProductsStock ?? [])
+    .filter((p) => p.stock_quantity <= p.low_stock_threshold)
+    .slice(0, 5);
 
   return (
     <div className="space-y-6">
@@ -96,14 +99,14 @@ export default async function OwnerDashboard() {
       </div>
 
       {/* Alertas de stock bajo */}
-      {(lowStockProducts?.length ?? 0) > 0 && (
+      {lowStockProducts.length > 0 && (
         <Card className="border-destructive/50">
           <CardHeader className="pb-3">
             <CardTitle className="text-base text-destructive">Alertas de stock bajo</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <div className="divide-y">
-              {lowStockProducts!.map((p) => (
+              {lowStockProducts.map((p) => (
                 <div key={p.id} className="flex items-center justify-between px-4 py-2">
                   <div>
                     <p className="text-sm font-medium">{p.name}</p>

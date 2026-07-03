@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getMoney } from "@/lib/get-currency";
@@ -36,27 +37,12 @@ export default async function BrandDashboard() {
 
   const { start, end } = getPeriodRange();
 
-  const [
-    { count: activeProducts },
-    { count: lowStockProducts },
-    { data: periodItems },
-    { data: todayItems },
-  ] = await Promise.all([
+  const [{ data: products }, { data: saleItems }] = await Promise.all([
     supabase
       .from("products")
-      .select("*", { count: "exact", head: true })
+      .select("id, name, stock_quantity, low_stock_threshold, active")
       .eq("brand_id", brandId)
       .eq("active", true),
-    supabase
-      .from("products")
-      .select("*", { count: "exact", head: true })
-      .eq("brand_id", brandId)
-      .eq("active", true)
-      .lte("stock_quantity", 5),
-    supabase
-      .from("sale_items")
-      .select("line_total, sales(created_at, cancelled)")
-      .eq("brand_id", brandId),
     supabase
       .from("sale_items")
       .select("line_total, sales(created_at, cancelled)")
@@ -65,22 +51,27 @@ export default async function BrandDashboard() {
 
   const todayStr = new Date().toISOString().split("T")[0];
 
-  const totalPeriodo = (periodItems ?? [])
+  // Single fetch, two aggregations (exclude cancelled sales)
+  const validItems = (saleItems ?? []).filter((i) => {
+    const s = i.sales as { created_at: string; cancelled: boolean } | null;
+    return s && !s.cancelled;
+  });
+
+  const totalPeriodo = validItems
     .filter((i) => {
-      const s = i.sales as { created_at: string; cancelled: boolean } | null;
-      if (!s || s.cancelled) return false;
-      const d = new Date(s.created_at);
+      const d = new Date((i.sales as { created_at: string }).created_at);
       return d >= start && d <= end;
     })
     .reduce((sum, i) => sum + i.line_total, 0);
 
-  const totalHoy = (todayItems ?? [])
-    .filter((i) => {
-      const s = i.sales as { created_at: string; cancelled: boolean } | null;
-      if (!s || s.cancelled) return false;
-      return s.created_at.startsWith(todayStr);
-    })
+  const totalHoy = validItems
+    .filter((i) => (i.sales as { created_at: string }).created_at.startsWith(todayStr))
     .reduce((sum, i) => sum + i.line_total, 0);
+
+  // Real per-product threshold — PostgREST can't compare columns, do it in JS
+  const lowStock = (products ?? []).filter(
+    (p) => p.stock_quantity <= p.low_stock_threshold
+  );
 
   const periodoLabel = start.getDate() === 1
     ? `1–15 de ${start.toLocaleDateString("es-NI", { month: "long" })}`
@@ -119,20 +110,41 @@ export default async function BrandDashboard() {
             <CardTitle className="text-xs text-muted-foreground">Productos activos</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-xl font-bold">{activeProducts ?? 0}</p>
+            <p className="text-xl font-bold">{products?.length ?? 0}</p>
           </CardContent>
         </Card>
-        <Card className={(lowStockProducts ?? 0) > 0 ? "border-destructive" : ""}>
+        <Card className={lowStock.length > 0 ? "border-destructive" : ""}>
           <CardHeader className="pb-2">
             <CardTitle className="text-xs text-muted-foreground">Stock bajo</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className={`text-xl font-bold ${(lowStockProducts ?? 0) > 0 ? "text-destructive" : ""}`}>
-              {lowStockProducts ?? 0}
+            <p className={`text-xl font-bold ${lowStock.length > 0 ? "text-destructive" : ""}`}>
+              {lowStock.length}
             </p>
           </CardContent>
         </Card>
       </div>
+
+      {/* Alertas de stock bajo — detalle */}
+      {lowStock.length > 0 && (
+        <Card className="border-destructive/50">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base text-destructive">
+              Productos por agotarse
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="divide-y">
+              {lowStock.slice(0, 5).map((p) => (
+                <div key={p.id} className="flex items-center justify-between px-4 py-2">
+                  <p className="text-sm font-medium">{p.name}</p>
+                  <Badge variant="destructive">{p.stock_quantity} uds.</Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {brand?.space_fee ? (
         <Card className="bg-muted/40">
@@ -145,7 +157,10 @@ export default async function BrandDashboard() {
         </Card>
       ) : null}
 
-      <div className="flex gap-3">
+      <div className="flex gap-3 flex-wrap">
+        <Link href="/mi-cuenta">
+          <Button variant="cta">Mi estado de cuenta</Button>
+        </Link>
         <Link href="/mis-ventas">
           <Button variant="outline">Ver reporte quincenal</Button>
         </Link>
