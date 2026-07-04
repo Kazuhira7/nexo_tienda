@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { homeRoute } from "@/lib/home-route";
 import { Button } from "@/components/ui/button";
@@ -102,11 +103,20 @@ export default function LoginPage() {
         >
           {loading ? "Ingresando…" : "Entrar"}
         </Button>
+
+        <p className="text-center text-sm">
+          <Link href="/recuperar" className="text-muted-foreground hover:text-primary hover:underline">
+            ¿Olvidaste tu contraseña?
+          </Link>
+        </p>
       </form>
 
-      <p className="text-center text-xs text-muted-foreground">
-        ¿Problemas para entrar? Contacta a tu administradora.
-      </p>
+      <div className="border-t pt-5 text-center space-y-1">
+        <p className="text-sm text-muted-foreground">¿Tienes un negocio?</p>
+        <Link href="/registro" className="text-primary font-semibold text-sm hover:underline">
+          Crea tu cuenta gratis →
+        </Link>
+      </div>
     </div>
   );
 }

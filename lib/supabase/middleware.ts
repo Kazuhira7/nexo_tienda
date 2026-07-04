@@ -33,9 +33,16 @@ export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // Public routes that don't require auth
-  if (pathname.startsWith("/login") || pathname.startsWith("/_next")) {
-    if (user && pathname.startsWith("/login")) {
-      // Redirect authenticated users away from login
+  const isPublic =
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/registro") ||
+    pathname.startsWith("/recuperar") ||
+    pathname.startsWith("/auth") ||
+    pathname.startsWith("/_next");
+
+  if (isPublic) {
+    if (user && (pathname.startsWith("/login") || pathname.startsWith("/registro"))) {
+      // Redirect authenticated users away from login/signup
       return redirectByRole(user.id, supabase, request);
     }
     return supabaseResponse;

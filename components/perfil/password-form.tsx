@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 
-export default function PasswordForm() {
+export default function PasswordForm({ redirectAfter }: { redirectAfter?: string }) {
   const [newPass, setNewPass]     = useState("");
   const [confirmPass, setConfirm] = useState("");
   const [showPass, setShowPass]   = useState(false);
@@ -27,6 +27,7 @@ export default function PasswordForm() {
     if (error) { toast.error(error.message); return; }
     toast.success("Contraseña actualizada correctamente");
     setNewPass(""); setConfirm("");
+    if (redirectAfter) window.location.href = redirectAfter;
   }
 
   const strong = newPass.length >= 8;
