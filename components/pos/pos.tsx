@@ -68,6 +68,7 @@ export default function POS({ soldBy, customers }: Props) {
     total: number;
     items: CartItem[];
     paymentMethod: string;
+    saleId: string;
   } | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
 
@@ -192,7 +193,7 @@ export default function POS({ soldBy, customers }: Props) {
     }
 
     // Mostrar confirmación con los items y dejar que la usuaria decida
-    setConfirmed({ total, items: cart, paymentMethod });
+    setConfirmed({ total, items: cart, paymentMethod, saleId: saleId as string });
   }
 
   // Pantalla de confirmación mejorada
@@ -219,7 +220,7 @@ export default function POS({ soldBy, customers }: Props) {
         <div>
           <h2 className="text-2xl font-bold font-heading">¡Venta registrada!</h2>
           <p className="text-4xl font-bold text-primary mt-2">
-            C${confirmed.total.toFixed(2)}
+            {money(confirmed.total)}
           </p>
           <p className="text-muted-foreground mt-1">{PAYMENT_LABELS[confirmed.paymentMethod]}</p>
         </div>
@@ -232,7 +233,7 @@ export default function POS({ soldBy, customers }: Props) {
                 {item.quantity}× {item.name}
               </span>
               <span className="font-medium">
-                C${((item.unit_price - item.discount) * item.quantity).toFixed(2)}
+                {money((item.unit_price - item.discount) * item.quantity)}
               </span>
             </div>
           ))}
@@ -240,8 +241,8 @@ export default function POS({ soldBy, customers }: Props) {
 
         {/* Acciones */}
         <div className="flex gap-3 w-full max-w-sm">
-          <Button variant="outline" className="flex-1" onClick={() => router.push("/ventas")}>
-            Ver ventas
+          <Button variant="outline" className="flex-1" onClick={() => router.push(`/ventas/${confirmed.saleId}`)}>
+            Ver recibo
           </Button>
           <Button
             variant="cta"

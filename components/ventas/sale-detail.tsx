@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ChevronDownIcon, ChevronUpIcon, ReceiptIcon } from "lucide-react";
+import { useMoney } from "@/components/org-provider";
 
 type SaleItem = {
   brand_name: string;
@@ -15,6 +18,7 @@ type SaleItem = {
 };
 
 interface Props {
+  saleId: string;
   saleNumber: number;
   date: string;
   total: number;
@@ -30,9 +34,10 @@ const PAYMENT_LABELS: Record<string, string> = {
 };
 
 export default function SaleDetail({
-  saleNumber, date, total, paymentMethod, customerName, discountTotal, isCancelled, items,
+  saleId, saleNumber, date, total, paymentMethod, customerName, discountTotal, isCancelled, items,
 }: Props) {
   const [expanded, setExpanded] = useState(false);
+  const money = useMoney();
 
   return (
     <div className={`rounded-xl border bg-card transition-all ${isCancelled ? "opacity-50" : ""}`}>
@@ -52,13 +57,13 @@ export default function SaleDetail({
               {isCancelled ? "Anulada" : PAYMENT_LABELS[paymentMethod]}
             </Badge>
             {discountTotal > 0 && (
-              <span className="text-xs text-muted-foreground">−C${discountTotal.toFixed(2)} dto.</span>
+              <span className="text-xs text-muted-foreground">−{money(discountTotal)} dto.</span>
             )}
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <span className={`font-bold text-lg ${isCancelled ? "line-through text-muted-foreground" : ""}`}>
-            C${total.toFixed(2)}
+            {money(total)}
           </span>
           {expanded
             ? <ChevronUpIcon className="size-4 text-muted-foreground" />
@@ -83,13 +88,20 @@ export default function SaleDetail({
                 </p>
               </div>
               <div className="text-right shrink-0">
-                <p className="font-semibold">C${item.line_total.toFixed(2)}</p>
+                <p className="font-semibold">{money(item.line_total)}</p>
                 {item.discount > 0 && (
-                  <p className="text-xs text-muted-foreground">−C${item.discount.toFixed(2)} dto.</p>
+                  <p className="text-xs text-muted-foreground">−{money(item.discount)} dto.</p>
                 )}
               </div>
             </div>
           ))}
+          <div className="pt-2">
+            <Link href={`/ventas/${saleId}`}>
+              <Button variant="outline" size="sm" className="w-full gap-1.5">
+                <ReceiptIcon className="size-4" /> Ver recibo
+              </Button>
+            </Link>
+          </div>
         </div>
       )}
     </div>

@@ -136,7 +136,12 @@ export default async function VentasPage({ searchParams }: Props) {
                           : `${fmt(sale.total)}`}
                       </TableCell>
                       <TableCell className="text-right">
-                        {!isCancelled && <CancelSaleButton saleId={sale.id} saleNumber={sale.sale_number} />}
+                        <div className="flex justify-end items-center gap-1">
+                          <Link href={`/ventas/${sale.id}`}>
+                            <Button variant="ghost" size="sm">Recibo</Button>
+                          </Link>
+                          {!isCancelled && <CancelSaleButton saleId={sale.id} saleNumber={sale.sale_number} />}
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -166,6 +171,7 @@ export default async function VentasPage({ searchParams }: Props) {
               return (
                 <SaleDetail
                   key={sale.id}
+                  saleId={sale.id}
                   saleNumber={sale.sale_number}
                   date={new Date(sale.created_at).toLocaleString("es-NI", {
                     month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
