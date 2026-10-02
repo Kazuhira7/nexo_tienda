@@ -18,7 +18,7 @@ NEXO CORE (se construye una vez)
 VERTICALES (presets de módulos + pantallas propias)
   colectivo    → + marcas, liquidaciones, cuotas      [EN PRODUCCIÓN]
   retail       → + variantes, e-commerce, tienda web  [SIGUIENTE]
-  restaurante  → + mesas, comandas, cocina, delivery  [DESPUÉS]
+  restaurante  → + mesas, comandas, cocina, delivery  [EN CONSTRUCCIÓN — clienta real, ver docs/RESTAURANTE.md]
 ```
 
 Reglas de arquitectura:
@@ -38,14 +38,26 @@ Reglas de arquitectura:
 - Moneda configurable con conversión real NIO↔USD (`lib/money.ts`, `getMoney()`/`useMoney()`).
 - **Sistema de módulos** (Fase B parcial): registro en `lib/modules.ts`, contexto en `lib/org-context.ts`, guards `requireModule()`, navegación dinámica, gestión de módulos por org en el admin.
 
+**Oct 2026 — vertical restaurante adelantado** (llegó clienta real; detalle en `docs/RESTAURANTE.md`):
+- Migraciones `006a_terminal_role` + `006_restaurante` aplicadas: tablas del restaurante + órdenes por RPC atómicas.
+- **Equipo con PIN (Core, sirve a cualquier vertical):** rol de auth `terminal` = "cuenta del local" abierta una vez
+  por dispositivo; cada empleado opera con PIN de 4 dígitos y permisos por puesto (`staff_members`,
+  `lib/permissions.ts`, `lib/staff-session.ts`). Toda RPC operativa exige sesión de PIN.
+- Navegación unificada en `components/nav-items.ts` (filtrada por módulo **y** rol) y shell compartido
+  `components/app-shell.tsx`. Todo redirect de rol pasa por `/` → `homeRoute(role, vertical)`.
+- Módulos nuevos `restaurant` y `kitchen`; preset restaurante = `restaurant, kitchen, customers, cash`.
+
 **Deuda / pendientes conocidos:**
+- ⚠️ `register_sale` y `cancel_sale` (Core) son ejecutables por `anon` y no validan usuario ni org (advisor de
+  Supabase). Corregir con una migración 007 antes de vender a más clientes.
+- `/caja` calcula "hoy" en UTC → ventas nocturnas caen al día siguiente en Nicaragua.
 - La clienta nunca definió la regla de cobro de cuotas → `brand_payments` es un libro manual flexible; automatizar cuando haya regla.
 - `products.brand_id` y `sale_items.brand_id` son NOT NULL (herencia colectivo). Para retail hay que hacerlos nullable y ajustar POS/formularios. **Hacerlo al construir retail, no antes.**
 - Separación física `lib/core/` vs `lib/colectivo/` aún no hecha (la separación lógica vía módulos sí).
 - Portal de marca (A3) incompleto; alertas de stock en dashboard sí existen.
 - ⚠️ El proyecto Supabase es plan gratuito y **se pausa por inactividad** → producción se cae. Para vender esto se necesita plan Pro.
 
-**Historia de BD** en `docs/db/` (correr en orden en una base nueva): `000_schema_base` → `001_multitenant` → `002_cash_closures` → `003_brand_payments` → `004_platform_modules`.
+**Historia de BD** en `docs/db/` (correr en orden en una base nueva): `000_schema_base` → `001_multitenant` → `002_cash_closures` → `003_brand_payments` → `004_platform_modules` → `005_fix_handle_new_user` → `006a_terminal_role` (sola) → `006_restaurante`.
 
 ---
 
@@ -76,14 +88,15 @@ Sistema de módulos ✔ · navegación dinámica ✔ · admin de módulos ✔ ·
 **Etapa 4 — Vertical retail completo**
 Variantes de producto (talla/color), `brand_id` nullable, catálogo web con carrito, códigos de barras. Reutiliza ~80% del core.
 
-**Etapa 5 — Vertical restaurante**
-POS propio (mesas, comandas, cocina en tiempo real, delivery). Solo con ingresos/equipo — es casi otro producto.
+**Etapa 5 — Vertical restaurante** ← ADELANTADA (oct 2026, clienta real)
+POS propio (mesas, comandas, cocina en tiempo real, delivery). Roadmap R1/R2/R3 en `docs/RESTAURANTE.md`.
 
 ---
 
 ## 5. Guardrails
 
 - RLS activo en toda tabla nueva, con policies owner/brand/superadmin filtrando por `organization_id`.
+- Acciones operativas en dispositivos compartidos: RPC con `p_staff_token` + `require_staff(token, permiso)`; nunca confiar en quién dice el cliente que es.
 - `service_role key` jamás al navegador.
 - Toda pantalla de módulo lleva `requireModule()` además del filtro de navegación (defensa en profundidad).
 - No construir features de un vertical futuro "ya que estamos".

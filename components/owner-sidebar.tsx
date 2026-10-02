@@ -2,65 +2,25 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  LayoutDashboardIcon,
-  ShoppingCartIcon,
-  ReceiptIcon,
-  PackageIcon,
-  WalletIcon,
-  UsersIcon,
-  StoreIcon,
-  UploadIcon,
-  SettingsIcon,
-  CalculatorIcon,
-} from "lucide-react";
+import { ShoppingCartIcon, SettingsIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import UserMenu from "@/components/user-menu";
-import type { ModuleId } from "@/types/database";
+import { NAV_SECTION_LABELS, isNavActive, visibleNavItems, type NavItem } from "@/components/nav-items";
+import type { UserRole } from "@/types/database";
 
-interface NavItem {
-  href:    string;
-  label:   string;
-  icon:    typeof LayoutDashboardIcon;
-  module?: ModuleId; // undefined = always visible
-}
-
-const NAV_SECTIONS: { label?: string; items: NavItem[] }[] = [
-  {
-    items: [
-      { href: "/dashboard",    label: "Inicio",        icon: LayoutDashboardIcon },
-    ],
-  },
-  {
-    label: "Operaciones",
-    items: [
-      { href: "/ventas",        label: "Ventas",        icon: ReceiptIcon,    module: "pos" },
-      { href: "/inventario",    label: "Inventario",    icon: PackageIcon,    module: "inventory" },
-      { href: "/marcas",        label: "Marcas",        icon: StoreIcon,      module: "brands" },
-      { href: "/importar",      label: "Importar CSV",  icon: UploadIcon,     module: "inventory" },
-    ],
-  },
-  {
-    label: "Clientes y Finanzas",
-    items: [
-      { href: "/caja",          label: "Cierre de caja", icon: CalculatorIcon, module: "cash" },
-      { href: "/clientes",      label: "Clientes",      icon: UsersIcon,      module: "customers" },
-      { href: "/liquidaciones", label: "Liquidaciones", icon: WalletIcon,     module: "settlements" },
-    ],
-  },
-];
+const SIDEBAR_SECTIONS: NavItem["section"][] = ["main", "operations", "finance"];
 
 interface Props {
   userName: string;
   orgName?: string;
   modules:  readonly string[];
+  role?:    UserRole;
 }
 
-export default function OwnerSidebar({ userName, orgName, modules }: Props) {
+export default function OwnerSidebar({ userName, orgName, modules, role = "owner" }: Props) {
   const pathname = usePathname();
 
-  const isActive = (href: string) =>
-    pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
+  const isActive = (href: string) => isNavActive(pathname, href);
 
   const linkClass = (href: string) =>
     `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
@@ -69,10 +29,12 @@ export default function OwnerSidebar({ userName, orgName, modules }: Props) {
         : "text-muted-foreground hover:text-foreground hover:bg-muted"
     }`;
 
-  const sections = NAV_SECTIONS
-    .map((s) => ({
-      ...s,
-      items: s.items.filter((i) => !i.module || modules.includes(i.module)),
+  // "/ventas/nueva" is the CTA button, not a list item
+  const items = visibleNavItems(modules, role).filter((i) => i.href !== "/ventas/nueva");
+  const sections = SIDEBAR_SECTIONS
+    .map((section) => ({
+      label: NAV_SECTION_LABELS[section],
+      items: items.filter((i) => i.section === section),
     }))
     .filter((s) => s.items.length > 0);
 
@@ -80,7 +42,7 @@ export default function OwnerSidebar({ userName, orgName, modules }: Props) {
     <aside className="hidden lg:flex flex-col fixed inset-y-0 left-0 w-56 border-r bg-card z-40">
       {/* Logo + org */}
       <div className="px-4 py-5 border-b">
-        <Link href="/dashboard" className="block">
+        <Link href="/" className="block">
           <p className="text-xl font-bold font-heading text-primary leading-none">nexo</p>
           {orgName && (
             <p className="text-xs text-muted-foreground mt-1 truncate">{orgName}</p>
@@ -89,7 +51,7 @@ export default function OwnerSidebar({ userName, orgName, modules }: Props) {
       </div>
 
       {/* Botón Vender — CTA prominente */}
-      {modules.includes("pos") && (
+      {role === "owner" && modules.includes("pos") && (
         <div className="px-3 pt-4 pb-2">
           <Link href="/ventas/nueva">
             <Button
@@ -127,12 +89,14 @@ export default function OwnerSidebar({ userName, orgName, modules }: Props) {
 
       {/* Fondo del sidebar */}
       <div className="border-t px-3 py-3 space-y-1">
-        <Link href="/configuracion" className={linkClass("/configuracion")}>
-          <SettingsIcon className="size-4 shrink-0" />
-          Configuración
-        </Link>
+        {role === "owner" && (
+          <Link href="/configuracion" className={linkClass("/configuracion")}>
+            <SettingsIcon className="size-4 shrink-0" />
+            Configuración
+          </Link>
+        )}
         <div className="pt-1">
-          <UserMenu userName={userName} orgName={orgName} />
+          <UserMenu userName={userName} orgName={orgName} showPersonal={role === "owner"} />
         </div>
       </div>
     </aside>

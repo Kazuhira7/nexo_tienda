@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { switchUser } from "@/lib/staff-actions";
 import { UserIcon, LogOutIcon, PaletteIcon } from "lucide-react";
 
 function Avatar({ name }: { name: string }) {
@@ -14,9 +15,9 @@ function Avatar({ name }: { name: string }) {
   );
 }
 
-interface Props { userName: string; orgName?: string }
+interface Props { userName: string; orgName?: string; showPersonal?: boolean }
 
-export default function UserMenu({ userName, orgName }: Props) {
+export default function UserMenu({ userName, orgName, showPersonal = true }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -29,6 +30,7 @@ export default function UserMenu({ userName, orgName }: Props) {
   }, []);
 
   async function handleLogout() {
+    await switchUser(); // close any staff PIN session on this device too
     const supabase = createClient();
     await supabase.auth.signOut();
     window.location.href = "/login";
@@ -56,24 +58,26 @@ export default function UserMenu({ userName, orgName }: Props) {
           </div>
 
           {/* Opciones personales */}
-          <div className="py-1">
-            <Link
-              href="/perfil"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors"
-            >
-              <UserIcon className="size-4 text-muted-foreground" />
-              Mi perfil y contraseña
-            </Link>
-            <Link
-              href="/apariencia"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors"
-            >
-              <PaletteIcon className="size-4 text-muted-foreground" />
-              Apariencia
-            </Link>
-          </div>
+          {showPersonal && (
+            <div className="py-1">
+              <Link
+                href="/perfil"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors"
+              >
+                <UserIcon className="size-4 text-muted-foreground" />
+                Mi perfil y contraseña
+              </Link>
+              <Link
+                href="/apariencia"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors"
+              >
+                <PaletteIcon className="size-4 text-muted-foreground" />
+                Apariencia
+              </Link>
+            </div>
+          )}
 
           {/* Salir */}
           <div className="border-t py-1">

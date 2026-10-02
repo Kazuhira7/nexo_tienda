@@ -58,6 +58,7 @@ export default function CreateOrgUserForm({ orgId }: { orgId: string }) {
                   <SelectContent>
                     <SelectItem value="owner">Dueña (owner)</SelectItem>
                     <SelectItem value="brand">Marca (brand)</SelectItem>
+                    <SelectItem value="terminal">Cuenta del local (dispositivos)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

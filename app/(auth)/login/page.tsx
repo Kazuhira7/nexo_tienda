@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { homeRoute } from "@/lib/home-route";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,18 +30,9 @@ export default function LoginPage() {
       return;
     }
 
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (user) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
-
-      // Full page reload so the server proxy reads the new session cookie
-      window.location.href = homeRoute(profile?.role);
-    }
+    // Full page reload so the server proxy reads the new session cookie;
+    // "/" resolves the home route from role + org vertical.
+    window.location.href = "/";
   }
 
   return (

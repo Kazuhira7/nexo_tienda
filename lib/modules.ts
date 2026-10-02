@@ -9,6 +9,8 @@ export const MODULES: Record<ModuleId, { label: string; description: string }> =
   cash:        { label: "Cierre de caja",  description: "Cuadre diario de efectivo" },
   brands:      { label: "Marcas",          description: "Marcas en consignación y estados de cuenta" },
   settlements: { label: "Liquidaciones",   description: "Liquidaciones periódicas a marcas" },
+  restaurant:  { label: "Salón y órdenes", description: "Mesas, comandas, cobro, menú y equipo con PIN" },
+  kitchen:     { label: "Pantalla de cocina", description: "Comandas en tiempo real para cocina (KDS)" },
 };
 
 export const MODULE_IDS = Object.keys(MODULES) as ModuleId[];
@@ -16,13 +18,13 @@ export const MODULE_IDS = Object.keys(MODULES) as ModuleId[];
 export const VERTICAL_INFO: Record<VerticalType, { label: string; description: string }> = {
   colectivo:   { label: "Tienda colectiva", description: "Varias marcas venden bajo un mismo techo (consignación)" },
   retail:      { label: "Tienda / retail",  description: "Conveniencia, ropa o comercio general" },
-  restaurante: { label: "Restaurante",      description: "Mesas, comandas y cocina (próximamente)" },
+  restaurante: { label: "Restaurante",      description: "Mesas, comandas y cocina" },
 };
 
 export const VERTICAL_PRESETS: Record<VerticalType, ModuleId[]> = {
   colectivo:   ["pos", "inventory", "customers", "cash", "brands", "settlements"],
   retail:      ["pos", "inventory", "customers", "cash"],
-  restaurante: ["pos", "inventory", "customers", "cash"],
+  restaurante: ["restaurant", "kitchen", "customers", "cash"],
 };
 
 export function hasModule(

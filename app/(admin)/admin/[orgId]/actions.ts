@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { MODULE_IDS } from "@/lib/modules";
+import type { ModuleId } from "@/types/database";
 import { z } from "zod";
 
 // ── Editar organización ───────────────────────────────────────
@@ -34,9 +36,7 @@ export async function updateOrganization(orgId: string, formData: FormData) {
 }
 
 // ── Módulos activos de una org ────────────────────────────────
-const ModulesSchema = z.array(
-  z.enum(["pos", "inventory", "customers", "cash", "brands", "settlements"])
-);
+const ModulesSchema = z.array(z.enum(MODULE_IDS as [ModuleId, ...ModuleId[]]));
 
 export async function updateOrgModules(orgId: string, modules: string[]) {
   const parsed = ModulesSchema.safeParse(modules);
@@ -65,7 +65,7 @@ const CreateUserSchema = z.object({
   full_name: z.string().min(1),
   email:     z.string().email(),
   password:  z.string().min(8),
-  role:      z.enum(["owner", "brand"]),
+  role:      z.enum(["owner", "brand", "terminal"]),
 });
 
 export async function createOrgUser(orgId: string, formData: FormData) {

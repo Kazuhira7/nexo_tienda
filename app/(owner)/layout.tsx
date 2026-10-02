@@ -1,9 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import OwnerSidebar from "@/components/owner-sidebar";
-import MobileHeader from "@/components/mobile-header";
-import MobileBottomNav from "@/components/mobile-bottom-nav";
-import { OrgProvider } from "@/components/org-provider";
+import AppShell from "@/components/app-shell";
 import type { CurrencyCode, ModuleId, VerticalType } from "@/types/database";
 
 export default async function OwnerLayout({ children }: { children: React.ReactNode }) {
@@ -17,7 +14,7 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
     .eq("id", user.id)
     .single();
 
-  if (!profile || profile.role !== "owner") redirect("/mi-tienda");
+  if (!profile || profile.role !== "owner") redirect("/");
 
   const orgData = profile.organizations as {
     name:            string;
@@ -27,31 +24,17 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
     enabled_modules: ModuleId[];
   } | null;
 
-  const orgName      = orgData?.name ?? "Mi Tienda";
-  const currency     = orgData?.currency ?? "NIO";
-  const exchangeRate = orgData?.exchange_rate ?? 36.63;
-  const vertical     = orgData?.vertical ?? "colectivo";
-  const modules      = orgData?.enabled_modules ?? [];
-  const userName     = profile.full_name ?? user.email ?? "Dueña";
-
   return (
-    <OrgProvider
-      currency={currency}
-      exchangeRate={exchangeRate}
-      orgName={orgName}
-      vertical={vertical}
-      modules={modules}
+    <AppShell
+      userName={profile.full_name ?? user.email ?? "Dueña"}
+      orgName={orgData?.name ?? "Mi Tienda"}
+      currency={orgData?.currency ?? "NIO"}
+      exchangeRate={orgData?.exchange_rate ?? 36.63}
+      vertical={orgData?.vertical ?? "colectivo"}
+      modules={orgData?.enabled_modules ?? []}
+      role="owner"
     >
-      <div className="min-h-screen bg-background">
-        <OwnerSidebar userName={userName} orgName={orgName} modules={modules} />
-        <div className="lg:pl-56">
-          <MobileHeader userName={userName} orgName={orgName} />
-          <main className="p-4 sm:p-6 pb-24 lg:pb-8 min-h-screen">
-            {children}
-          </main>
-        </div>
-        <MobileBottomNav modules={modules} />
-      </div>
-    </OrgProvider>
+      {children}
+    </AppShell>
   );
 }

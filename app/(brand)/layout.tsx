@@ -20,7 +20,7 @@ export default async function BrandLayout({
     .eq("id", user.id)
     .single();
 
-  if (!profile || profile.role !== "brand") redirect("/dashboard");
+  if (!profile || profile.role !== "brand") redirect("/");
 
   const brandName =
     (profile.brands as { name: string } | null)?.name ?? "Mi tienda";

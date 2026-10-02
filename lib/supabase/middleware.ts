@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import type { Database } from "@/types/database";
+import type { Database, VerticalType } from "@/types/database";
+import { homeRoute } from "@/lib/home-route";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -65,13 +66,12 @@ async function redirectByRole(
 ) {
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, organizations(vertical)")
     .eq("id", userId)
     .single();
 
+  const vertical = (profile?.organizations as { vertical: VerticalType } | null)?.vertical;
   const url = request.nextUrl.clone();
-  if (profile?.role === "superadmin") url.pathname = "/admin";
-  else if (profile?.role === "owner") url.pathname = "/dashboard";
-  else url.pathname = "/mi-tienda";
+  url.pathname = homeRoute(profile?.role, vertical);
   return NextResponse.redirect(url);
 }
