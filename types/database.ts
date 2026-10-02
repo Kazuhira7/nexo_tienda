@@ -57,6 +57,7 @@ export type Database = {
           exchange_rate:      number;
           vertical:           VerticalType;
           enabled_modules:    ModuleId[];
+          timezone:           string;
           active:             boolean;
           created_at:         string;
         };
@@ -70,6 +71,7 @@ export type Database = {
           exchange_rate?:     number;
           vertical?:          VerticalType;
           enabled_modules?:   ModuleId[];
+          timezone?:          string;
           active?:            boolean;
           created_at?:        string;
         };
@@ -83,6 +85,7 @@ export type Database = {
           exchange_rate?:     number;
           vertical?:          VerticalType;
           enabled_modules?:   ModuleId[];
+          timezone?:          string;
           active?:            boolean;
           created_at?:        string;
         };

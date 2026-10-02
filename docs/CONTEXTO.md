@@ -45,19 +45,20 @@ Reglas de arquitectura:
   `lib/permissions.ts`, `lib/staff-session.ts`). Toda RPC operativa exige sesión de PIN.
 - Navegación unificada en `components/nav-items.ts` (filtrada por módulo **y** rol) y shell compartido
   `components/app-shell.tsx`. Todo redirect de rol pasa por `/` → `homeRoute(role, vertical)`.
-- Módulos nuevos `restaurant` y `kitchen`; preset restaurante = `restaurant, kitchen, customers, cash`.
+- Módulos nuevos `restaurant` y `kitchen`; preset restaurante = `restaurant, customers, cash` (`kitchen` opcional por org).
+- `organizations.timezone` (007) + `lib/dates.ts`: "hoy" se calcula en la hora local del negocio.
 
 **Deuda / pendientes conocidos:**
 - ⚠️ `register_sale` y `cancel_sale` (Core) son ejecutables por `anon` y no validan usuario ni org (advisor de
   Supabase). Corregir con una migración 007 antes de vender a más clientes.
-- `/caja` calcula "hoy" en UTC → ventas nocturnas caen al día siguiente en Nicaragua.
+- Páginas del colectivo (ventas, liquidaciones, reporte por marca, portal de marca) aún calculan fechas en UTC.
 - La clienta nunca definió la regla de cobro de cuotas → `brand_payments` es un libro manual flexible; automatizar cuando haya regla.
 - `products.brand_id` y `sale_items.brand_id` son NOT NULL (herencia colectivo). Para retail hay que hacerlos nullable y ajustar POS/formularios. **Hacerlo al construir retail, no antes.**
 - Separación física `lib/core/` vs `lib/colectivo/` aún no hecha (la separación lógica vía módulos sí).
 - Portal de marca (A3) incompleto; alertas de stock en dashboard sí existen.
 - ⚠️ El proyecto Supabase es plan gratuito y **se pausa por inactividad** → producción se cae. Para vender esto se necesita plan Pro.
 
-**Historia de BD** en `docs/db/` (correr en orden en una base nueva): `000_schema_base` → `001_multitenant` → `002_cash_closures` → `003_brand_payments` → `004_platform_modules` → `005_fix_handle_new_user` → `006a_terminal_role` (sola) → `006_restaurante`.
+**Historia de BD** en `docs/db/` (correr en orden en una base nueva): `000_schema_base` → `001_multitenant` → `002_cash_closures` → `003_brand_payments` → `004_platform_modules` → `005_fix_handle_new_user` → `006a_terminal_role` (sola) → `006_restaurante` → `007_org_timezone`.
 
 ---
 

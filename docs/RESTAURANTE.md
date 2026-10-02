@@ -15,6 +15,19 @@ se adelanta respecto al roadmap de CONTEXTO v3.
 Se construye **una versión de restaurante que sirva a la mayoría**, no algo a la medida de la clienta. Mismo
 código, misma BD, mismo deploy.
 
+**Respuestas de la clienta (2 oct 2026):**
+- Hoy toma pedidos en papel y lleva la comanda de papel a cocina.
+- Los kioscos funcionan igual que las mesas (con número).
+- Vende para llevar; no hace delivery.
+- Calcula unas 4–5 mesas al día. Abre todos los días de 8 am a 10 pm.
+- Tiene 17 platillos y el menú no cambia. Cobra extras de comida con costo. No tiene combos.
+- Solo maneja córdobas.
+- Acepta efectivo, POS y transferencia.
+- **Sí divide cuentas** (grupos). **No cobra propina.**
+- Por ahora no quiere inventario.
+- Tiene **una computadora y una tablet**. No tiene impresora térmica (quiere comprar una). Tiene buen internet.
+- **Lo necesita antes del 1 de noviembre 2026.** Presupuesto: barato.
+
 **Prioridad de diseño: velocidad.** El mesero toma una orden completa en el celular, con una mano, de pie junto a la
 mesa. Si una acción frecuente toma más de 3 toques, está mal diseñada.
 
@@ -26,8 +39,9 @@ mesa. Si una acción frecuente toma más de 3 toques, está mal diseñada.
 - **Lo que se ve lo deciden los módulos** (`organizations.enabled_modules`, `lib/modules.ts`):
   - `restaurant`: salón, órdenes, cobro, menú, mesas y equipo.
   - `kitchen`: pantalla de cocina. Va aparte porque algunos negocios usan ticket impreso.
-  - Preset del vertical: `restaurant, kitchen, customers, cash`. No incluye `pos` ni `inventory`, porque el POS
-    colectivo exige `brand_id`.
+  - Preset del vertical: `restaurant, customers, cash`. No incluye `pos` ni `inventory`, porque el POS
+    colectivo exige `brand_id`. `kitchen` (pantalla de cocina) se activa por org cuando haya un dispositivo
+    en cocina; la primera clienta no lo tiene.
 - La navegación sale de `components/nav-items.ts`, filtrada por módulo **y** rol. Nada de sidebars por tipo de
   negocio.
 - `homeRoute(role, vertical)` en `lib/home-route.ts`:
@@ -129,8 +143,8 @@ Las que tienen ✔ ya existen. Las demás son de los siguientes pasos de R1.
 | `/cocina` | `(restaurante)` | PIN | KDS para tablet horizontal, modo oscuro, Realtime + sonido, la más antigua primero. "Preparando" → "Listo". *(placeholder ✔)* |
 | `/cobrar/[id]` | `(restaurante)` | PIN | Pre-cuenta imprimible a 80 mm, descuento, propina, método de pago, cliente opcional. Llama a `close_order`. |
 | `/equipo` | `(owner)` | owner | Equipo, puestos, permisos y PINs. ✔ |
-| `/menu` | `(owner)` | owner | Categorías, platillos (precio, costo, foto, estación), modificadores. Toggle rápido "Agotado". |
-| `/mesas` | `(owner)` | owner | Áreas y mesas. |
+| `/menu` | `(owner)` | owner | Categorías, platillos (precio, costo, estación), extras y opciones con precio. Toggle rápido "Agotado". ✔ |
+| `/mesas` | `(owner)` | owner | Áreas y mesas; alta en lote ("Mesa 1…10"). ✔ |
 | `/caja` | `(owner)` | owner | Reutiliza el cierre de caja del Core. |
 | `/reportes` | `(owner)` | owner | Ventas por día y hora, platillos top, por categoría, ticket promedio, por mesero, canceladas. |
 
@@ -140,19 +154,34 @@ Impresión: CSS `@media print` a 80 mm con `window.print()`. Sin drivers de impr
 
 ## 6. Roadmap del vertical
 
-**R1 — MVP para la clienta**
+**R1 — MVP para la clienta (entrega antes del 1 nov 2026)**
+
+Ajustado a sus respuestas: no hay dispositivo en cocina, así que la comanda se imprime y la pantalla de cocina pasa
+a R2. Dividir cuenta entra a R1. No hay propina.
+
 1. ✔ Migración 006 + tipos + rol `terminal` + equipo con PIN + navegación por módulos y rol.
-2. Admin de menú y mesas (`/menu`, `/mesas`) + seed con el menú real de la clienta.
-3. `/salon` con mapa de mesas y estados.
-4. `/orden/[id]` con modificadores y envío a cocina.
-5. `/cocina` con Realtime.
-6. `/cobrar/[id]` + pre-cuenta imprimible.
-7. Cierre de caja (reutilizado) + `/reportes`.
-8. UI de cancelación de orden e ítems con PIN de supervisor. Las RPC ya existen.
+2. ✔ `/menu` y `/mesas` + zona horaria por org (007), con `/caja` y `/dashboard` en hora local.
+   Falta: cargar el menú real (esperando foto) y crear la org de la clienta.
+3. `/salon` (mapa de mesas) + `/orden/[id]` en la tablet, con extras y "para llevar" (nombre del cliente).
+4. **Estación de impresión** en la computadora: imprime sola cada comanda enviada a cocina (Realtime + Chrome
+   `--kiosk-printing`, ticket de 80 mm). También pre-cuenta y recibo.
+5. `/cobrar/[id]` con **cuenta dividida**: una orden admite varios pagos, cada uno es una fila en `sales` con su
+   método (migración 008). La caja sigue cuadrando por método sin cambios.
+6. Reportes básicos + UI de anulación/cancelación con PIN de supervisor (las RPC ya existen).
+7. Prueba en el local, capacitación y margen para imprevistos.
+
+**Semanas:**
+
+| Semana | Pasos |
+|---|---|
+| 1 | 1–2 |
+| 2 | 3 |
+| 3 | 4–5 |
+| 4 | 6–7 |
 
 **R2:**
-- dividir cuenta;
-- para llevar / delivery con datos del cliente;
+- pantalla de cocina (`/cocina`, módulo `kitchen`) para negocios con tablet en cocina;
+- delivery con datos del cliente;
 - menú QR público;
 - transferir o unir mesas.
 
@@ -165,31 +194,29 @@ No empezar R2 sin que la clienta haya usado R1 en servicio real al menos una sem
 
 ---
 
-## 7. Pendientes conocidos (antes de R1.7)
+## 7. Pendientes conocidos
 
-- `/caja` calcula "hoy" en UTC (`toISOString()`). En Nicaragua (UTC−6) las ventas después de las 6 pm caen al día
-  siguiente, y eso le pega fuerte a un restaurante nocturno.
-- **Propina vs. cuadre:** `sales.total` no incluye `tip_amount`, pero la propina en efectivo sí entra al cajón.
-  Hay que decidirlo con la clienta.
+- ✔ `/caja` y `/dashboard` ya calculan "hoy" en la zona horaria de la org (`organizations.timezone`,
+  `lib/dates.ts`). Faltan las páginas del colectivo (ventas, liquidaciones, reportes por marca y portal de marca).
 - `cancel_sale` sobre una venta de restaurante no revierte la orden.
+- ⚠️ `register_sale` y `cancel_sale` son ejecutables por `anon` (Core). Corregir antes de vender a más clientes.
 
----
+## 8. Pendiente de la clienta
 
-## 8. Supuestos a validar con la clienta (PREGUNTAR antes de asumir)
-
-- ¿Quién cocina y cómo recibe la comanda: tablet o ticket impreso? Define la prioridad de `/cocina`.
-- ¿Cuántos dispositivos y cuáles: celular del mesero, tablet de caja, tablet de cocina?
-- ¿Los kioscos funcionan como mesas normales?
-- ¿Cobra propina o cargo de servicio fijo (ej. 10%)?
-- ¿Moneda: córdobas, dólares o ambas?
-- ¿Factura fiscal? Fuera de R1.
-- ¿Dividen cuentas con frecuencia? Si es así, "dividir cuenta" sube a R1.
+- **Foto del menú con precios**, incluyendo los extras y su precio.
+- Cuántas son mesas y cuántos kioscos, y cómo los numera.
+- ¿La tablet es Android o iPad? ¿La computadora es Windows? ¿Está en caja?
+- ¿Quién toma la orden en la tablet y quién cobra?
+- "Factura": ¿necesita factura fiscal (DGI, fuera de R1) o basta un recibo?
+- **Impresora:** térmica de 80 mm, USB (idealmente también LAN), ESC/POS, con corte automático. No comprar
+  solo Bluetooth. Confirmar el modelo antes de comprarla.
 
 ## 9. Guardrails
 
 - El precio de cada ítem lo fija la BD, nunca el frontend.
 - Una mesa, una orden abierta (índice único parcial).
-- Cada orden cobrada genera exactamente una fila en `sales`.
+- Cada pago de una orden genera una fila en `sales` (una sola si no se divide la cuenta). La suma de los pagos
+  es el total de la orden.
 - `terminal` nunca ve reportes, costos, ventas ni caja (RLS + nav + layouts).
 - El hash del PIN nunca sale de la BD; el token de sesión nunca llega al JavaScript del navegador.
 - No construir R2/R3 "ya que estamos".

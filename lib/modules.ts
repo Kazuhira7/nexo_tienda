@@ -24,7 +24,7 @@ export const VERTICAL_INFO: Record<VerticalType, { label: string; description: s
 export const VERTICAL_PRESETS: Record<VerticalType, ModuleId[]> = {
   colectivo:   ["pos", "inventory", "customers", "cash", "brands", "settlements"],
   retail:      ["pos", "inventory", "customers", "cash"],
-  restaurante: ["restaurant", "kitchen", "customers", "cash"],
+  restaurante: ["restaurant", "customers", "cash"],          // "kitchen" (KDS) opt-in per org
 };
 
 export function hasModule(

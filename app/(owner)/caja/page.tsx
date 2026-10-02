@@ -4,21 +4,26 @@ import { Badge } from "@/components/ui/badge";
 import { BanknoteIcon, CreditCardIcon, ArrowLeftRightIcon } from "lucide-react";
 import { getMoney } from "@/lib/get-currency";
 import { requireModule } from "@/lib/require-module";
+import { getOrgContext } from "@/lib/org-context";
+import { localDateString, localDayRange } from "@/lib/dates";
 import CashClosureForm from "@/components/caja/cash-closure-form";
 import type { PaymentMethod } from "@/types/database";
 
 export default async function CajaPage() {
   await requireModule("cash");
   const fmt = await getMoney();
+  const { timezone } = await getOrgContext();
   const supabase = await createClient();
-  const today = new Date().toISOString().split("T")[0];
+  // "Hoy" en la zona horaria del negocio (el servidor corre en UTC)
+  const today = localDateString(timezone);
+  const todayRange = localDayRange(today, timezone);
 
   const [{ data: todaySales }, { data: existing }, { data: history }] = await Promise.all([
     supabase
       .from("sales")
       .select("total, payment_method, cancelled")
-      .gte("created_at", `${today}T00:00:00`)
-      .lte("created_at", `${today}T23:59:59`),
+      .gte("created_at", todayRange.start)
+      .lt("created_at", todayRange.end),
     supabase.from("cash_closures").select("*").eq("closure_date", today).maybeSingle(),
     supabase
       .from("cash_closures")
@@ -38,8 +43,8 @@ export default async function CajaPage() {
   const expectedMixed    = sumBy("mixed");
   const totalHoy = expectedCash + expectedPos + expectedTransfer + expectedMixed;
 
-  const todayLabel = new Date().toLocaleDateString("es-NI", {
-    weekday: "long", year: "numeric", month: "long", day: "numeric",
+  const todayLabel = new Date(`${today}T12:00:00Z`).toLocaleDateString("es-NI", {
+    weekday: "long", year: "numeric", month: "long", day: "numeric", timeZone: "UTC",
   });
 
   const methodCards = [

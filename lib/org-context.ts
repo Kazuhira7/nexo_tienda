@@ -1,8 +1,9 @@
 // Server-side org context, memoized per request with React.cache.
-// Single source of truth for org name, currency, vertical and enabled modules.
+// Single source of truth for org name, currency, timezone, vertical and enabled modules.
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_EXCHANGE_RATE } from "@/lib/money";
+import { DEFAULT_TIMEZONE } from "@/lib/dates";
 import type { CurrencyCode, ModuleId, VerticalType } from "@/types/database";
 
 export interface OrgContext {
@@ -12,6 +13,7 @@ export interface OrgContext {
   exchangeRate: number;
   vertical:     VerticalType;
   modules:      ModuleId[];
+  timezone:     string;
 }
 
 const FALLBACK: OrgContext = {
@@ -21,6 +23,7 @@ const FALLBACK: OrgContext = {
   exchangeRate: DEFAULT_EXCHANGE_RATE,
   vertical:     "colectivo",
   modules:      [],
+  timezone:     DEFAULT_TIMEZONE,
 };
 
 export const getOrgContext = cache(async (): Promise<OrgContext> => {
@@ -30,7 +33,7 @@ export const getOrgContext = cache(async (): Promise<OrgContext> => {
 
   const { data } = await supabase
     .from("profiles")
-    .select("organization_id, organizations(name, currency, exchange_rate, vertical, enabled_modules)")
+    .select("organization_id, organizations(name, currency, exchange_rate, vertical, enabled_modules, timezone)")
     .eq("id", user.id)
     .single();
 
@@ -40,6 +43,7 @@ export const getOrgContext = cache(async (): Promise<OrgContext> => {
     exchange_rate:   number;
     vertical:        VerticalType;
     enabled_modules: ModuleId[];
+    timezone:        string;
   } | null;
 
   if (!org) return FALLBACK;
@@ -51,5 +55,6 @@ export const getOrgContext = cache(async (): Promise<OrgContext> => {
     exchangeRate: org.exchange_rate ?? DEFAULT_EXCHANGE_RATE,
     vertical:     org.vertical ?? "colectivo",
     modules:      org.enabled_modules ?? [],
+    timezone:     org.timezone ?? DEFAULT_TIMEZONE,
   };
 });

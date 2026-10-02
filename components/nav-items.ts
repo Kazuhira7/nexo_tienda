@@ -15,6 +15,8 @@ import {
   UtensilsCrossedIcon,
   ChefHatIcon,
   IdCardIcon,
+  BookOpenIcon,
+  LayoutGridIcon,
 } from "lucide-react";
 import type { ModuleId, UserRole } from "@/types/database";
 
@@ -35,6 +37,8 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/ventas/nueva",  label: "Vender",         icon: ShoppingCartIcon,    section: "main",       mobile: "primary", module: "pos" },
   { href: "/ventas",        label: "Ventas",         icon: ReceiptIcon,         section: "operations", mobile: "primary", module: "pos" },
   { href: "/inventario",    label: "Inventario",     icon: PackageIcon,         section: "operations", mobile: "primary", module: "inventory" },
+  { href: "/menu",          label: "Menú",           icon: BookOpenIcon,        section: "operations", mobile: "more",    module: "restaurant" },
+  { href: "/mesas",         label: "Mesas",          icon: LayoutGridIcon,      section: "operations", mobile: "more",    module: "restaurant" },
   { href: "/equipo",        label: "Equipo",         icon: IdCardIcon,          section: "operations", mobile: "more",    module: "restaurant" },
   { href: "/marcas",        label: "Marcas",         icon: StoreIcon,           section: "operations", mobile: "more",    module: "brands" },
   { href: "/importar",      label: "Importar CSV",   icon: UploadIcon,          section: "operations", mobile: "more",    module: "inventory" },
