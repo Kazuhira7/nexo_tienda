@@ -269,6 +269,7 @@ export type Database = {
           cancelled_at:    string | null;
           tip_amount:      number;
           source:          SaleSource;
+          order_id:        string | null;
         };
         Insert: {
           id?:              string;
@@ -285,6 +286,7 @@ export type Database = {
           cancelled_at?:    string | null;
           tip_amount?:      number;
           source?:          SaleSource;
+          order_id?:        string | null;
         };
         Update: {
           id?:              string;
@@ -301,6 +303,7 @@ export type Database = {
           cancelled_at?:    string | null;
           tip_amount?:      number;
           source?:          SaleSource;
+          order_id?:        string | null;
         };
         Relationships: [
           { foreignKeyName: "sales_organization_id_fkey"; columns: ["organization_id"]; isOneToOne: false; referencedRelation: "organizations"; referencedColumns: ["id"] },
@@ -770,6 +773,8 @@ export type Database = {
           closed_by_staff:    string | null;
           cancelled_by_staff: string | null;
           customer_id:        string | null;
+          customer_name:      string | null;
+          discount_total:     number;
           notes:              string | null;
           sale_id:            string | null;
           cancel_reason:      string | null;
@@ -843,7 +848,13 @@ export type Database = {
       staff_members_with_pin:  { Args: Record<string, never>; Returns: string[] };
       // ── Restaurante (todas requieren sesión de PIN) ──
       open_order: {
-        Args: { p_staff_token: string; p_table_id?: string | null; p_order_type?: OrderType; p_guests?: number };
+        Args: {
+          p_staff_token:    string;
+          p_table_id?:      string | null;
+          p_order_type?:    OrderType;
+          p_guests?:        number;
+          p_customer_name?: string | null;
+        };
         Returns: string;
       };
       add_order_item: {
@@ -857,22 +868,35 @@ export type Database = {
         };
         Returns: string;
       };
+      update_order_item: {
+        Args: { p_staff_token: string; p_item_id: string; p_quantity: number; p_notes?: string | null };
+        Returns: void;
+      };
+      set_order_guests:        { Args: { p_staff_token: string; p_order_id: string; p_guests: number }; Returns: void };
       send_order_to_kitchen:   { Args: { p_staff_token: string; p_order_id: string }; Returns: number };
       set_order_item_status: {
         Args: { p_staff_token: string; p_item_id: string; p_status: OrderItemStatus };
         Returns: void;
       };
       request_bill:            { Args: { p_staff_token: string; p_order_id: string }; Returns: void };
-      close_order: {
+      order_payments: {
+        Args: { p_order_id: string };
+        Returns: { payment_method: PaymentMethod; amount: number; discount: number; created_at: string }[];
+      };
+      set_order_discount: {
+        Args: { p_staff_token: string; p_order_id: string; p_amount: number };
+        Returns: void;
+      };
+      /** Registers a (partial) payment; returns the remaining balance (0 = order paid). */
+      pay_order: {
         Args: {
           p_staff_token:    string;
           p_order_id:       string;
+          p_amount:         number;
           p_payment_method: PaymentMethod;
-          p_discount?:      number;
-          p_tip?:           number;
           p_customer_id?:   string | null;
         };
-        Returns: string;
+        Returns: number;
       };
       cancel_order:            { Args: { p_staff_token: string; p_order_id: string; p_reason: string }; Returns: void };
       set_menu_item_available: {

@@ -44,6 +44,36 @@ export type StaffActionResult<T = undefined> =
   | { ok: true; data: T }
   | { ok: false; error: string; pinRequired?: boolean; needsPermission?: PermissionId };
 
+type ServerClient = Awaited<ReturnType<typeof createClient>>;
+
+/**
+ * Runs a staff RPC with this device's PIN session — or, when `authPin` is given,
+ * as the supervisor who typed it (single-use token, never leaves the server).
+ * Errors from require_staff() come back as pinRequired / needsPermission.
+ */
+export async function withStaff<T>(
+  authPin: string | undefined,
+  call: (token: string, supabase: ServerClient) => PromiseLike<{
+    data: unknown;
+    error: { message: string; hint?: string | null } | null;
+  }>
+): Promise<StaffActionResult<T>> {
+  let token: string | null;
+  if (authPin) {
+    const auth = await authorizeWithPin(authPin);
+    if ("error" in auth) return { ok: false, error: auth.error };
+    token = auth.token;
+  } else {
+    token = await getStaffToken();
+  }
+  if (!token) return { ok: false, error: "Ingresa tu PIN", pinRequired: true };
+
+  const supabase = await createClient();
+  const { data, error } = await call(token, supabase);
+  if (error) return staffError(error);
+  return { ok: true, data: data as T };
+}
+
 /** Maps a Postgres error raised by require_staff() to a StaffActionResult. */
 export function staffError(error: { message: string; hint?: string | null }): StaffActionResult<never> {
   return {

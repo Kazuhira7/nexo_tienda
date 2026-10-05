@@ -280,3 +280,26 @@
   ::-webkit-scrollbar-thumb { @apply bg-border rounded-full; }
   ::-webkit-scrollbar-thumb:hover { @apply bg-muted-foreground/40; }
 }
+
+/* ============================================================
+   TICKET 80 mm (restaurante) — ver components/restaurante/print-ticket.tsx
+   Solo aplica mientras body tiene .printing-ticket
+   ============================================================ */
+@media print {
+  body.printing-ticket * { visibility: hidden; }
+  body.printing-ticket [data-print-ticket],
+  body.printing-ticket [data-print-ticket] * { visibility: visible; }
+  body.printing-ticket [data-print-ticket] {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 74mm;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+    background: #fff;
+    color: #000;
+    font-size: 12px;
+    line-height: 1.35;
+  }
+}

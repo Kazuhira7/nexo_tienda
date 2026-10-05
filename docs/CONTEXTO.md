@@ -58,7 +58,7 @@ Reglas de arquitectura:
 - Portal de marca (A3) incompleto; alertas de stock en dashboard sí existen.
 - ⚠️ El proyecto Supabase es plan gratuito y **se pausa por inactividad** → producción se cae. Para vender esto se necesita plan Pro.
 
-**Historia de BD** en `docs/db/` (correr en orden en una base nueva): `000_schema_base` → `001_multitenant` → `002_cash_closures` → `003_brand_payments` → `004_platform_modules` → `005_fix_handle_new_user` → `006a_terminal_role` (sola) → `006_restaurante` → `007_org_timezone`.
+**Historia de BD** en `docs/db/` (correr en orden en una base nueva): `000_schema_base` → `001_multitenant` → `002_cash_closures` → `003_brand_payments` → `004_platform_modules` → `005_fix_handle_new_user` → `006a_terminal_role` (sola) → `006_restaurante` → `007_org_timezone` → `008_orden_ui` → `009_pagos_divididos` → `010_order_payments_read`.
 
 ---
 

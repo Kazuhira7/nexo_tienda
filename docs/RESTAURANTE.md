@@ -113,7 +113,9 @@ POS Master (instalado en cada computadora) solo pide PIN. Nexo está en internet
   | `open_order`, `add_order_item`, `request_bill` | `orders.take` |
   | `send_order_to_kitchen` | `orders.send` |
   | `set_order_item_status` | depende del estado destino |
-  | `close_order` | `payments.collect` (+ `orders.discount`) |
+  | `pay_order` (009, reemplaza a `close_order`) | `payments.collect` |
+  | `set_order_discount` (009) | `orders.discount` |
+  | `update_order_item`, `set_order_guests` (008) | `orders.take` |
   | `cancel_order` | `orders.cancel` |
   | `set_menu_item_available` | `menu.availability` |
 
@@ -128,7 +130,15 @@ POS Master (instalado en cada computadora) solo pide PIN. Nexo está en internet
   - Sin `EXECUTE` para `anon`.
 - Realtime publicado: `orders`, `order_items`, `dining_tables`.
 - Tipos agregados **a mano** en `types/database.ts`. **No** correr `supabase gen types >` (borra extensiones).
-- Prueba: `scripts/test_006_restaurante.sql` (45 casos; se revierte sola).
+- **008:** `orders.customer_name` (para llevar), `open_order(…, p_customer_name)`, `update_order_item` (cantidad y
+  notas de lo no enviado), `set_order_guests`.
+- **009 — cuenta dividida:** una orden admite varios pagos (`pay_order`); cada pago es una fila en `sales` con
+  `order_id` y su método. El primer pago lleva el descuento de la orden (`orders.discount_total`), así que
+  `sum(sales.total)` = total de la orden. La orden se cierra y la mesa se libera cuando el saldo llega a 0. No se
+  puede cancelar una orden con pagos ni anular platillos por debajo de lo ya cobrado.
+- **010:** `order_payments(order_id)` deja al equipo ver los pagos de una orden sin leer `sales`.
+- Pruebas: `scripts/test_006_restaurante.sql` (45 casos) y `scripts/test_009_pagos.sql` (008/009). Ambas se
+  revierten solas.
 
 ---
 
@@ -138,10 +148,10 @@ Las que tienen ✔ ya existen. Las demás son de los siguientes pasos de R1.
 
 | Ruta | Grupo | Quién | Qué hace |
 |---|---|---|---|
-| `/salon` | `(restaurante)` | owner, terminal + PIN | **Pantalla principal.** Mapa de mesas por área con color + texto (Libre, Ocupada, Cuenta pedida), tiempo abierto y total parcial. Tocar mesa libre abre orden; tocar mesa ocupada muestra la orden. Botón "Para llevar". *(placeholder ✔)* |
-| `/orden/[id]` | `(restaurante)` | PIN | Menú en grid por categoría (tabs). Platillo con modificadores abre un sheet; si no tiene, se agrega directo. CTA **"Enviar a cocina"** (solo pendientes). "Pedir cuenta", "Cobrar". Optimistic UI. |
+| `/salon` | `(restaurante)` | owner, terminal + PIN | **Pantalla principal.** Mapa de mesas por área con color + texto (Libre, Ocupada, Cuenta pedida), tiempo abierto y total parcial. Tocar mesa libre abre orden; tocar mesa ocupada muestra la orden. Botón "Para llevar". Realtime entre dispositivos. ✔ |
+| `/orden/[id]` | `(restaurante)` | PIN | Menú en grid por categoría (tabs). Platillo con modificadores abre un sheet; si no tiene, se agrega directo. CTA **"Enviar a cocina"** (solo pendientes). "Pedir cuenta", "Cobrar". Optimistic UI, personas, editar cantidades de lo no enviado, anular con PIN de supervisor, cancelar orden con motivo. ✔ |
 | `/cocina` | `(restaurante)` | PIN | KDS para tablet horizontal, modo oscuro, Realtime + sonido, la más antigua primero. "Preparando" → "Listo". *(placeholder ✔)* |
-| `/cobrar/[id]` | `(restaurante)` | PIN | Pre-cuenta imprimible a 80 mm, descuento, propina, método de pago, cliente opcional. Llama a `close_order`. |
+| `/cobrar/[id]` | `(restaurante)` | PIN | Pre-cuenta/recibo imprimible a 80 mm, descuento (monto o %), **cuenta dividida** (todo, entre 2/3/4, por platillos), método por pago, vuelto en efectivo. Llama a `pay_order`. ✔ |
 | `/equipo` | `(owner)` | owner | Equipo, puestos, permisos y PINs. ✔ |
 | `/menu` | `(owner)` | owner | Categorías, platillos (precio, costo, estación), extras y opciones con precio. Toggle rápido "Agotado". ✔ |
 | `/mesas` | `(owner)` | owner | Áreas y mesas; alta en lote ("Mesa 1…10"). ✔ |
@@ -162,12 +172,12 @@ a R2. Dividir cuenta entra a R1. No hay propina.
 1. ✔ Migración 006 + tipos + rol `terminal` + equipo con PIN + navegación por módulos y rol.
 2. ✔ `/menu` y `/mesas` + zona horaria por org (007), con `/caja` y `/dashboard` en hora local.
    Falta: cargar el menú real (esperando foto) y crear la org de la clienta.
-3. `/salon` (mapa de mesas) + `/orden/[id]` en la tablet, con extras y "para llevar" (nombre del cliente).
+3. ✔ `/salon` (mapa de mesas) + `/orden/[id]` en la tablet, con extras y "para llevar" (nombre del cliente).
 4. **Estación de impresión** en la computadora: imprime sola cada comanda enviada a cocina (Realtime + Chrome
    `--kiosk-printing`, ticket de 80 mm). También pre-cuenta y recibo.
-5. `/cobrar/[id]` con **cuenta dividida**: una orden admite varios pagos, cada uno es una fila en `sales` con su
-   método (migración 008). La caja sigue cuadrando por método sin cambios.
-6. Reportes básicos + UI de anulación/cancelación con PIN de supervisor (las RPC ya existen).
+5. ✔ `/cobrar/[id]` con **cuenta dividida**: una orden admite varios pagos, cada uno es una fila en `sales` con su
+   método (migración 009). La caja sigue cuadrando por método sin cambios.
+6. Reportes básicos. (La UI de anulación/cancelación con PIN de supervisor ya quedó en el paso 3.)
 7. Prueba en el local, capacitación y margen para imprevistos.
 
 **Semanas:**

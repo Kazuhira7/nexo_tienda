@@ -167,7 +167,7 @@ begin
   exception when others then r := r || E'\nok mesero no marca cocina'; end;
 
   begin
-    perform close_order(tok_w, o1, 'cash');
+    perform pay_order(tok_w, o1, 100, 'cash');
     r := r || E'\nFAIL mesero cobró';
   exception when others then
     get stacked diagnostics h = pg_exception_hint;
@@ -180,16 +180,17 @@ begin
 
   tok_c := staff_login('2222')->>'token';
   begin
-    perform close_order(tok_c, o1, 'cash', 0, 0, cust2);
+    perform pay_order(tok_c, o1, 620, 'cash', cust2);
     r := r || E'\nFAIL cliente de otra org aceptado';
   exception when others then r := r || E'\nok cliente ajeno: ' || sqlerrm; end;
   begin
-    perform close_order(tok_c, o1, 'cash', 700);
+    perform set_order_discount(tok_c, o1, 700);
     r := r || E'\nFAIL descuento mayor al subtotal';
   exception when others then r := r || E'\nok descuento inválido: ' || sqlerrm; end;
 
-  sale := close_order(tok_c, o1, 'cash', 20, 50);
-  r := r || E'\nok close_order';
+  perform set_order_discount(tok_c, o1, 20);
+  perform pay_order(tok_c, o1, 600, 'cash');
+  r := r || E'\nok cobro completo (pay_order)';
 
   select count(*) into n from sales;
   r := r || case when n = 0 then E'\nok terminal no lee ventas' else E'\nFAIL terminal lee ' || n || ' ventas' end;
@@ -247,10 +248,10 @@ begin
 
   -- ---------- Verificación como postgres ----------
   execute 'reset role';
-  select sale_number into n from sales where id = sale and organization_id = org1
-    and source = 'restaurant' and subtotal = 620 and discount_total = 20 and total = 600 and tip_amount = 50
+  select id, sale_number into sale, n from sales where order_id = o1 and organization_id = org1
+    and source = 'restaurant' and subtotal = 620 and discount_total = 20 and total = 600
     and sold_by = term1;
-  r := r || case when n = 1 then E'\nok venta #1 en sales (620 - 20 = 600, propina 50)' else E'\nFAIL fila de sales' end;
+  r := r || case when n = 1 then E'\nok venta #1 en sales (620 - 20 = 600)' else E'\nFAIL fila de sales' end;
   select count(*) into n from orders where id = o1 and status = 'paid' and sale_id = sale and closed_by_staff = m_c;
   r := r || case when n = 1 then E'\nok orden pagada y ligada a la venta' else E'\nFAIL orden pagada' end;
 
