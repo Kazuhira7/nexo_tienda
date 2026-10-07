@@ -52,3 +52,14 @@ export function localDayRange(day: string, timeZone?: string | null): { start: s
     end:   toUtc(y, m, d + 1).toISOString(),
   };
 }
+
+/** Adds `days` to a calendar date (YYYY-MM-DD → YYYY-MM-DD), timezone-free. */
+export function shiftDay(day: string, days: number): string {
+  const [y, m, d] = day.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
+}
+
+/** True for a valid YYYY-MM-DD string. */
+export function isDayString(value: string | undefined | null): value is string {
+  return !!value && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(`${value}T00:00:00Z`));
+}

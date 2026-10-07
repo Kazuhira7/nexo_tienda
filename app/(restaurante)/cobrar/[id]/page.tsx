@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { requireModule } from "@/lib/require-module";
 import { createClient } from "@/lib/supabase/server";
+import { getOrgContext } from "@/lib/org-context";
 import CobrarScreen from "@/components/restaurante/cobrar/cobrar-screen";
 import type { OrderItemModifier } from "@/types/database";
 
@@ -11,6 +12,7 @@ export default async function CobrarPage({ params }: { params: Promise<{ id: str
   const { id } = await params;
   if (!UUID_RE.test(id)) notFound();
 
+  const { ticket } = await getOrgContext();
   const supabase = await createClient();
   const [{ data: order }, { data: items }, { data: payments }] = await Promise.all([
     supabase.from("orders")
@@ -30,6 +32,7 @@ export default async function CobrarPage({ params }: { params: Promise<{ id: str
 
   return (
     <CobrarScreen
+      business={ticket}
       order={{
         id:       order.id,
         number:   order.order_number,

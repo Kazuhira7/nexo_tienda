@@ -10,10 +10,13 @@ import { getOrgContext } from "@/lib/org-context";
 import { hasModule } from "@/lib/modules";
 import { localDateString, localDayRange } from "@/lib/dates";
 import PeriodReport from "@/components/dashboard/period-report";
+import RestaurantDashboard from "@/components/restaurante/dashboard/restaurant-dashboard";
 
 export default async function OwnerDashboard() {
-  const fmt = await getMoney();
   const { modules, timezone } = await getOrgContext();
+  if (hasModule(modules, "restaurant")) return <RestaurantDashboard />;
+
+  const fmt = await getMoney();
   const showBrands = hasModule(modules, "brands");
   const supabase = await createClient();
   const todayRange = localDayRange(localDateString(timezone), timezone);

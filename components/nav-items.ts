@@ -17,6 +17,8 @@ import {
   IdCardIcon,
   BookOpenIcon,
   LayoutGridIcon,
+  BarChart3Icon,
+  PrinterIcon,
 } from "lucide-react";
 import type { ModuleId, UserRole } from "@/types/database";
 
@@ -37,11 +39,13 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/ventas/nueva",  label: "Vender",         icon: ShoppingCartIcon,    section: "main",       mobile: "primary", module: "pos" },
   { href: "/ventas",        label: "Ventas",         icon: ReceiptIcon,         section: "operations", mobile: "primary", module: "pos" },
   { href: "/inventario",    label: "Inventario",     icon: PackageIcon,         section: "operations", mobile: "primary", module: "inventory" },
+  { href: "/impresion",     label: "Impresión",      icon: PrinterIcon,         section: "operations", mobile: "more",    module: "restaurant", roles: ["owner", "terminal"] },
   { href: "/menu",          label: "Menú",           icon: BookOpenIcon,        section: "operations", mobile: "more",    module: "restaurant" },
   { href: "/mesas",         label: "Mesas",          icon: LayoutGridIcon,      section: "operations", mobile: "more",    module: "restaurant" },
   { href: "/equipo",        label: "Equipo",         icon: IdCardIcon,          section: "operations", mobile: "more",    module: "restaurant" },
   { href: "/marcas",        label: "Marcas",         icon: StoreIcon,           section: "operations", mobile: "more",    module: "brands" },
   { href: "/importar",      label: "Importar CSV",   icon: UploadIcon,          section: "operations", mobile: "more",    module: "inventory" },
+  { href: "/reportes",      label: "Reportes",       icon: BarChart3Icon,       section: "finance",    mobile: "more",    module: "restaurant" },
   { href: "/caja",          label: "Cierre de caja", icon: CalculatorIcon,      section: "finance",    mobile: "more",    module: "cash" },
   { href: "/clientes",      label: "Clientes",       icon: UsersIcon,           section: "finance",    mobile: "more",    module: "customers" },
   { href: "/liquidaciones", label: "Liquidaciones",  icon: WalletIcon,          section: "finance",    mobile: "more",    module: "settlements" },

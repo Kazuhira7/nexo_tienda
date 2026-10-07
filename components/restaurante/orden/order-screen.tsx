@@ -152,7 +152,9 @@ export default function OrderScreen({ order, items, menu }: { order: OrderView; 
   function send() {
     run(() => sendToKitchen(order.id), {
       onSuccess: (count) => {
-        toast.success(`${count} ${count === 1 ? "platillo enviado" : "platillos enviados"} a cocina`);
+        toast.success(`${count} ${count === 1 ? "platillo enviado" : "platillos enviados"} a cocina`, {
+          description: "La comanda sale en la impresora de la estación.",
+        });
         setTicketOpen(false);
       },
     });

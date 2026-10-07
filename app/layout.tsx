@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Sora, Plus_Jakarta_Sans } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import ThemeProvider from "@/components/theme-provider";
@@ -17,8 +17,14 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Nexo — Tienda Colectiva",
-  description: "Sistema de gestión para tienda colectiva",
+  title: "Nexo",
+  description: "Gestión para tu negocio: ventas, salón y caja",
+  icons: { apple: "/icons/apple-touch-icon.png" },
+  appleWebApp: { capable: true, title: "Nexo", statusBarStyle: "default" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#1B4FFF",
 };
 
 export default function RootLayout({

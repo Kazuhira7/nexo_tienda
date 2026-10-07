@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import type { Database, VerticalType } from "@/types/database";
+import type { Database } from "@/types/database";
 import { homeRoute } from "@/lib/home-route";
 
 export async function updateSession(request: NextRequest) {
@@ -39,7 +39,8 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/registro") ||
     pathname.startsWith("/recuperar") ||
     pathname.startsWith("/auth") ||
-    pathname.startsWith("/_next");
+    pathname.startsWith("/_next") ||
+    pathname === "/manifest.webmanifest"; // fetched by the browser without cookies
 
   if (isPublic) {
     if (user && (pathname.startsWith("/login") || pathname.startsWith("/registro"))) {
@@ -66,12 +67,11 @@ async function redirectByRole(
 ) {
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role, organizations(vertical)")
+    .select("role")
     .eq("id", userId)
     .single();
 
-  const vertical = (profile?.organizations as { vertical: VerticalType } | null)?.vertical;
   const url = request.nextUrl.clone();
-  url.pathname = homeRoute(profile?.role, vertical);
+  url.pathname = homeRoute(profile?.role);
   return NextResponse.redirect(url);
 }

@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-type Table = "orders" | "order_items" | "dining_tables";
+type Table = "orders" | "order_items" | "dining_tables" | "kitchen_tickets";
 
 // Re-renders the current server page when another device changes orders/tables
 // (Supabase Realtime, filtered by org; RLS still applies to what each user sees).

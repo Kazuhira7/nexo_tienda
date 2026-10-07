@@ -29,6 +29,15 @@ export interface OrderItemModifier {
   price_delta: number;
 }
 
+/** Line of a printed kitchen ticket (snapshot taken when sent to the kitchen). */
+export interface KitchenTicketItem {
+  qty:       number;
+  name:      string;
+  modifiers: string[];
+  notes:     string | null;
+  station:   PrepStation;
+}
+
 /** Result of staff_login (PIN). On failure only { ok: false, error }. */
 export type StaffLoginResult =
   | { ok: true; token: string; staff_member_id: string; name: string; position: string; permissions: string[] }
@@ -58,6 +67,10 @@ export type Database = {
           vertical:           VerticalType;
           enabled_modules:    ModuleId[];
           timezone:           string;
+          ticket_address:     string | null;
+          ticket_phone:       string | null;
+          ticket_tax_id:      string | null;
+          ticket_footer:      string | null;
           active:             boolean;
           created_at:         string;
         };
@@ -72,6 +85,10 @@ export type Database = {
           vertical?:          VerticalType;
           enabled_modules?:   ModuleId[];
           timezone?:          string;
+          ticket_address?:    string | null;
+          ticket_phone?:      string | null;
+          ticket_tax_id?:     string | null;
+          ticket_footer?:     string | null;
           active?:            boolean;
           created_at?:        string;
         };
@@ -86,6 +103,10 @@ export type Database = {
           vertical?:          VerticalType;
           enabled_modules?:   ModuleId[];
           timezone?:          string;
+          ticket_address?:    string | null;
+          ticket_phone?:      string | null;
+          ticket_tax_id?:     string | null;
+          ticket_footer?:     string | null;
           active?:            boolean;
           created_at?:        string;
         };
@@ -759,6 +780,27 @@ export type Database = {
           { foreignKeyName: "menu_item_modifier_groups_organization_id_fkey"; columns: ["organization_id"]; isOneToOne: false; referencedRelation: "organizations"; referencedColumns: ["id"] },
         ];
       };
+      // ── kitchen_tickets (comandas; se crean en send_order_to_kitchen) ──
+      kitchen_tickets: {
+        Row: {
+          id:               string;
+          organization_id:  string;
+          order_id:         string;
+          ticket_number:    number;
+          round:            number;
+          items:            KitchenTicketItem[];
+          created_by_staff: string | null;
+          created_at:       string;
+          printed_at:       string | null;
+        };
+        Insert: Record<string, never>;
+        Update: Record<string, never>;
+        Relationships: [
+          { foreignKeyName: "kitchen_tickets_organization_id_fkey"; columns: ["organization_id"]; isOneToOne: false; referencedRelation: "organizations"; referencedColumns: ["id"] },
+          { foreignKeyName: "kitchen_tickets_order_id_fkey"; columns: ["order_id"]; isOneToOne: false; referencedRelation: "orders"; referencedColumns: ["id"] },
+          { foreignKeyName: "kitchen_tickets_created_by_staff_fkey"; columns: ["created_by_staff"]; isOneToOne: false; referencedRelation: "staff_members"; referencedColumns: ["id"] },
+        ];
+      };
       // ── orders (solo lectura desde el cliente; se escribe vía RPC) ──
       orders: {
         Row: {
@@ -879,6 +921,10 @@ export type Database = {
         Returns: void;
       };
       request_bill:            { Args: { p_staff_token: string; p_order_id: string }; Returns: void };
+      mark_kitchen_ticket_printed: { Args: { p_ticket_id: string }; Returns: void };
+      reprint_kitchen_ticket:      { Args: { p_ticket_id: string }; Returns: void };
+      /** Owner-only restaurant report; shape in lib/restaurant-report.ts */
+      restaurant_report:       { Args: { p_from: string; p_to: string }; Returns: Json };
       order_payments: {
         Args: { p_order_id: string };
         Returns: { payment_method: PaymentMethod; amount: number; discount: number; created_at: string }[];

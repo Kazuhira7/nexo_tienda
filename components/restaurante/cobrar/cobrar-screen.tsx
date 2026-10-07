@@ -14,6 +14,7 @@ import { useStaffAction } from "@/components/staff/use-staff-action";
 import Ticket, { type TicketItem, type TicketPayment } from "@/components/restaurante/ticket";
 import { PrintTicketButton } from "@/components/restaurante/print-ticket";
 import { applyDiscount, payOrder } from "@/app/(restaurante)/cobrar/actions";
+import type { TicketInfo } from "@/lib/org-context";
 
 type Method = "cash" | "pos" | "transfer";
 
@@ -35,9 +36,10 @@ interface Props {
   };
   items:    TicketItem[];
   payments: TicketPayment[];
+  business: TicketInfo;
 }
 
-export default function CobrarScreen({ order, items, payments }: Props) {
+export default function CobrarScreen({ order, items, payments, business }: Props) {
   const router = useRouter();
   const fmt = useMoney();
   const { run, pending, authDialog } = useStaffAction();
@@ -135,6 +137,7 @@ export default function CobrarScreen({ order, items, payments }: Props) {
             subtotal={subtotal}
             discount={order.discount}
             payments={payments}
+            business={business}
           />
           <PrintTicketButton label={closed ? "Imprimir recibo" : "Imprimir pre-cuenta"} className="w-full h-11" />
         </div>

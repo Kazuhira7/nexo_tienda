@@ -49,8 +49,9 @@ Reglas de arquitectura:
 - `organizations.timezone` (007) + `lib/dates.ts`: "hoy" se calcula en la hora local del negocio.
 
 **Deuda / pendientes conocidos:**
-- ⚠️ `register_sale` y `cancel_sale` (Core) son ejecutables por `anon` y no validan usuario ni org (advisor de
-  Supabase). Corregir con una migración 007 antes de vender a más clientes.
+- ✔ `register_sale`/`cancel_sale` protegidos (014) y UPDATE de `organizations` solo para la dueña y columnas de
+  configuración (012).
+- Activar "Leaked password protection" en Supabase Auth (aviso del advisor).
 - Páginas del colectivo (ventas, liquidaciones, reporte por marca, portal de marca) aún calculan fechas en UTC.
 - La clienta nunca definió la regla de cobro de cuotas → `brand_payments` es un libro manual flexible; automatizar cuando haya regla.
 - `products.brand_id` y `sale_items.brand_id` son NOT NULL (herencia colectivo). Para retail hay que hacerlos nullable y ajustar POS/formularios. **Hacerlo al construir retail, no antes.**
@@ -58,7 +59,7 @@ Reglas de arquitectura:
 - Portal de marca (A3) incompleto; alertas de stock en dashboard sí existen.
 - ⚠️ El proyecto Supabase es plan gratuito y **se pausa por inactividad** → producción se cae. Para vender esto se necesita plan Pro.
 
-**Historia de BD** en `docs/db/` (correr en orden en una base nueva): `000_schema_base` → `001_multitenant` → `002_cash_closures` → `003_brand_payments` → `004_platform_modules` → `005_fix_handle_new_user` → `006a_terminal_role` (sola) → `006_restaurante` → `007_org_timezone` → `008_orden_ui` → `009_pagos_divididos` → `010_order_payments_read`.
+**Historia de BD** en `docs/db/` (correr en orden en una base nueva): `000_schema_base` → `001_multitenant` → `002_cash_closures` → `003_brand_payments` → `004_platform_modules` → `005_fix_handle_new_user` → `006a_terminal_role` (sola) → `006_restaurante` → `007_org_timezone` → `008_orden_ui` → `009_pagos_divididos` → `010_order_payments_read` → `011_reportes` → `012_ticket_info_y_org_update` → `013_kitchen_tickets` → `014_harden_sales_rpcs`.
 
 ---
 

@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import OrgSettingsForm from "@/components/configuracion/org-settings-form";
+import { getOrgContext } from "@/lib/org-context";
 
 export default async function ConfiguracionPage() {
   const supabase = await createClient();
@@ -21,16 +22,17 @@ export default async function ConfiguracionPage() {
     .single();
 
   if (!org) redirect("/dashboard");
+  const { modules } = await getOrgContext();
 
   return (
     <div className="space-y-8 max-w-xl">
       <div>
         <h1 className="text-2xl font-bold">Configuración</h1>
         <p className="text-sm text-muted-foreground mt-0.5">
-          Ajusta los parámetros de tu tienda colectiva
+          Ajusta los datos y parámetros de tu negocio
         </p>
       </div>
-      <OrgSettingsForm org={org} />
+      <OrgSettingsForm org={org} modules={modules} />
     </div>
   );
 }

@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ShoppingBagIcon, UsersIcon, Loader2Icon } from "lucide-react";
+import { toast } from "sonner";
+import { ShoppingBagIcon, UsersIcon, Loader2Icon, ReceiptIcon, WalletIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useMoney } from "@/components/org-provider";
 import { useStaffAction } from "@/components/staff/use-staff-action";
 import Elapsed from "@/components/restaurante/elapsed";
-import { openTable, openTakeaway } from "@/app/(restaurante)/orden/actions";
+import { openTable, openTakeaway, requestBill } from "@/app/(restaurante)/orden/actions";
 import type { OrderType, TableStatus } from "@/types/database";
 
 export interface SalonOrder {
@@ -79,6 +80,10 @@ export default function SalonBoard({ areas, tables, takeaways }: Props) {
     });
   }
 
+  function askBill(orderId: string) {
+    run(() => requestBill(orderId), { onSuccess: () => toast.success("Cuenta pedida") });
+  }
+
   function handleTakeaway(e: React.FormEvent) {
     e.preventDefault();
     run(() => openTakeaway(takeawayName), {
@@ -118,36 +123,49 @@ export default function SalonBoard({ areas, tables, takeaways }: Props) {
             {g.tables.map((t) => {
               const s = STATUS[t.status];
               return (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => handleTable(t)}
-                  disabled={opening === t.id}
-                  className={`relative min-h-28 rounded-2xl border-2 p-3 text-left transition-all active:scale-[0.97] disabled:opacity-70 ${s.card}`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="text-lg font-bold leading-tight">{t.name}</p>
-                    {opening === t.id && <Loader2Icon className="size-4 animate-spin text-primary" />}
-                  </div>
-                  <p className="mt-1 flex items-center gap-1.5 text-xs font-medium">
-                    <span className={`size-2 rounded-full ${s.dot}`} />
-                    {s.label}
-                  </p>
-                  {t.order ? (
-                    <div className="mt-2 space-y-0.5">
-                      <p className="font-semibold">{fmt(t.order.total)}</p>
-                      <p className="text-xs text-muted-foreground flex items-center gap-2">
-                        <Elapsed since={t.order.openedAt} />
-                        <span className="flex items-center gap-0.5"><UsersIcon className="size-3" />{t.order.guests}</span>
-                      </p>
-                      {t.order.pending > 0 && (
-                        <p className="text-xs font-semibold text-accent">{t.order.pending} por enviar</p>
-                      )}
+                <div key={t.id} className={`min-h-28 rounded-2xl border-2 flex flex-col overflow-hidden transition-all ${s.card}`}>
+                  <button
+                    type="button"
+                    onClick={() => handleTable(t)}
+                    disabled={opening === t.id}
+                    className="flex-1 p-3 text-left active:scale-[0.97] transition-transform disabled:opacity-70"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-lg font-bold leading-tight">{t.name}</p>
+                      {opening === t.id && <Loader2Icon className="size-4 animate-spin text-primary" />}
                     </div>
-                  ) : (
-                    <p className="mt-2 text-xs text-muted-foreground">{t.seats} puestos</p>
-                  )}
-                </button>
+                    <p className="mt-1 flex items-center gap-1.5 text-xs font-medium">
+                      <span className={`size-2 rounded-full ${s.dot}`} />
+                      {s.label}
+                    </p>
+                    {t.order ? (
+                      <div className="mt-2 space-y-0.5">
+                        <p className="font-semibold">{fmt(t.order.total)}</p>
+                        <p className="text-xs text-muted-foreground flex items-center gap-2">
+                          <Elapsed since={t.order.openedAt} />
+                          <span className="flex items-center gap-0.5"><UsersIcon className="size-3" />{t.order.guests}</span>
+                        </p>
+                        {t.order.pending > 0 && (
+                          <p className="text-xs font-semibold text-accent">{t.order.pending} por enviar</p>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="mt-2 text-xs text-muted-foreground">{t.seats} puestos</p>
+                    )}
+                  </button>
+                  {/* Quick action: ask for the bill / go charge it */}
+                  {t.order && t.order.total > 0 && (t.status === "occupied" ? (
+                    <button type="button" onClick={() => askBill(t.order!.id)}
+                      className="h-10 border-t border-inherit text-xs font-semibold flex items-center justify-center gap-1.5 bg-background/60 active:bg-muted">
+                      <ReceiptIcon className="size-3.5" /> Pedir cuenta
+                    </button>
+                  ) : t.status === "bill_requested" ? (
+                    <Link href={`/cobrar/${t.order.id}`}
+                      className="h-10 border-t border-inherit text-xs font-semibold flex items-center justify-center gap-1.5 bg-background/60 active:bg-muted">
+                      <WalletIcon className="size-3.5" /> Cobrar
+                    </Link>
+                  ) : null)}
+                </div>
               );
             })}
           </div>

@@ -137,7 +137,22 @@ POS Master (instalado en cada computadora) solo pide PIN. Nexo está en internet
   `sum(sales.total)` = total de la orden. La orden se cierra y la mesa se libera cuando el saldo llega a 0. No se
   puede cancelar una orden con pagos ni anular platillos por debajo de lo ya cobrado.
 - **010:** `order_payments(order_id)` deja al equipo ver los pagos de una orden sin leer `sales`.
-- Pruebas: `scripts/test_006_restaurante.sql` (45 casos) y `scripts/test_009_pagos.sql` (008/009). Ambas se
+- **011:** `restaurant_report(desde, hasta)` (solo dueña). Reporte completo en la zona horaria del negocio: ventas,
+  por día/hora/método, platillos, categorías, meseros, cancelaciones, anulaciones y órdenes cerradas.
+- **012:** datos del ticket (`organizations.ticket_address/phone/tax_id/footer`).
+  - **Seguridad:** la policy de UPDATE de `organizations` solo exigía misma org. Una marca o la cuenta del local
+    podía cambiar el negocio (incluso módulos y vertical). Ahora solo la dueña puede, y solo las columnas de
+    configuración.
+- **013:** `kitchen_tickets`.
+  - `send_order_to_kitchen` crea un ticket por ronda con lo enviado: cocina primero, barra al final.
+  - `mark_kitchen_ticket_printed` y `reprint_kitchen_ticket` son para la estación (sin PIN, solo equipo).
+  - La tabla está en Realtime.
+- **014 (Core):** `register_sale` y `cancel_sale` ya no se pueden ejecutar sin sesión.
+  - Solo la dueña puede usarlas; la org y el vendedor salen de la sesión.
+  - Se borró la versión vieja de 4 argumentos.
+  - Los helpers tienen `search_path` fijo.
+- Pruebas: `scripts/test_006_restaurante.sql` (45 casos) y `scripts/test_009_pagos.sql` (008/009). Para 011–014
+  se corrieron pruebas equivalentes en un bloque que se revierte (ver el historial del commit). Ambas se
   revierten solas.
 
 ---
@@ -173,11 +188,11 @@ a R2. Dividir cuenta entra a R1. No hay propina.
 2. ✔ `/menu` y `/mesas` + zona horaria por org (007), con `/caja` y `/dashboard` en hora local.
    Falta: cargar el menú real (esperando foto) y crear la org de la clienta.
 3. ✔ `/salon` (mapa de mesas) + `/orden/[id]` en la tablet, con extras y "para llevar" (nombre del cliente).
-4. **Estación de impresión** en la computadora: imprime sola cada comanda enviada a cocina (Realtime + Chrome
+4. ✔ **Estación de impresión** (`/impresion`) en la computadora: imprime sola cada comanda enviada a cocina (Realtime + Chrome
    `--kiosk-printing`, ticket de 80 mm). También pre-cuenta y recibo.
 5. ✔ `/cobrar/[id]` con **cuenta dividida**: una orden admite varios pagos, cada uno es una fila en `sales` con su
    método (migración 009). La caja sigue cuadrando por método sin cambios.
-6. Reportes básicos. (La UI de anulación/cancelación con PIN de supervisor ya quedó en el paso 3.)
+6. ✔ Reportes (`/reportes`) + Inicio de restaurante + configuración con datos del ticket + app instalable (PWA).
 7. Prueba en el local, capacitación y margen para imprevistos.
 
 **Semanas:**
@@ -204,12 +219,28 @@ No empezar R2 sin que la clienta haya usado R1 en servicio real al menos una sem
 
 ---
 
+## 6b. Instalación en el local
+
+**Tablet (mesero):**
+1. Abrir Nexo en Chrome (Android) o Safari (iPad).
+2. Iniciar sesión con la **cuenta del local**.
+3. Usar "Agregar a pantalla de inicio" (Android) o Compartir → "Agregar a inicio" (iPad).
+4. Se abre como app en pantalla completa y entra directo al salón.
+
+**Computadora (caja + impresora):**
+1. Instalar la impresora térmica de 80 mm y dejarla como **predeterminada**.
+2. Crear un acceso directo de Chrome con `--kiosk-printing` al final del Destino. Así imprime sin preguntar.
+3. Abrir Nexo con ese acceso directo, iniciar sesión con la cuenta del local y entrar a **Impresión** (`/impresion`).
+   Tocar "Imprimir prueba".
+4. Dejar esa pestaña abierta durante el servicio. Cada "Enviar a cocina" imprime su comanda y "Reimprimir" la saca
+   de nuevo. En otra pestaña se usa el salón y el cobro (pre-cuenta y recibo).
+
 ## 7. Pendientes conocidos
 
 - ✔ `/caja` y `/dashboard` ya calculan "hoy" en la zona horaria de la org (`organizations.timezone`,
   `lib/dates.ts`). Faltan las páginas del colectivo (ventas, liquidaciones, reportes por marca y portal de marca).
 - `cancel_sale` sobre una venta de restaurante no revierte la orden.
-- ⚠️ `register_sale` y `cancel_sale` son ejecutables por `anon` (Core). Corregir antes de vender a más clientes.
+- ✔ `register_sale` y `cancel_sale` (Core) protegidos (014).
 
 ## 8. Pendiente de la clienta
 

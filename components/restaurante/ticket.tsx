@@ -1,14 +1,9 @@
 "use client";
 
 import { useMoney, useOrg } from "@/components/org-provider";
+import { METHOD_LABEL } from "@/components/restaurante/ticket-labels";
 import type { OrderItemModifier, PaymentMethod } from "@/types/database";
-
-export const METHOD_LABEL: Record<PaymentMethod, string> = {
-  cash:     "Efectivo",
-  pos:      "Tarjeta (POS)",
-  transfer: "Transferencia",
-  mixed:    "Mixto",
-};
+import type { TicketInfo } from "@/lib/org-context";
 
 export interface TicketItem {
   id:         string;
@@ -32,10 +27,11 @@ interface Props {
   subtotal:  number;
   discount:  number;
   payments:  TicketPayment[];
+  business?: TicketInfo;
 }
 
 // Pre-bill / receipt laid out for an 80 mm thermal printer (also readable on screen).
-export default function Ticket({ kind, title, number, items, subtotal, discount, payments }: Props) {
+export default function Ticket({ kind, title, number, items, subtotal, discount, payments, business }: Props) {
   const fmt = useMoney();
   const { orgName } = useOrg();
   const total = subtotal - discount;
@@ -46,7 +42,15 @@ export default function Ticket({ kind, title, number, items, subtotal, discount,
     <div data-print-ticket className="rounded-xl border bg-white text-neutral-900 p-4 font-mono text-[13px] leading-snug">
       <div className="text-center space-y-0.5">
         <p className="font-bold text-base">{orgName}</p>
-        <p>{kind === "precuenta" ? "PRE-CUENTA" : "RECIBO"}</p>
+        {business?.address && <p className="text-xs">{business.address}</p>}
+        {(business?.phone || business?.taxId) && (
+          <p className="text-xs">
+            {business.phone && `Tel. ${business.phone}`}
+            {business.phone && business.taxId && " · "}
+            {business.taxId && `RUC ${business.taxId}`}
+          </p>
+        )}
+        <p className="pt-1">{kind === "precuenta" ? "PRE-CUENTA" : "RECIBO"}</p>
         <p>{title} · Orden #{number}</p>
         <p className="text-neutral-500">{now}</p>
       </div>
@@ -80,7 +84,7 @@ export default function Ticket({ kind, title, number, items, subtotal, discount,
       </div>
 
       <div className="my-3 border-t border-dashed border-neutral-400" />
-      <p className="text-center">¡Gracias por su visita!</p>
+      <p className="text-center">{business?.footer || "¡Gracias por su visita!"}</p>
       {kind === "precuenta" && <p className="text-center text-xs text-neutral-500">Este no es un comprobante de pago</p>}
     </div>
   );
