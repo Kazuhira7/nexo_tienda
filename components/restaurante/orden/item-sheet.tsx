@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useMoney } from "@/components/org-provider";
+import AnimatedNumber from "@/components/ui/animated-number";
 import type { MenuGroup, MenuItemView } from "./order-screen";
 
 interface Props {
@@ -82,13 +83,13 @@ function ItemForm({ item, groups, onAdd }: { item: MenuItemView; groups: MenuGro
                     key={o.id}
                     type="button"
                     onClick={() => toggle(g, o.id)}
-                    className={`min-h-14 rounded-xl border-2 px-3 py-2 text-left text-sm transition-colors ${
+                    className={`min-h-14 rounded-xl border-2 px-3 py-2 text-left text-sm transition-all duration-150 active:scale-95 ${
                       on ? "border-primary bg-primary/10" : "border-border hover:bg-muted"
                     }`}
                   >
                     <span className="flex items-center justify-between gap-1 font-medium">
                       {o.name}
-                      {on && <CheckIcon className="size-4 text-primary shrink-0" />}
+                      {on && <CheckIcon className="size-4 text-primary shrink-0 animate-in zoom-in duration-200" />}
                     </span>
                     {o.price_delta !== 0 && (
                       <span className="text-xs text-muted-foreground">+{fmt(o.price_delta)}</span>
@@ -127,7 +128,7 @@ function ItemForm({ item, groups, onAdd }: { item: MenuItemView; groups: MenuGro
         >
           {missing.length > 0
             ? `Elige ${missing[0].name.toLowerCase()}`
-            : `Agregar · ${fmt(quantity * (item.price + extras))}`}
+            : <>Agregar · <AnimatedNumber value={quantity * (item.price + extras)} /></>}
         </Button>
       </div>
     </div>

@@ -1,21 +1,25 @@
 import { requireModule } from "@/lib/require-module";
 import { getOrgContext } from "@/lib/org-context";
 import { createClient } from "@/lib/supabase/server";
+import { localDateString } from "@/lib/dates";
 import SalonBoard, { type SalonOrder, type SalonTable } from "@/components/restaurante/salon/salon-board";
 import RealtimeRefresh from "@/components/restaurante/realtime-refresh";
 
 export default async function SalonPage() {
   await requireModule("restaurant");
-  const { orgId } = await getOrgContext();
+  const { orgId, modules, timezone } = await getOrgContext();
   const supabase = await createClient();
 
-  const [{ data: areas }, { data: tables }, { data: orders }] = await Promise.all([
+  const [{ data: areas }, { data: tables }, { data: orders }, { data: opening }] = await Promise.all([
     supabase.from("dining_areas").select("id, name").order("sort_order").order("name"),
     supabase.from("dining_tables").select("id, name, seats, status, area_id")
       .eq("active", true).order("sort_order").order("name"),
     supabase.from("orders")
       .select("id, table_id, order_type, order_number, opened_at, guests, customer_name, opened_by:staff_members!orders_opened_by_staff_fkey(name)")
       .eq("status", "open").order("opened_at"),
+    modules.includes("cash")
+      ? supabase.from("cash_openings").select("id").eq("opening_date", localDateString(timezone)).maybeSingle()
+      : Promise.resolve({ data: null }),
   ]);
 
   const openOrders = orders ?? [];
@@ -52,6 +56,7 @@ export default async function SalonPage() {
         areas={areas ?? []}
         tables={salonTables}
         takeaways={summary.filter((o) => o.type !== "dine_in")}
+        cashOpen={modules.includes("cash") ? !!opening : null}
       />
     </>
   );

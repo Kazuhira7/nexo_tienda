@@ -60,8 +60,9 @@ export default async function EquipoPage() {
         />
       ) : (
         <div className="rounded-xl border bg-card divide-y">
-          {members.map((m) => (
-            <div key={m.id} className={`px-4 py-3 flex items-start gap-3 ${m.active ? "" : "opacity-60"}`}>
+          {members.map((m, idx) => (
+            <div key={m.id} style={{ "--i": idx } as React.CSSProperties}
+              className={`animate-enter px-4 py-3 flex items-start gap-3 transition-opacity duration-300 ${m.active ? "" : "opacity-60"}`}>
               <div className="flex-1 min-w-0 space-y-1.5">
                 <div className="flex items-center gap-2 flex-wrap">
                   <p className="font-semibold">{m.name}</p>

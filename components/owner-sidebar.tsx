@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { ShoppingCartIcon, SettingsIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import UserMenu from "@/components/user-menu";
+import NavPending from "@/components/nav-pending";
 import { NAV_SECTION_LABELS, isNavActive, visibleNavItems, type NavItem } from "@/components/nav-items";
 import type { UserRole } from "@/types/database";
 
@@ -23,7 +24,7 @@ export default function OwnerSidebar({ userName, orgName, modules, role = "owner
   const isActive = (href: string) => isNavActive(pathname, href);
 
   const linkClass = (href: string) =>
-    `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+    `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 active:scale-[0.98] ${
       isActive(href)
         ? "bg-primary/10 text-primary"
         : "text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -78,8 +79,9 @@ export default function OwnerSidebar({ userName, orgName, modules, role = "owner
             <div className="space-y-0.5">
               {section.items.map(({ href, label, icon: Icon }) => (
                 <Link key={href} href={href} className={linkClass(href)}>
-                  <Icon className="size-4 shrink-0" />
-                  {label}
+                  <Icon className={`size-4 shrink-0 transition-transform duration-200 ${isActive(href) ? "scale-110" : ""}`} />
+                  <span className="flex-1">{label}</span>
+                  <NavPending />
                 </Link>
               ))}
             </div>

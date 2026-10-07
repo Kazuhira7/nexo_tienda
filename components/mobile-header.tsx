@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import UserMenu from "@/components/user-menu";
 import { MenuIcon } from "lucide-react";
 import { isNavActive, visibleNavItems } from "@/components/nav-items";
+import NavPending from "@/components/nav-pending";
 import type { UserRole } from "@/types/database";
 
 interface Props {
@@ -64,7 +65,8 @@ export default function MobileHeader({ userName, orgName, modules, role = "owner
                       }`}
                     >
                       <Icon className="size-4 shrink-0" />
-                      {cta ? "Nueva venta" : label}
+                      <span className="flex-1">{cta ? "Nueva venta" : label}</span>
+                      <NavPending />
                     </Link>
                   );
                 })}

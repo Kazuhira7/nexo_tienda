@@ -48,6 +48,16 @@ Reglas de arquitectura:
 - Módulos nuevos `restaurant` y `kitchen`; preset restaurante = `restaurant, customers, cash` (`kitchen` opcional por org).
 - `organizations.timezone` (007) + `lib/dates.ts`: "hoy" se calcula en la hora local del negocio.
 
+**Movimiento en la interfaz** (`app/globals.css`, sección MOVIMIENTO):
+- `template.tsx` por grupo de rutas: cada página entra con `animate-page`.
+- `loading.tsx`: esqueletos al navegar.
+- `NavPending` (`useLinkStatus`): aviso inmediato en el menú al tocar un enlace.
+- `AnimatedNumber`: los montos cuentan hasta el nuevo valor.
+- `animate-enter` con `--i`: entrada escalonada.
+- `animate-shake`, `animate-pop`, `animate-grow`, `animate-check` para errores, confirmaciones y barras.
+- Botones con escala al presionar.
+- Todo respeta `prefers-reduced-motion`.
+
 **Deuda / pendientes conocidos:**
 - ✔ `register_sale`/`cancel_sale` protegidos (014) y UPDATE de `organizations` solo para la dueña y columnas de
   configuración (012).
@@ -59,7 +69,7 @@ Reglas de arquitectura:
 - Portal de marca (A3) incompleto; alertas de stock en dashboard sí existen.
 - ⚠️ El proyecto Supabase es plan gratuito y **se pausa por inactividad** → producción se cae. Para vender esto se necesita plan Pro.
 
-**Historia de BD** en `docs/db/` (correr en orden en una base nueva): `000_schema_base` → `001_multitenant` → `002_cash_closures` → `003_brand_payments` → `004_platform_modules` → `005_fix_handle_new_user` → `006a_terminal_role` (sola) → `006_restaurante` → `007_org_timezone` → `008_orden_ui` → `009_pagos_divididos` → `010_order_payments_read` → `011_reportes` → `012_ticket_info_y_org_update` → `013_kitchen_tickets` → `014_harden_sales_rpcs`.
+**Historia de BD** en `docs/db/` (correr en orden en una base nueva): `000_schema_base` → `001_multitenant` → `002_cash_closures` → `003_brand_payments` → `004_platform_modules` → `005_fix_handle_new_user` → `006a_terminal_role` (sola) → `006_restaurante` → `007_org_timezone` → `008_orden_ui` → `009_pagos_divididos` → `010_order_payments_read` → `011_reportes` → `012_ticket_info_y_org_update` → `013_kitchen_tickets` → `014_harden_sales_rpcs` → `015_cash_openings`.
 
 ---
 

@@ -15,8 +15,8 @@ export default function BarList({ rows, empty = "Sin datos en este periodo" }: {
   const max = Math.max(...rows.map((r) => r.value), 1);
   return (
     <ul className="space-y-2">
-      {rows.map((r) => (
-        <li key={r.key} className="space-y-1">
+      {rows.map((r, i) => (
+        <li key={r.key} className="space-y-1 animate-enter" style={{ "--i": i } as React.CSSProperties}>
           <div className="flex items-baseline justify-between gap-3 text-sm">
             <span className="min-w-0 truncate">
               {r.label}
@@ -25,7 +25,8 @@ export default function BarList({ rows, empty = "Sin datos en este periodo" }: {
             <span className="font-medium shrink-0">{r.right}</span>
           </div>
           <div className="h-2 rounded-full bg-muted overflow-hidden">
-            <div className="h-full rounded-full bg-primary" style={{ width: `${(r.value / max) * 100}%` }} />
+            <div className="h-full rounded-full bg-primary animate-grow"
+              style={{ width: `${(r.value / max) * 100}%`, animationDelay: `${Math.min(i, 14) * 40 + 120}ms` }} />
           </div>
         </li>
       ))}

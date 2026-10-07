@@ -16,6 +16,7 @@ interface Props {
 // 4-dot PIN entry with big keys; also accepts the physical keyboard.
 export default function PinKeypad({ onComplete, pending, error, onInput }: Props) {
   const [pin, setPin] = useState("");
+  const [attempt, setAttempt] = useState(0); // re-keys the dots so a failed attempt shakes again
 
   const press = useCallback((key: string) => {
     if (pending) return;
@@ -28,6 +29,7 @@ export default function PinKeypad({ onComplete, pending, error, onInput }: Props
     const next = pin + key;
     if (next.length === PIN_LENGTH) {
       setPin("");
+      setAttempt((a) => a + 1);
       onComplete(next);
     } else {
       setPin(next);
@@ -48,11 +50,15 @@ export default function PinKeypad({ onComplete, pending, error, onInput }: Props
   return (
     <div className="space-y-5">
       <div className="space-y-3 text-center">
-        <div className="flex justify-center gap-4" aria-label={`${filled} de ${PIN_LENGTH} dígitos`}>
+        <div
+          key={error && !pending ? `err-${attempt}` : "ok"}
+          className={`flex justify-center gap-4 ${error && !pending ? "animate-shake" : ""}`}
+          aria-label={`${filled} de ${PIN_LENGTH} dígitos`}
+        >
           {Array.from({ length: PIN_LENGTH }).map((_, i) => (
             <span
-              key={i}
-              className={`size-4 rounded-full border-2 transition-colors ${
+              key={`${i}-${i < filled}`}
+              className={`size-4 rounded-full border-2 transition-colors duration-200 ${i < filled ? "animate-pop" : ""} ${
                 error && !pending
                   ? "border-destructive"
                   : i < filled
@@ -78,7 +84,7 @@ export default function PinKeypad({ onComplete, pending, error, onInput }: Props
               onClick={() => press(key)}
               disabled={pending}
               aria-label={key === "del" ? "Borrar" : key}
-              className="h-16 rounded-2xl bg-muted/60 text-2xl font-semibold active:bg-primary/15 active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center select-none"
+              className="h-16 rounded-2xl bg-muted/60 text-2xl font-semibold hover:bg-muted active:bg-primary/20 active:scale-90 transition-all duration-150 disabled:opacity-50 flex items-center justify-center select-none"
             >
               {key === "del" ? <DeleteIcon className="size-6" /> : key}
             </button>

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { MoreHorizontalIcon } from "lucide-react";
 import { useState } from "react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import NavPending from "@/components/nav-pending";
 import { isNavActive, visibleNavItems } from "@/components/nav-items";
 import type { UserRole } from "@/types/database";
 
@@ -35,14 +36,15 @@ export default function MobileBottomNav({ modules, role = "owner" }: Props) {
             <Link
               key={href}
               href={href}
-              className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors ${
+              className={`relative flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors active:bg-muted/60 ${
                 isActive(href) ? "text-primary" : "text-muted-foreground"
               }`}
             >
-              <Icon className={`size-5 ${isActive(href) ? "text-primary" : ""}`} />
+              <Icon className={`size-5 transition-transform duration-200 ${isActive(href) ? "text-primary -translate-y-0.5 scale-110" : ""}`} />
               {label}
+              <NavPending className="absolute top-2 right-1/4" />
               {isActive(href) && (
-                <span className="absolute bottom-1 w-1 h-1 rounded-full bg-primary" />
+                <span className="absolute bottom-1 w-1 h-1 rounded-full bg-primary animate-in zoom-in duration-200" />
               )}
             </Link>
           ))}
@@ -73,12 +75,13 @@ export default function MobileBottomNav({ modules, role = "owner" }: Props) {
                   key={href}
                   href={href}
                   onClick={() => setMoreOpen(false)}
-                  className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-colors ${
+                  className={`relative flex flex-col items-center gap-2 p-4 rounded-xl transition-all active:scale-95 ${
                     isActive(href) ? "bg-primary/10 text-primary" : "bg-muted/50 text-foreground hover:bg-muted"
                   }`}
                 >
                   <Icon className="size-5" />
                   <span className="text-xs font-medium text-center leading-tight">{label}</span>
+                  <NavPending className="absolute top-2 right-2" />
                 </Link>
               ))}
             </div>

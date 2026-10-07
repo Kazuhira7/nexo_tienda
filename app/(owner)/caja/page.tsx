@@ -7,6 +7,7 @@ import { requireModule } from "@/lib/require-module";
 import { getOrgContext } from "@/lib/org-context";
 import { localDateString, localDayRange } from "@/lib/dates";
 import CashClosureForm from "@/components/caja/cash-closure-form";
+import CashOpeningForm from "@/components/caja/cash-opening-form";
 import type { PaymentMethod } from "@/types/database";
 
 export default async function CajaPage() {
@@ -18,7 +19,7 @@ export default async function CajaPage() {
   const today = localDateString(timezone);
   const todayRange = localDayRange(today, timezone);
 
-  const [{ data: todaySales }, { data: existing }, { data: history }] = await Promise.all([
+  const [{ data: todaySales }, { data: existing }, { data: history }, { data: opening }] = await Promise.all([
     supabase
       .from("sales")
       .select("total, payment_method, cancelled")
@@ -30,7 +31,26 @@ export default async function CajaPage() {
       .select("*")
       .order("closure_date", { ascending: false })
       .limit(30),
+    supabase
+      .from("cash_openings")
+      .select("opening_cash, notes, created_at, profile:profiles(full_name), staff:staff_members(name)")
+      .eq("opening_date", today)
+      .maybeSingle(),
   ]);
+
+  const openingCash = Number(opening?.opening_cash ?? 0);
+  const openingView = opening
+    ? {
+        opening_cash: openingCash,
+        notes:        opening.notes,
+        openedAt:     `Abierta a las ${new Date(opening.created_at).toLocaleTimeString("es-NI", {
+          timeZone: timezone, hour: "2-digit", minute: "2-digit",
+        })}`,
+        openedBy:     (opening.staff as { name: string } | null)?.name
+                      ?? (opening.profile as { full_name: string | null } | null)?.full_name
+                      ?? null,
+      }
+    : null;
 
   // Esperado por método (excluye ventas anuladas)
   const valid = (todaySales ?? []).filter((s) => !s.cancelled);
@@ -56,9 +76,12 @@ export default async function CajaPage() {
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
-        <h1 className="text-2xl font-bold">Cierre de caja</h1>
+        <h1 className="text-2xl font-bold">Caja</h1>
         <p className="text-sm text-muted-foreground mt-0.5 capitalize">{todayLabel}</p>
       </div>
+
+      {/* Apertura del día */}
+      <CashOpeningForm opening={openingView} closed={!!existing} />
 
       {/* Esperado por método de pago */}
       <div>
@@ -102,7 +125,8 @@ export default async function CajaPage() {
       {/* Formulario de cuadre */}
       <CashClosureForm
         closureDate={today}
-        expectedCash={expectedCash}
+        openingCash={openingCash}
+        cashSales={expectedCash}
         expectedPos={expectedPos}
         expectedTransfer={expectedTransfer}
         expectedMixed={expectedMixed}
@@ -124,13 +148,14 @@ export default async function CajaPage() {
           </div>
         ) : (
           <div className="rounded-xl border bg-card divide-y">
-            {history.map((c) => {
+            {history.map((c, idx) => {
               const cuadrado = c.difference === 0;
               const dateLabel = new Date(`${c.closure_date}T12:00:00`).toLocaleDateString("es-NI", {
                 weekday: "short", day: "numeric", month: "short",
               });
               return (
-                <div key={c.id} className="flex items-center justify-between px-4 py-3">
+                <div key={c.id} style={{ "--i": idx } as React.CSSProperties}
+                  className="animate-enter flex items-center justify-between px-4 py-3">
                   <div>
                     <p className="font-medium text-sm capitalize">{dateLabel}</p>
                     <p className="text-xs text-muted-foreground">

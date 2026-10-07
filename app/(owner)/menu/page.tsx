@@ -109,10 +109,11 @@ export default async function MenuPage() {
               </p>
             ) : (
               <div className="rounded-xl border bg-card divide-y">
-                {sectionItems.map((item) => {
+                {sectionItems.map((item, idx) => {
                   const itemGroups = groupIdsOf(item.id);
                   return (
-                    <div key={item.id} className={`px-4 py-3 flex items-center gap-3 ${item.active ? "" : "opacity-60"}`}>
+                    <div key={item.id} style={{ "--i": idx } as React.CSSProperties}
+                      className={`animate-enter px-4 py-3 flex items-center gap-3 transition-opacity duration-300 ${item.active ? "" : "opacity-60"}`}>
                       <div className="flex-1 min-w-0 space-y-1">
                         <div className="flex items-center gap-2 flex-wrap">
                           <p className="font-medium">{item.name}</p>
@@ -179,11 +180,12 @@ export default async function MenuPage() {
           </p>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
-            {allGroups.map((g) => {
+            {allGroups.map((g, idx) => {
               const opts = optionsOf(g.id);
               const used = usedByCount(g.id);
               return (
-                <div key={g.id} className="rounded-xl border bg-card p-4 space-y-2">
+                <div key={g.id} style={{ "--i": idx } as React.CSSProperties}
+                  className="animate-enter rounded-xl border bg-card p-4 space-y-2">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className="font-semibold">{g.name}</p>

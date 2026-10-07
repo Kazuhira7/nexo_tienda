@@ -155,7 +155,9 @@ export default function PrintStation({ tickets, timezone }: { tickets: KitchenTi
             {printing ? "Imprimiendo…" : "En espera"}
           </p>
           {printing ? (
-            <KitchenTicket ticket={printing} timezone={timezone} printable />
+            <div key={printing.id} className="animate-in fade-in slide-in-from-top-3 duration-300">
+              <KitchenTicket ticket={printing} timezone={timezone} printable />
+            </div>
           ) : (
             <div className="rounded-xl border border-dashed px-4 py-10 text-center text-sm text-muted-foreground">
               {pending.length ? `${pending.length} en cola` : "Sin comandas pendientes"}
@@ -171,8 +173,9 @@ export default function PrintStation({ tickets, timezone }: { tickets: KitchenTi
             </p>
           ) : (
             <ul className="rounded-xl border bg-card divide-y">
-              {tickets.map((t) => (
-                <li key={t.id} className="px-4 py-3 flex items-center gap-3">
+              {tickets.map((t, idx) => (
+                <li key={t.id} style={{ "--i": idx } as React.CSSProperties}
+                  className="animate-enter px-4 py-3 flex items-center gap-3">
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold truncate">
                       #{t.ticket_number} · {t.title}

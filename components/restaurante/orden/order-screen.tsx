@@ -15,6 +15,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { useMoney } from "@/components/org-provider";
 import { useStaffAction } from "@/components/staff/use-staff-action";
 import Elapsed from "@/components/restaurante/elapsed";
+import AnimatedNumber from "@/components/ui/animated-number";
 import ItemSheet from "./item-sheet";
 import OrderTicket from "./order-ticket";
 import {
@@ -251,7 +252,7 @@ export default function OrderScreen({ order, items, menu }: { order: OrderView; 
                 { id: ALL, name: "Todo" },
               ].map((c) => (
                 <button key={c.id} type="button" onClick={() => setCategory(c.id)}
-                  className={`h-11 px-4 rounded-full border text-sm font-medium whitespace-nowrap transition-colors ${
+                  className={`h-11 px-4 rounded-full border text-sm font-medium whitespace-nowrap transition-all duration-200 active:scale-95 ${
                     category === c.id ? "bg-primary text-primary-foreground border-primary" : "bg-card hover:bg-muted"
                   }`}>
                   {c.name}
@@ -264,14 +265,15 @@ export default function OrderScreen({ order, items, menu }: { order: OrderView; 
                 El menú está vacío. La administradora lo arma en <span className="font-medium">Menú</span>.
               </p>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-                {visibleItems.map((item) => (
+              <div key={category} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                {visibleItems.map((item, idx) => (
                   <button
                     key={item.id}
                     type="button"
                     onClick={() => tapItem(item)}
                     disabled={!item.available}
-                    className="min-h-20 rounded-xl border bg-card p-3 text-left transition-all active:scale-[0.97] active:bg-primary/10 disabled:opacity-50 disabled:active:scale-100"
+                    style={{ "--i": idx } as React.CSSProperties}
+                    className="animate-enter min-h-20 rounded-xl border bg-card p-3 text-left transition-all duration-150 hover:border-primary/40 hover:shadow-sm active:scale-[0.95] active:bg-primary/10 disabled:opacity-50 disabled:active:scale-100"
                   >
                     <p className="font-semibold leading-tight text-sm">{item.name}</p>
                     <p className="mt-1 text-sm text-muted-foreground">{fmt(item.price)}</p>
@@ -307,7 +309,7 @@ export default function OrderScreen({ order, items, menu }: { order: OrderView; 
               Ver orden · {activeItems.reduce((n, i) => n + i.quantity, 0)}
               {pendingCount > 0 && <span className="text-accent">({pendingCount} por enviar)</span>}
             </span>
-            <span className="text-lg font-bold">{fmt(total)}</span>
+            <span className="text-lg font-bold"><AnimatedNumber value={total} /></span>
           </button>
         </div>
       )}

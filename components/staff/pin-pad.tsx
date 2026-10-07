@@ -28,7 +28,7 @@ export default function PinPad({ orgName, canLeave }: Props) {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 py-10">
-      <div className="w-full max-w-xs space-y-8">
+      <div className="w-full max-w-xs space-y-8 animate-in fade-in zoom-in-95 duration-300">
         <div className="text-center space-y-2">
           <p className="text-3xl font-heading font-bold text-primary">nexo</p>
           <p className="text-sm text-muted-foreground truncate">{orgName}</p>

@@ -431,6 +431,7 @@ export type Database = {
           expected_pos:      number;
           expected_transfer: number;
           expected_mixed:    number;
+          opening_cash:      number;
           difference:        number;
           notes:             string | null;
           closed_by:         string | null;
@@ -445,6 +446,7 @@ export type Database = {
           expected_pos?:      number;
           expected_transfer?: number;
           expected_mixed?:    number;
+          opening_cash?:      number;
           difference?:        number;
           notes?:             string | null;
           closed_by?:         string | null;
@@ -459,6 +461,7 @@ export type Database = {
           expected_pos?:      number;
           expected_transfer?: number;
           expected_mixed?:    number;
+          opening_cash?:      number;
           difference?:        number;
           notes?:             string | null;
           closed_by?:         string | null;
@@ -467,6 +470,42 @@ export type Database = {
         Relationships: [
           { foreignKeyName: "cash_closures_organization_id_fkey"; columns: ["organization_id"]; isOneToOne: false; referencedRelation: "organizations"; referencedColumns: ["id"] },
           { foreignKeyName: "cash_closures_closed_by_fkey"; columns: ["closed_by"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+        ];
+      };
+      // ── cash_openings (apertura de caja: fondo inicial del día) ──
+      cash_openings: {
+        Row: {
+          id:              string;
+          organization_id: string;
+          opening_date:    string;
+          opening_cash:    number;
+          notes:           string | null;
+          opened_by:       string | null;
+          opened_by_staff: string | null;
+          created_at:      string;
+          updated_at:      string;
+        };
+        Insert: {
+          id?:              string;
+          organization_id:  string;
+          opening_date:     string;
+          opening_cash:     number;
+          notes?:           string | null;
+          opened_by?:       string | null;
+          opened_by_staff?: string | null;
+          created_at?:      string;
+          updated_at?:      string;
+        };
+        Update: {
+          opening_cash?:    number;
+          notes?:           string | null;
+          opened_by?:       string | null;
+          updated_at?:      string;
+        };
+        Relationships: [
+          { foreignKeyName: "cash_openings_organization_id_fkey"; columns: ["organization_id"]; isOneToOne: false; referencedRelation: "organizations"; referencedColumns: ["id"] },
+          { foreignKeyName: "cash_openings_opened_by_fkey"; columns: ["opened_by"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+          { foreignKeyName: "cash_openings_opened_by_staff_fkey"; columns: ["opened_by_staff"]; isOneToOne: false; referencedRelation: "staff_members"; referencedColumns: ["id"] },
         ];
       };
       // ── brand_payments ──────────────────────────────────────
@@ -921,6 +960,10 @@ export type Database = {
         Returns: void;
       };
       request_bill:            { Args: { p_staff_token: string; p_order_id: string }; Returns: void };
+      open_cash: {
+        Args: { p_staff_token: string; p_amount: number; p_notes?: string | null };
+        Returns: void;
+      };
       mark_kitchen_ticket_printed: { Args: { p_ticket_id: string }; Returns: void };
       reprint_kitchen_ticket:      { Args: { p_ticket_id: string }; Returns: void };
       /** Owner-only restaurant report; shape in lib/restaurant-report.ts */

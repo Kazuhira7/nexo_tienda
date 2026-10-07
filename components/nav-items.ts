@@ -46,7 +46,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/marcas",        label: "Marcas",         icon: StoreIcon,           section: "operations", mobile: "more",    module: "brands" },
   { href: "/importar",      label: "Importar CSV",   icon: UploadIcon,          section: "operations", mobile: "more",    module: "inventory" },
   { href: "/reportes",      label: "Reportes",       icon: BarChart3Icon,       section: "finance",    mobile: "more",    module: "restaurant" },
-  { href: "/caja",          label: "Cierre de caja", icon: CalculatorIcon,      section: "finance",    mobile: "more",    module: "cash" },
+  { href: "/caja",          label: "Caja",           icon: CalculatorIcon,      section: "finance",    mobile: "more",    module: "cash" },
   { href: "/clientes",      label: "Clientes",       icon: UsersIcon,           section: "finance",    mobile: "more",    module: "customers" },
   { href: "/liquidaciones", label: "Liquidaciones",  icon: WalletIcon,          section: "finance",    mobile: "more",    module: "settlements" },
   { href: "/perfil",        label: "Mi perfil",      icon: UserIcon,            section: "account",    mobile: "more" },

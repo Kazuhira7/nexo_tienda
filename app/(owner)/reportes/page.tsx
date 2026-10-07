@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import BarList from "@/components/restaurante/reportes/bar-list";
+import AnimatedNumber from "@/components/ui/animated-number";
 import { METHOD_LABEL } from "@/components/restaurante/ticket-labels";
 
 interface Props {
@@ -78,13 +79,13 @@ export default async function ReportesPage({ searchParams }: Props) {
         <>
           {/* KPIs */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <Kpi label="Ventas" value={fmt(report.totals.sales)}
+            <Kpi i={0} label="Ventas" value={<AnimatedNumber value={report.totals.sales} fromZero />}
               sub={report.totals.discounts > 0 ? `Descuentos ${fmt(report.totals.discounts)}` : undefined} />
-            <Kpi label="Órdenes cobradas" value={String(report.totals.orders)}
+            <Kpi i={1} label="Órdenes cobradas" value={<AnimatedNumber value={report.totals.orders} format="int" fromZero />}
               sub={report.totals.takeaway > 0 ? `${report.totals.takeaway} para llevar` : undefined} />
-            <Kpi label="Ticket promedio"
-              value={report.totals.orders ? fmt(report.totals.sales / report.totals.orders) : "—"} />
-            <Kpi label="Personas atendidas" value={String(report.totals.guests)}
+            <Kpi i={2} label="Ticket promedio"
+              value={report.totals.orders ? <AnimatedNumber value={report.totals.sales / report.totals.orders} fromZero /> : "—"} />
+            <Kpi i={3} label="Personas atendidas" value={<AnimatedNumber value={report.totals.guests} format="int" fromZero />}
               sub="En mesas (sin para llevar)" />
           </div>
 
@@ -173,7 +174,7 @@ export default async function ReportesPage({ searchParams }: Props) {
                 {report.orders.map((o) => (
                   <li key={o.id}>
                     <Link href={`/reportes/orden/${o.id}`}
-                      className="py-2.5 flex items-center justify-between gap-3 hover:bg-muted/50 -mx-2 px-2 rounded-lg">
+                      className="py-2.5 flex items-center justify-between gap-3 hover:bg-muted/50 -mx-2 px-2 rounded-lg transition-colors active:scale-[0.99]">
                       <div className="min-w-0">
                         <p className="text-sm font-medium truncate">#{o.number} · {orderLabel(o)}</p>
                         <p className="text-xs text-muted-foreground">
@@ -195,9 +196,9 @@ export default async function ReportesPage({ searchParams }: Props) {
   );
 }
 
-function Kpi({ label, value, sub }: { label: string; value: string; sub?: string }) {
+function Kpi({ label, value, sub, i = 0 }: { label: string; value: React.ReactNode; sub?: string; i?: number }) {
   return (
-    <Card>
+    <Card className="animate-enter" style={{ "--i": i } as React.CSSProperties}>
       <CardHeader className="pb-1.5">
         <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
       </CardHeader>
@@ -211,7 +212,7 @@ function Kpi({ label, value, sub }: { label: string; value: string; sub?: string
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border bg-card p-4 space-y-3">
+    <div className="rounded-xl border bg-card p-4 space-y-3 animate-enter" style={{ "--i": 4 } as React.CSSProperties}>
       <h2 className="text-sm font-semibold">{title}</h2>
       {children}
     </div>

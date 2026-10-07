@@ -11,7 +11,8 @@ import { saveCashClosure } from "@/app/(owner)/caja/actions";
 
 interface Props {
   closureDate:      string;
-  expectedCash:     number;
+  openingCash:      number; // fondo inicial del día (0 si no se abrió caja)
+  cashSales:        number; // ventas en efectivo del día
   expectedPos:      number;
   expectedTransfer: number;
   expectedMixed:    number;
@@ -23,7 +24,8 @@ interface Props {
 
 export default function CashClosureForm({
   closureDate,
-  expectedCash,
+  openingCash,
+  cashSales,
   expectedPos,
   expectedTransfer,
   expectedMixed,
@@ -36,6 +38,7 @@ export default function CashClosureForm({
   );
   const [notes, setNotes] = useState(existing?.notes ?? "");
 
+  const expectedCash = Math.round((openingCash + cashSales) * 100) / 100;
   const countedNum = parseFloat(counted || "0") || 0;
   const difference = Math.round((countedNum - expectedCash) * 100) / 100;
   const hasInput = counted.trim() !== "";
@@ -45,7 +48,8 @@ export default function CashClosureForm({
     start(async () => {
       const result = await saveCashClosure({
         closureDate,
-        expectedCash,
+        openingCash,
+        cashSales,
         countedCash:      countedNum,
         expectedPos,
         expectedTransfer,
@@ -60,6 +64,13 @@ export default function CashClosureForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <section className="rounded-xl border bg-card p-5 space-y-4">
+        {/* Desglose de lo esperado en el cajón */}
+        <div className="rounded-lg bg-muted/50 px-4 py-3 text-sm space-y-1">
+          <div className="flex justify-between"><span className="text-muted-foreground">Fondo inicial</span><span>{fmt(openingCash)}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">+ Ventas en efectivo</span><span>{fmt(cashSales)}</span></div>
+          <div className="flex justify-between font-semibold border-t pt-1"><span>Debe haber en caja</span><span>{fmt(expectedCash)}</span></div>
+        </div>
+
         <div className="space-y-1.5">
           <Label htmlFor="counted_cash">Efectivo contado en caja</Label>
           <Input
@@ -81,7 +92,8 @@ export default function CashClosureForm({
         {/* Resultado del cuadre — solo si hay conteo */}
         {hasInput && (
           <div
-            className={`rounded-xl border-2 p-4 flex items-center justify-between ${
+            key={difference === 0 ? "ok" : "diff"}
+            className={`rounded-xl border-2 p-4 flex items-center justify-between animate-in fade-in zoom-in-95 duration-200 ${
               difference === 0
                 ? "border-emerald-300 bg-emerald-50 dark:bg-emerald-950/30 dark:border-emerald-900"
                 : "border-destructive/50 bg-destructive/5"

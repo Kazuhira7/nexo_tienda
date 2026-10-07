@@ -98,8 +98,9 @@ export default async function MesasPage() {
               </p>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                {groupTables.map((t) => (
-                  <div key={t.id} className={`rounded-xl border bg-card p-3 space-y-2 ${t.active ? "" : "opacity-60"}`}>
+                {groupTables.map((t, idx) => (
+                  <div key={t.id} style={{ "--i": idx } as React.CSSProperties}
+                    className={`animate-enter rounded-xl border bg-card p-3 space-y-2 transition-opacity duration-300 ${t.active ? "" : "opacity-60"}`}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <p className="font-semibold truncate">{t.name}</p>

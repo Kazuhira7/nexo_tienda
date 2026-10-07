@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useMoney } from "@/components/org-provider";
+import AnimatedNumber from "@/components/ui/animated-number";
 import { useStaffAction } from "@/components/staff/use-staff-action";
 import Ticket, { type TicketItem, type TicketPayment } from "@/components/restaurante/ticket";
 import { PrintTicketButton } from "@/components/restaurante/print-ticket";
@@ -144,8 +145,8 @@ export default function CobrarScreen({ order, items, payments, business }: Props
 
         {/* ── Panel de pago ── */}
         {closed ? (
-          <div className="rounded-2xl border bg-card p-6 text-center space-y-3 print:hidden">
-            <CheckCircle2Icon className="size-12 text-primary mx-auto" />
+          <div className="rounded-2xl border bg-card p-6 text-center space-y-3 print:hidden animate-in fade-in zoom-in-95 duration-300">
+            <CheckCircle2Icon className="size-16 text-emerald-600 mx-auto animate-check" />
             <p className="text-lg font-semibold">
               {order.status === "paid" ? "Cuenta pagada" : "Orden cancelada"}
             </p>
@@ -158,7 +159,7 @@ export default function CobrarScreen({ order, items, payments, business }: Props
             <div className="flex items-end justify-between gap-2">
               <div>
                 <p className="text-xs text-muted-foreground">{paid > 0 ? "Saldo pendiente" : "Total a cobrar"}</p>
-                <p className="text-3xl font-bold">{fmt(balance)}</p>
+                <p className="text-3xl font-bold"><AnimatedNumber value={balance} /></p>
               </div>
               {paid === 0 && (
                 <Button variant="ghost" size="sm" className="gap-1" onClick={() => setDiscountOpen(true)}>
@@ -181,7 +182,7 @@ export default function CobrarScreen({ order, items, payments, business }: Props
                 <Chip on={byItems} onClick={() => { setByItems(!byItems); setPicked([]); }}>Por platillos</Chip>
               </div>
               {byItems && (
-                <div className="rounded-xl border divide-y max-h-56 overflow-y-auto">
+                <div className="rounded-xl border divide-y max-h-56 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
                   {items.map((i) => (
                     <label key={i.id} className="flex items-center gap-3 px-3 py-2.5 cursor-pointer">
                       <input type="checkbox" className="size-5 accent-[var(--primary)]"
@@ -200,7 +201,7 @@ export default function CobrarScreen({ order, items, payments, business }: Props
               <div className="grid grid-cols-3 gap-2">
                 {METHODS.map(({ id, label, icon: Icon }) => (
                   <button key={id} type="button" onClick={() => setMethod(id)}
-                    className={`h-16 rounded-xl border-2 flex flex-col items-center justify-center gap-1 text-xs font-medium transition-colors ${
+                    className={`h-16 rounded-xl border-2 flex flex-col items-center justify-center gap-1 text-xs font-medium transition-all duration-150 active:scale-95 ${
                       method === id ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-muted"
                     }`}>
                     <Icon className="size-5" />
@@ -235,11 +236,11 @@ export default function CobrarScreen({ order, items, payments, business }: Props
               </div>
             )}
             {change !== null && (
-              <div className={`rounded-xl px-4 py-3 flex items-center justify-between ${
+              <div className={`rounded-xl px-4 py-3 flex items-center justify-between animate-in fade-in slide-in-from-top-1 duration-200 ${
                 change < 0 ? "bg-destructive/10 text-destructive" : "bg-primary/10"
               }`}>
                 <span className="text-sm font-medium">{change < 0 ? "Falta" : "Vuelto"}</span>
-                <span className="text-2xl font-bold">{fmt(Math.abs(change))}</span>
+                <span className="text-2xl font-bold"><AnimatedNumber value={Math.abs(change)} /></span>
               </div>
             )}
 
@@ -281,7 +282,7 @@ export default function CobrarScreen({ order, items, payments, business }: Props
 function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button type="button" onClick={onClick}
-      className={`h-10 px-4 rounded-full border text-sm font-medium transition-colors ${
+      className={`h-10 px-4 rounded-full border text-sm font-medium transition-all duration-150 active:scale-95 ${
         on ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-muted"
       }`}>
       {children}

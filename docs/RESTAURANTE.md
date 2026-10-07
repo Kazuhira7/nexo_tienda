@@ -147,6 +147,11 @@ POS Master (instalado en cada computadora) solo pide PIN. Nexo está en internet
   - `send_order_to_kitchen` crea un ticket por ronda con lo enviado: cocina primero, barra al final.
   - `mark_kitchen_ticket_printed` y `reprint_kitchen_ticket` son para la estación (sin PIN, solo equipo).
   - La tabla está en Realtime.
+- **015 (Core):** apertura de caja (`cash_openings`).
+  - Fondo inicial del día local.
+  - La dueña lo abre o corrige en `/caja`. En restaurante también lo abre desde el salón quien tenga permiso de
+    cobrar, con PIN (`open_cash`).
+  - El cierre guarda `opening_cash` y espera fondo + ventas en efectivo.
 - **014 (Core):** `register_sale` y `cancel_sale` ya no se pueden ejecutar sin sesión.
   - Solo la dueña puede usarlas; la org y el vendedor salen de la sesión.
   - Se borró la versión vieja de 4 argumentos.
