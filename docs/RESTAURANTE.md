@@ -152,6 +152,10 @@ POS Master (instalado en cada computadora) solo pide PIN. Nexo está en internet
   - La dueña lo abre o corrige en `/caja`. En restaurante también lo abre desde el salón quien tenga permiso de
     cobrar, con PIN (`open_cash`).
   - El cierre guarda `opening_cash` y espera fondo + ventas en efectivo.
+- **016:** en el restaurante **no se puede cobrar sin abrir la caja del día**.
+  - `pay_order` lanza "Abre la caja antes de cobrar" con hint `cash_closed`.
+  - Solo aplica si la org usa el módulo `cash`. El POS del colectivo no cambia.
+  - `/cobrar` muestra el bloqueo con el botón "Abrir caja".
 - **014 (Core):** `register_sale` y `cancel_sale` ya no se pueden ejecutar sin sesión.
   - Solo la dueña puede usarlas; la org y el vendedor salen de la sesión.
   - Se borró la versión vieja de 4 argumentos.

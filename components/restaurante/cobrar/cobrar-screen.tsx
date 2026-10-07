@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ArrowLeftIcon, BanknoteIcon, CreditCardIcon, ArrowLeftRightIcon, CheckCircle2Icon, PercentIcon } from "lucide-react";
+import { ArrowLeftIcon, BanknoteIcon, CreditCardIcon, ArrowLeftRightIcon, CheckCircle2Icon, PercentIcon, LockIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +14,7 @@ import AnimatedNumber from "@/components/ui/animated-number";
 import { useStaffAction } from "@/components/staff/use-staff-action";
 import Ticket, { type TicketItem, type TicketPayment } from "@/components/restaurante/ticket";
 import { PrintTicketButton } from "@/components/restaurante/print-ticket";
+import OpenCashDialog from "@/components/restaurante/open-cash-dialog";
 import { applyDiscount, payOrder } from "@/app/(restaurante)/cobrar/actions";
 import type { TicketInfo } from "@/lib/org-context";
 
@@ -38,9 +39,10 @@ interface Props {
   items:    TicketItem[];
   payments: TicketPayment[];
   business: TicketInfo;
+  cashOpen: boolean; // false → today's drawer isn't open: payments are blocked (016)
 }
 
-export default function CobrarScreen({ order, items, payments, business }: Props) {
+export default function CobrarScreen({ order, items, payments, business, cashOpen }: Props) {
   const router = useRouter();
   const fmt = useMoney();
   const { run, pending, authDialog } = useStaffAction();
@@ -60,6 +62,7 @@ export default function CobrarScreen({ order, items, payments, business }: Props
   const [discountValue, setDiscountValue] = useState("");
   const [discountPct, setDiscountPct] = useState(false);
   const [lastBalance, setLastBalance] = useState(balance);
+  const [cashDialog, setCashDialog] = useState(false);
 
   // Server data changed (another payment landed): reset the suggested amount
   if (lastBalance !== balance) {
@@ -152,6 +155,17 @@ export default function CobrarScreen({ order, items, payments, business }: Props
             </p>
             <Button variant="cta" className="w-full h-12" onClick={() => router.push("/salon")}>
               Volver al salón
+            </Button>
+          </div>
+        ) : !cashOpen ? (
+          <div className="rounded-2xl border-2 border-accent/60 bg-accent/10 p-6 text-center space-y-3 print:hidden animate-in fade-in zoom-in-95 duration-300">
+            <LockIcon className="size-10 text-accent mx-auto" />
+            <p className="text-lg font-semibold">La caja no está abierta</p>
+            <p className="text-sm text-muted-foreground">
+              Para cobrar, primero abre la caja de hoy con el fondo inicial. Puedes imprimir la pre-cuenta mientras tanto.
+            </p>
+            <Button variant="cta" className="w-full h-12 text-base" onClick={() => setCashDialog(true)}>
+              Abrir caja
             </Button>
           </div>
         ) : (
@@ -274,6 +288,7 @@ export default function CobrarScreen({ order, items, payments, business }: Props
         </DialogContent>
       </Dialog>
 
+      <OpenCashDialog open={cashDialog} onOpenChange={setCashDialog} />
       {authDialog}
     </div>
   );

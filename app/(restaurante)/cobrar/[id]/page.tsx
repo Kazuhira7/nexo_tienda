@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { requireModule } from "@/lib/require-module";
 import { createClient } from "@/lib/supabase/server";
 import { getOrgContext } from "@/lib/org-context";
+import { localDateString } from "@/lib/dates";
 import CobrarScreen from "@/components/restaurante/cobrar/cobrar-screen";
 import type { OrderItemModifier } from "@/types/database";
 
@@ -12,9 +13,9 @@ export default async function CobrarPage({ params }: { params: Promise<{ id: str
   const { id } = await params;
   if (!UUID_RE.test(id)) notFound();
 
-  const { ticket } = await getOrgContext();
+  const { ticket, modules, timezone } = await getOrgContext();
   const supabase = await createClient();
-  const [{ data: order }, { data: items }, { data: payments }] = await Promise.all([
+  const [{ data: order }, { data: items }, { data: payments }, { data: opening }] = await Promise.all([
     supabase.from("orders")
       .select("id, order_number, order_type, status, customer_name, discount_total, table:dining_tables(name)")
       .eq("id", id).maybeSingle(),
@@ -22,6 +23,9 @@ export default async function CobrarPage({ params }: { params: Promise<{ id: str
       .select("id, item_name, quantity, line_total, modifiers")
       .eq("order_id", id).neq("status", "cancelled").order("created_at"),
     supabase.rpc("order_payments", { p_order_id: id }),
+    modules.includes("cash")
+      ? supabase.from("cash_openings").select("id").eq("opening_date", localDateString(timezone)).maybeSingle()
+      : Promise.resolve({ data: null }),
   ]);
   if (!order) notFound();
 
@@ -33,6 +37,7 @@ export default async function CobrarPage({ params }: { params: Promise<{ id: str
   return (
     <CobrarScreen
       business={ticket}
+      cashOpen={!modules.includes("cash") || !!opening}
       order={{
         id:       order.id,
         number:   order.order_number,

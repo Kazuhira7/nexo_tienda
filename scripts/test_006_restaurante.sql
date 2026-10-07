@@ -179,6 +179,7 @@ begin
   r := r || case when n = 1 then E'\nok cuenta pedida' else E'\nFAIL request_bill' end;
 
   tok_c := staff_login('2222')->>'token';
+  perform open_cash(tok_c, 0);  -- 016: sin caja abierta no se cobra
   begin
     perform pay_order(tok_c, o1, 620, 'cash', cust2);
     r := r || E'\nFAIL cliente de otra org aceptado';

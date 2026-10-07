@@ -14,7 +14,7 @@ import { useStaffAction } from "@/components/staff/use-staff-action";
 import Elapsed from "@/components/restaurante/elapsed";
 import AnimatedNumber from "@/components/ui/animated-number";
 import { openTable, openTakeaway, requestBill } from "@/app/(restaurante)/orden/actions";
-import { openCashFromFloor } from "@/app/(restaurante)/caja-actions";
+import OpenCashDialog from "@/components/restaurante/open-cash-dialog";
 import type { OrderType, TableStatus } from "@/types/database";
 
 export interface SalonOrder {
@@ -61,8 +61,6 @@ export default function SalonBoard({ areas, tables, takeaways, cashOpen }: Props
   const [takeawayOpen, setTakeawayOpen] = useState(false);
   const [takeawayName, setTakeawayName] = useState("");
   const [cashDialog, setCashDialog] = useState(false);
-  const [cashAmount, setCashAmount] = useState("");
-  const [cashNotes, setCashNotes] = useState("");
 
   const groups = [
     ...areas.map((a) => ({ id: a.id, name: a.name, tables: tables.filter((t) => t.area_id === a.id) })),
@@ -88,17 +86,6 @@ export default function SalonBoard({ areas, tables, takeaways, cashOpen }: Props
 
   function askBill(orderId: string) {
     run(() => requestBill(orderId), { onSuccess: () => toast.success("Cuenta pedida") });
-  }
-
-  function handleOpenCash(e: React.FormEvent) {
-    e.preventDefault();
-    const amount = Number(cashAmount) || 0;
-    run((pin) => openCashFromFloor(amount, cashNotes, pin), {
-      onSuccess: () => {
-        setCashDialog(false);
-        toast.success(`Caja abierta con ${fmt(amount)}`);
-      },
-    });
   }
 
   function handleTakeaway(e: React.FormEvent) {
@@ -133,7 +120,7 @@ export default function SalonBoard({ areas, tables, takeaways, cashOpen }: Props
             <LockOpenIcon className="size-5 text-accent shrink-0" />
             <div>
               <p className="font-semibold text-sm">La caja no está abierta hoy</p>
-              <p className="text-xs text-muted-foreground">Registra el fondo inicial antes de cobrar.</p>
+              <p className="text-xs text-muted-foreground">No se puede cobrar hasta abrirla con el fondo inicial.</p>
             </div>
           </div>
           <Button variant="cta" className="h-11" onClick={() => setCashDialog(true)}>Abrir caja</Button>
@@ -245,35 +232,7 @@ export default function SalonBoard({ areas, tables, takeaways, cashOpen }: Props
         </DialogContent>
       </Dialog>
 
-      <Dialog open={cashDialog} onOpenChange={setCashDialog}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle>Abrir caja</DialogTitle></DialogHeader>
-          <form onSubmit={handleOpenCash} className="space-y-4 mt-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="cash-amount">Fondo inicial (C$)</Label>
-              <Input id="cash-amount" type="number" inputMode="decimal" step="0.01" min="0" autoFocus
-                value={cashAmount} onChange={(e) => setCashAmount(e.target.value)} className="h-12 text-lg font-semibold"
-                placeholder="Efectivo con el que empieza el día" />
-              <div className="flex flex-wrap gap-2 pt-1">
-                {[0, 500, 1000, 2000].map((q) => (
-                  <button key={q} type="button" onClick={() => setCashAmount(String(q))}
-                    className="h-9 px-3 rounded-full border bg-card text-sm font-medium transition-all hover:bg-muted active:scale-95">
-                    {fmt(q)}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="cash-notes">Nota (opcional)</Label>
-              <Input id="cash-notes" value={cashNotes} onChange={(e) => setCashNotes(e.target.value)} maxLength={200} />
-            </div>
-            <p className="text-xs text-muted-foreground">Requiere permiso para cobrar.</p>
-            <Button type="submit" variant="cta" className="w-full h-12 text-base" disabled={cashAmount === ""}>
-              Abrir caja
-            </Button>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <OpenCashDialog open={cashDialog} onOpenChange={setCashDialog} />
 
       {authDialog}
     </div>
