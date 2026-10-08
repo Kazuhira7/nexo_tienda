@@ -1,14 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MailCheckIcon } from "lucide-react";
+import AuthExperience from "@/components/auth/auth-experience";
 
 export default function RecuperarPage() {
+  return (
+    <AuthExperience>
+      <RecuperarForm />
+    </AuthExperience>
+  );
+}
+
+function RecuperarForm() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +42,7 @@ export default function RecuperarPage() {
 
   if (sent) {
     return (
-      <div className="w-full max-w-sm space-y-6 text-center">
+      <div className="space-y-6 text-center animate-in fade-in zoom-in-95 duration-300">
         <MailCheckIcon className="size-12 text-primary mx-auto" />
         <div className="space-y-2">
           <h1 className="text-2xl font-bold">Revisa tu correo</h1>
@@ -43,17 +51,14 @@ export default function RecuperarPage() {
             enlace para restablecer tu contraseña. Revisa también la carpeta de spam.
           </p>
         </div>
-        <Link href="/login" className="inline-block text-primary text-sm font-medium hover:underline">
-          ← Volver al inicio de sesión
-        </Link>
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-sm space-y-6">
+    <div className="space-y-6">
       <div className="space-y-2">
-        <h1 className="text-2xl font-bold">Recuperar contraseña</h1>
+        <h1 className="font-heading text-3xl font-bold tracking-tight">Recuperar contraseña</h1>
         <p className="text-muted-foreground text-sm">
           Escribe tu correo y te enviaremos un enlace para crear una contraseña nueva.
         </p>
@@ -70,7 +75,7 @@ export default function RecuperarPage() {
             onChange={(e) => setEmail(e.target.value)}
             required
             autoComplete="email"
-            className="h-11"
+            className="h-12 rounded-xl px-4 text-base"
           />
         </div>
 
@@ -80,16 +85,10 @@ export default function RecuperarPage() {
           </div>
         )}
 
-        <Button type="submit" className="w-full h-11 font-semibold" variant="cta" disabled={loading}>
+        <Button type="submit" className="w-full h-12 rounded-xl text-base font-semibold" variant="cta" disabled={loading}>
           {loading ? "Enviando…" : "Enviar enlace"}
         </Button>
       </form>
-
-      <p className="text-center text-sm">
-        <Link href="/login" className="text-muted-foreground hover:text-primary hover:underline">
-          ← Volver al inicio de sesión
-        </Link>
-      </p>
     </div>
   );
 }
