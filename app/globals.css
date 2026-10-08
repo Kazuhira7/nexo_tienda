@@ -337,3 +337,29 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ============================================================
+   PORTADA DE ACCESO — "la red de nexo" (components/auth/nexo-network.tsx)
+   Secuencia: nodo central → negocios entran → líneas se dibujan →
+   chispas naranjas viajan hacia nexo → titular palabra por palabra.
+   ============================================================ */
+@keyframes nx-center { from { opacity: 0; transform: scale(0.4); } 70% { transform: scale(1.08); } to { opacity: 1; transform: scale(1); } }
+@keyframes nx-ring   { from { opacity: 0.55; transform: scale(1); } to { opacity: 0; transform: scale(2.1); } }
+@keyframes nx-node   { from { opacity: 0; transform: translate(var(--fx, 0px), var(--fy, 0px)) scale(0.5); } to { opacity: 1; transform: none; } }
+@keyframes nx-float  { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+@keyframes nx-draw   { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes nx-spark  { from { stroke-dashoffset: 0.08; } to { stroke-dashoffset: -1; } }
+@keyframes nx-word   { from { opacity: 0; transform: translateY(0.5em); filter: blur(6px); } to { opacity: 1; transform: none; filter: blur(0); } }
+@keyframes nx-fade   { from { opacity: 0; } to { opacity: 1; } }
+
+.nx-center { animation: nx-center 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both; transform-box: fill-box; transform-origin: center; }
+.nx-ring   { animation: nx-ring 2.8s ease-out 1.2s infinite both; transform-box: fill-box; transform-origin: center; }
+.nx-node   { animation: nx-node 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) var(--d, 0s) both; transform-box: fill-box; transform-origin: center; }
+.nx-float  { animation: nx-float var(--t, 6s) ease-in-out calc(var(--d, 0s) + 0.8s) infinite; }
+.nx-line   { stroke-dasharray: 1; animation: nx-draw 0.9s ease-out calc(var(--d, 0s) + 0.35s) both; }
+.nx-spark  { stroke-dasharray: 0.08 1.2; animation: nx-spark var(--t, 2.6s) linear calc(var(--d, 0s) + 1.3s) infinite both; }
+.nx-word   { display: inline-block; animation: nx-word 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) calc(0.9s + var(--w, 0) * 70ms) both; }
+.nx-fade   { animation: nx-fade 0.8s ease-out var(--d, 0s) both; }
+/* Node labels: the SVG scales down on phones, so the text needs more user units there */
+.nx-label { font-size: 13px; }
+@media (max-width: 640px) { .nx-label { font-size: 21px; } }

@@ -1,44 +1,26 @@
-export default function AuthLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+import AuthHero from "@/components/auth/auth-hero";
+
+export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <main className="min-h-screen flex">
-      {/* Panel izquierdo — decorativo (oculto en móvil) */}
-      <div className="hidden lg:flex lg:w-1/2 bg-primary flex-col justify-between p-12 text-primary-foreground relative overflow-hidden">
-        {/* Círculos decorativos */}
-        <div className="absolute -top-20 -left-20 w-80 h-80 rounded-full bg-white/5" />
-        <div className="absolute top-1/3 -right-16 w-64 h-64 rounded-full bg-white/5" />
-        <div className="absolute -bottom-16 left-1/4 w-96 h-96 rounded-full bg-white/5" />
-
-        <div className="relative z-10">
-          <p className="text-3xl font-heading font-bold tracking-tight">nexo</p>
-          <p className="text-primary-foreground/60 text-sm mt-1">by Nexo</p>
-        </div>
-
-        <div className="relative z-10 space-y-4">
-          <h2 className="text-3xl font-heading font-bold leading-snug">
-            Gestión de tienda colectiva, sin complicaciones.
-          </h2>
-          <p className="text-primary-foreground/70 text-base leading-relaxed">
-            Inventario, ventas, reportes y liquidaciones en un solo lugar.
-            Diseñado para emprendedoras que prefieren vender más y administrar menos.
-          </p>
-        </div>
-
-        <div className="relative z-10 flex gap-6 text-sm text-primary-foreground/60">
-          <span>18 marcas</span>
-          <span>·</span>
-          <span>Reportes quincenales</span>
-          <span>·</span>
-          <span>Tiempo real</span>
-        </div>
+    <main className="min-h-screen flex flex-col lg:flex-row bg-background">
+      {/* Brand panel: top hero on phones, left half on desktop */}
+      <div className="lg:w-[56%] shrink-0">
+        <AuthHero />
       </div>
 
-      {/* Panel derecho — formulario */}
-      <div className="flex-1 flex items-center justify-center bg-background px-6 py-12">
-        {children}
+      {/* Form: rises over the hero as a sheet on phones */}
+      <div className="relative z-10 -mt-8 lg:mt-0 flex-1 flex flex-col rounded-t-[28px] lg:rounded-none bg-background
+                      shadow-[0_-12px_40px_-12px_rgba(11,30,102,0.35)] lg:shadow-none">
+        <div className="flex-1 flex items-center justify-center px-6 py-10 lg:py-12">
+          <div className="w-full max-w-md animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300 fill-mode-both">
+            {children}
+          </div>
+        </div>
+        <footer className="pb-6 text-center text-xs text-muted-foreground">
+          <span className="font-heading font-bold text-foreground/80">nexo</span>
+          <span className="mx-1.5">·</span>
+          Desarrollado por <span className="font-medium text-foreground/80">AG Systems</span>
+        </footer>
       </div>
     </main>
   );

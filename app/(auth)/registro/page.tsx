@@ -49,10 +49,6 @@ export default function RegistroPage() {
 
   return (
     <div className="w-full max-w-md space-y-6">
-      <div className="lg:hidden text-center">
-        <p className="text-3xl font-heading font-bold text-primary">nexo</p>
-      </div>
-
       <div className="space-y-1.5">
         <h1 className="text-2xl font-bold">Crea tu negocio</h1>
         <p className="text-muted-foreground text-sm">

@@ -48,6 +48,18 @@ Reglas de arquitectura:
 - Módulos nuevos `restaurant` y `kitchen`; preset restaurante = `restaurant, customers, cash` (`kitchen` opcional por org).
 - `organizations.timezone` (007) + `lib/dates.ts`: "hoy" se calcula en la hora local del negocio.
 
+**Identidad visual (oct 2026)** — "nexo by AG Systems":
+- **Superficie de marca** (`components/auth/brand-backdrop.tsx`): azul radial #2A5BFF → #1B4FFF → #0B1E66 con
+  retícula de puntos. Se usa en la portada de acceso y en el bloqueo con PIN.
+- **Elemento distintivo — "la red de nexo"** (`components/auth/nexo-network.tsx`):
+  - restaurante, tienda, almacén, cafetería, ferretería y colectivo se conectan a la "n" central;
+  - chispas naranjas (#FF5C1A) viajan hacia nexo;
+  - SVG + CSS (`nx-*` en globals.css), sin JS.
+- **Mensaje:** "Restaurantes, tiendas, almacenes, administra cualquier negocio, todo en un solo lugar, ¡todo en
+  nexo!".
+- **Pie:** "nexo · Desarrollado por AG Systems".
+- El naranja sigue reservado para la acción principal y las chispas.
+
 **Movimiento en la interfaz** (`app/globals.css`, sección MOVIMIENTO):
 - `template.tsx` por grupo de rutas: cada página entra con `animate-page`.
 - `loading.tsx`: esqueletos al navegar.
