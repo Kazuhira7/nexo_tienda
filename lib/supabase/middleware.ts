@@ -35,6 +35,8 @@ export async function updateSession(request: NextRequest) {
 
   // Public routes that don't require auth
   const isPublic =
+    pathname === "/" || // sales page for visitors; app/page.tsx sends signed-in users home
+    pathname.startsWith("/opengraph-image") || // link preview image (WhatsApp, Facebook…)
     pathname.startsWith("/login") ||
     pathname.startsWith("/registro") ||
     pathname.startsWith("/recuperar") ||

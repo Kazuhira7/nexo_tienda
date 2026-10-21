@@ -1,13 +1,14 @@
 import type { MetadataRoute } from "next";
 
 // Installable app (tablet / phone "Agregar a pantalla de inicio"): opens full screen.
-// start_url "/" lets the role decide the home (device account → /salon, owner → /dashboard).
+// start_url "/login": signed-in devices bounce to their role's home (proxy), signed-out ones land on
+// sign-in — "/" is the public sales page.
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name:             "Nexo",
     short_name:       "Nexo",
     description:      "Gestión para tu negocio: ventas, salón y caja",
-    start_url:        "/",
+    start_url:        "/login",
     display:          "standalone",
     orientation:      "any",
     background_color: "#ffffff",

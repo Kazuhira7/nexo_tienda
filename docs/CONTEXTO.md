@@ -70,6 +70,15 @@ Reglas de arquitectura:
 - Botones con escala al presionar.
 - Todo respeta `prefers-reduced-motion`.
 
+**Página pública de ventas (oct 2026)** — arranca la Etapa 3 (vender):
+- `/` muestra la página de ventas (`components/landing/`) a quien no tiene sesión. Con sesión, `/` sigue
+  mandando al inicio de cada rol.
+- **Precio y WhatsApp de ventas** viven en `lib/site.ts`: C$1,500/mes por negocio, primer mes gratis, sin contrato.
+  Sin número configurado, los botones llevan a `/registro`.
+- Imagen al compartir el enlace: `app/opengraph-image.tsx`, con las fuentes OFL de `assets/fonts/`.
+- La app instalada (PWA) abre en `/login`, no en la página de ventas.
+- Textos para prospectar por WhatsApp y redes: `docs/ventas/mensajes.md`.
+
 **Deuda / pendientes conocidos:**
 - ✔ `register_sale`/`cancel_sale` protegidos (014) y UPDATE de `organizations` solo para la dueña y columnas de
   configuración (012).
@@ -105,7 +114,7 @@ Terminar A3 (portal de marca) y pulir onboarding. Ya no depende de la clienta or
 Sistema de módulos ✔ · navegación dinámica ✔ · admin de módulos ✔ · redirect central ✔. Falta: signup self-service (registro → crea org → elige tipo de negocio), facturación básica core, separación física core/vertical.
 → *Compuerta: un desconocido puede registrarse y operar su negocio sin intervención manual.*
 
-**Etapa 3 — Vender**
+**Etapa 3 — Vender** ← EN CURSO (oct 2026: página pública + mensajes de venta)
 2–3 clientes pagando (colectivos u otros que quepan en los módulos actuales). En paralelo: catálogo web público como módulo transversal.
 → *Compuerta: ingreso mensual estable.*
 
