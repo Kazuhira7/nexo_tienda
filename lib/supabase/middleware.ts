@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/types/database";
+import { homeRoute } from "@/lib/home-route";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -34,11 +35,14 @@ export async function updateSession(request: NextRequest) {
 
   // Public routes that don't require auth
   const isPublic =
+    pathname === "/" || // sales page for visitors; app/page.tsx sends signed-in users home
+    pathname.startsWith("/opengraph-image") || // link preview image (WhatsApp, Facebook…)
     pathname.startsWith("/login") ||
     pathname.startsWith("/registro") ||
     pathname.startsWith("/recuperar") ||
     pathname.startsWith("/auth") ||
-    pathname.startsWith("/_next");
+    pathname.startsWith("/_next") ||
+    pathname === "/manifest.webmanifest"; // fetched by the browser without cookies
 
   if (isPublic) {
     if (user && (pathname.startsWith("/login") || pathname.startsWith("/registro"))) {
@@ -70,8 +74,6 @@ async function redirectByRole(
     .single();
 
   const url = request.nextUrl.clone();
-  if (profile?.role === "superadmin") url.pathname = "/admin";
-  else if (profile?.role === "owner") url.pathname = "/dashboard";
-  else url.pathname = "/mi-tienda";
+  url.pathname = homeRoute(profile?.role);
   return NextResponse.redirect(url);
 }

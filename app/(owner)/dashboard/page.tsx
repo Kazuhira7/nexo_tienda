@@ -8,14 +8,18 @@ import { TrendingUpIcon, StoreIcon, PackageIcon } from "lucide-react";
 import { getMoney } from "@/lib/get-currency";
 import { getOrgContext } from "@/lib/org-context";
 import { hasModule } from "@/lib/modules";
+import { localDateString, localDayRange } from "@/lib/dates";
 import PeriodReport from "@/components/dashboard/period-report";
+import RestaurantDashboard from "@/components/restaurante/dashboard/restaurant-dashboard";
 
 export default async function OwnerDashboard() {
+  const { modules, timezone } = await getOrgContext();
+  if (hasModule(modules, "restaurant")) return <RestaurantDashboard />;
+
   const fmt = await getMoney();
-  const { modules } = await getOrgContext();
   const showBrands = hasModule(modules, "brands");
   const supabase = await createClient();
-  const today = new Date().toISOString().split("T")[0];
+  const todayRange = localDayRange(localDateString(timezone), timezone);
 
   const [
     { count: brandsCount },
@@ -28,8 +32,8 @@ export default async function OwnerDashboard() {
     supabase
       .from("sales")
       .select("total")
-      .gte("created_at", `${today}T00:00:00`)
-      .lte("created_at", `${today}T23:59:59`)
+      .gte("created_at", todayRange.start)
+      .lt("created_at", todayRange.end)
       .eq("cancelled", false),
     supabase
       .from("products")

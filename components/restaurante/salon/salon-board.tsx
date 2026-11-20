@@ -1,0 +1,240 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { ShoppingBagIcon, UsersIcon, Loader2Icon, ReceiptIcon, WalletIcon, LockOpenIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useMoney } from "@/components/org-provider";
+import { useStaffAction } from "@/components/staff/use-staff-action";
+import Elapsed from "@/components/restaurante/elapsed";
+import AnimatedNumber from "@/components/ui/animated-number";
+import { openTable, openTakeaway, requestBill } from "@/app/(restaurante)/orden/actions";
+import OpenCashDialog from "@/components/restaurante/open-cash-dialog";
+import type { OrderType, TableStatus } from "@/types/database";
+
+export interface SalonOrder {
+  id:       string;
+  tableId:  string | null;
+  type:     OrderType;
+  number:   number;
+  openedAt: string;
+  guests:   number;
+  name:     string | null;
+  waiter:   string | null;
+  total:    number;
+  pending:  number; // items not sent to the kitchen yet
+}
+
+export interface SalonTable {
+  id:      string;
+  name:    string;
+  seats:   number;
+  status:  TableStatus;
+  area_id: string | null;
+  order:   SalonOrder | null;
+}
+
+// Color + text, never color alone
+const STATUS: Record<TableStatus, { label: string; card: string; dot: string }> = {
+  free:           { label: "Libre",         card: "bg-card border-border",                 dot: "bg-muted-foreground/40" },
+  occupied:       { label: "Ocupada",       card: "bg-primary/10 border-primary/60",       dot: "bg-primary" },
+  bill_requested: { label: "Cuenta pedida", card: "bg-accent/15 border-accent",            dot: "bg-accent" },
+};
+
+interface Props {
+  areas:     { id: string; name: string }[];
+  tables:    SalonTable[];
+  takeaways: SalonOrder[];
+  cashOpen:  boolean | null; // null = the org doesn't use the cash module
+}
+
+export default function SalonBoard({ areas, tables, takeaways, cashOpen }: Props) {
+  const router = useRouter();
+  const fmt = useMoney();
+  const { run, authDialog } = useStaffAction();
+  const [opening, setOpening] = useState<string | null>(null);
+  const [takeawayOpen, setTakeawayOpen] = useState(false);
+  const [takeawayName, setTakeawayName] = useState("");
+  const [cashDialog, setCashDialog] = useState(false);
+
+  const groups = [
+    ...areas.map((a) => ({ id: a.id, name: a.name, tables: tables.filter((t) => t.area_id === a.id) })),
+    { id: "none", name: "Otras", tables: tables.filter((t) => !t.area_id) },
+  ].filter((g) => g.tables.length > 0);
+
+  const counts = {
+    free:     tables.filter((t) => t.status === "free").length,
+    occupied: tables.filter((t) => t.status !== "free").length,
+  };
+
+  function handleTable(t: SalonTable) {
+    if (t.order) {
+      router.push(`/orden/${t.order.id}`);
+      return;
+    }
+    setOpening(t.id);
+    run(() => openTable(t.id), {
+      onSuccess: (orderId) => router.push(`/orden/${orderId}`),
+      onError:   () => setOpening(null),
+    });
+  }
+
+  function askBill(orderId: string) {
+    run(() => requestBill(orderId), { onSuccess: () => toast.success("Cuenta pedida") });
+  }
+
+  function handleTakeaway(e: React.FormEvent) {
+    e.preventDefault();
+    run(() => openTakeaway(takeawayName), {
+      onSuccess: (orderId) => {
+        setTakeawayOpen(false);
+        setTakeawayName("");
+        router.push(`/orden/${orderId}`);
+      },
+    });
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold">Salón</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {counts.free} libres · {counts.occupied} ocupadas
+          </p>
+        </div>
+        <Button variant="outline" size="lg" className="h-12 gap-2" onClick={() => setTakeawayOpen(true)}>
+          <ShoppingBagIcon className="size-5" />
+          Para llevar
+        </Button>
+      </div>
+
+      {cashOpen === false && (
+        <div className="rounded-2xl border-2 border-accent/60 bg-accent/10 px-4 py-3 flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="flex items-center gap-3">
+            <LockOpenIcon className="size-5 text-accent shrink-0" />
+            <div>
+              <p className="font-semibold text-sm">La caja no está abierta hoy</p>
+              <p className="text-xs text-muted-foreground">No se puede cobrar hasta abrirla con el fondo inicial.</p>
+            </div>
+          </div>
+          <Button variant="cta" className="h-11" onClick={() => setCashDialog(true)}>Abrir caja</Button>
+        </div>
+      )}
+
+      {tables.length === 0 && (
+        <div className="rounded-xl border border-dashed px-4 py-10 text-center text-sm text-muted-foreground">
+          Aún no hay mesas. La administradora las crea en <span className="font-medium">Mesas</span>.
+        </div>
+      )}
+
+      {groups.map((g, gi) => (
+        <section key={g.id} className="space-y-3">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">{g.name}</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            {g.tables.map((t, ti) => {
+              const s = STATUS[t.status];
+              return (
+                <div key={t.id}
+                  style={{ "--i": gi * 4 + ti } as React.CSSProperties}
+                  className={`animate-enter min-h-28 rounded-2xl border-2 flex flex-col overflow-hidden transition-colors duration-500 hover:shadow-md ${s.card}`}>
+                  <button
+                    type="button"
+                    onClick={() => handleTable(t)}
+                    disabled={opening === t.id}
+                    className="flex-1 p-3 text-left active:scale-[0.97] transition-transform disabled:opacity-70"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-lg font-bold leading-tight">{t.name}</p>
+                      {opening === t.id && <Loader2Icon className="size-4 animate-spin text-primary" />}
+                    </div>
+                    <p className="mt-1 flex items-center gap-1.5 text-xs font-medium">
+                      <span className={`size-2 rounded-full transition-colors duration-500 ${s.dot} ${t.status !== "free" ? "animate-pulse" : ""}`} />
+                      {s.label}
+                    </p>
+                    {t.order ? (
+                      <div className="mt-2 space-y-0.5">
+                        <p className="font-semibold"><AnimatedNumber value={t.order.total} /></p>
+                        <p className="text-xs text-muted-foreground flex items-center gap-2">
+                          <Elapsed since={t.order.openedAt} />
+                          <span className="flex items-center gap-0.5"><UsersIcon className="size-3" />{t.order.guests}</span>
+                        </p>
+                        {t.order.pending > 0 && (
+                          <p className="text-xs font-semibold text-accent flex items-center gap-1 animate-in fade-in duration-300">
+                            <span className="size-1.5 rounded-full bg-accent animate-ping" />
+                            {t.order.pending} por enviar
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="mt-2 text-xs text-muted-foreground">{t.seats} puestos</p>
+                    )}
+                  </button>
+                  {/* Quick action: ask for the bill / go charge it */}
+                  {t.order && t.order.total > 0 && (t.status === "occupied" ? (
+                    <button type="button" onClick={() => askBill(t.order!.id)}
+                      className="h-10 border-t border-inherit text-xs font-semibold flex items-center justify-center gap-1.5 bg-background/60 active:bg-muted">
+                      <ReceiptIcon className="size-3.5" /> Pedir cuenta
+                    </button>
+                  ) : t.status === "bill_requested" ? (
+                    <Link href={`/cobrar/${t.order.id}`}
+                      className="h-10 border-t border-inherit text-xs font-semibold flex items-center justify-center gap-1.5 bg-background/60 active:bg-muted">
+                      <WalletIcon className="size-3.5" /> Cobrar
+                    </Link>
+                  ) : null)}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      ))}
+
+      {takeaways.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Para llevar</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            {takeaways.map((o, i) => (
+              <Link
+                key={o.id}
+                href={`/orden/${o.id}`}
+                style={{ "--i": i } as React.CSSProperties}
+                className="animate-enter min-h-28 rounded-2xl border-2 border-primary/60 bg-primary/10 p-3 transition-all hover:shadow-md active:scale-[0.97]"
+              >
+                <p className="text-lg font-bold leading-tight truncate">{o.name || `Orden #${o.number}`}</p>
+                <p className="mt-1 flex items-center gap-1.5 text-xs font-medium">
+                  <ShoppingBagIcon className="size-3" /> Para llevar · #{o.number}
+                </p>
+                <p className="mt-2 font-semibold">{fmt(o.total)}</p>
+                <p className="text-xs text-muted-foreground"><Elapsed since={o.openedAt} /></p>
+                {o.pending > 0 && <p className="text-xs font-semibold text-accent">{o.pending} por enviar</p>}
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <Dialog open={takeawayOpen} onOpenChange={setTakeawayOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Orden para llevar</DialogTitle></DialogHeader>
+          <form onSubmit={handleTakeaway} className="space-y-4 mt-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="tk-name">Nombre del cliente</Label>
+              <Input id="tk-name" value={takeawayName} onChange={(e) => setTakeawayName(e.target.value)}
+                placeholder="Opcional — para llamarlo cuando esté listo" autoFocus maxLength={60} />
+            </div>
+            <Button type="submit" variant="cta" className="w-full h-12 text-base">Abrir orden</Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <OpenCashDialog open={cashDialog} onOpenChange={setCashDialog} />
+
+      {authDialog}
+    </div>
+  );
+}

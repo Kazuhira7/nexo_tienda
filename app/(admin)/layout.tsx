@@ -13,7 +13,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     .eq("id", user.id)
     .single();
 
-  if (profile?.role !== "superadmin") redirect("/dashboard");
+  if (profile?.role !== "superadmin") redirect("/");
 
   return (
     <div className="min-h-screen flex flex-col">

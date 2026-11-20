@@ -2,63 +2,30 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  LayoutDashboardIcon,
-  ShoppingCartIcon,
-  ReceiptIcon,
-  PackageIcon,
-  MoreHorizontalIcon,
-  WalletIcon,
-  UsersIcon,
-  StoreIcon,
-  UploadIcon,
-  UserIcon,
-  SettingsIcon,
-  CalculatorIcon,
-} from "lucide-react";
+import { MoreHorizontalIcon } from "lucide-react";
 import { useState } from "react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import type { ModuleId } from "@/types/database";
+import NavPending from "@/components/nav-pending";
+import { isNavActive, visibleNavItems } from "@/components/nav-items";
+import type { UserRole } from "@/types/database";
 
-interface NavItem {
-  href:    string;
-  label:   string;
-  icon:    typeof LayoutDashboardIcon;
-  module?: ModuleId; // undefined = always visible
+const MAX_PRIMARY = 4;
+
+interface Props {
+  modules: readonly string[];
+  role?:   UserRole;
 }
 
-const PRIMARY: NavItem[] = [
-  { href: "/dashboard",    label: "Inicio",     icon: LayoutDashboardIcon },
-  { href: "/ventas/nueva", label: "Vender",     icon: ShoppingCartIcon, module: "pos" },
-  { href: "/ventas",       label: "Ventas",     icon: ReceiptIcon,      module: "pos" },
-  { href: "/inventario",   label: "Inventario", icon: PackageIcon,      module: "inventory" },
-];
-
-const MORE: NavItem[] = [
-  { href: "/caja",          label: "Cierre de caja", icon: CalculatorIcon, module: "cash" },
-  { href: "/liquidaciones", label: "Liquidaciones",  icon: WalletIcon,     module: "settlements" },
-  { href: "/clientes",      label: "Clientes",       icon: UsersIcon,      module: "customers" },
-  { href: "/marcas",        label: "Marcas",         icon: StoreIcon,      module: "brands" },
-  { href: "/importar",      label: "Importar CSV",   icon: UploadIcon,     module: "inventory" },
-  { href: "/perfil",        label: "Mi perfil",      icon: UserIcon },
-  { href: "/configuracion", label: "Configuración",  icon: SettingsIcon },
-];
-
-export default function MobileBottomNav({ modules }: { modules: readonly string[] }) {
+export default function MobileBottomNav({ modules, role = "owner" }: Props) {
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
 
-  const enabled = (items: NavItem[]) =>
-    items.filter((i) => !i.module || modules.includes(i.module));
+  const items = visibleNavItems(modules, role);
+  const primaryCandidates = items.filter((i) => i.mobile === "primary");
+  const primary = primaryCandidates.slice(0, MAX_PRIMARY);
+  const more = [...primaryCandidates.slice(MAX_PRIMARY), ...items.filter((i) => i.mobile === "more")];
 
-  const primary = enabled(PRIMARY);
-  const more = enabled(MORE);
-
-  const isActive = (href: string) =>
-    href === "/ventas/nueva"
-      ? pathname === href
-      : pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
-
+  const isActive = (href: string) => isNavActive(pathname, href);
   const isMoreActive = more.some((l) => isActive(l.href));
 
   return (
@@ -69,28 +36,31 @@ export default function MobileBottomNav({ modules }: { modules: readonly string[
             <Link
               key={href}
               href={href}
-              className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors ${
+              className={`relative flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors active:bg-muted/60 ${
                 isActive(href) ? "text-primary" : "text-muted-foreground"
               }`}
             >
-              <Icon className={`size-5 ${isActive(href) ? "text-primary" : ""}`} />
+              <Icon className={`size-5 transition-transform duration-200 ${isActive(href) ? "text-primary -translate-y-0.5 scale-110" : ""}`} />
               {label}
+              <NavPending className="absolute top-2 right-1/4" />
               {isActive(href) && (
-                <span className="absolute bottom-1 w-1 h-1 rounded-full bg-primary" />
+                <span className="absolute bottom-1 w-1 h-1 rounded-full bg-primary animate-in zoom-in duration-200" />
               )}
             </Link>
           ))}
 
           {/* Más */}
-          <button
-            onClick={() => setMoreOpen(true)}
-            className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors ${
-              isMoreActive ? "text-primary" : "text-muted-foreground"
-            }`}
-          >
-            <MoreHorizontalIcon className="size-5" />
-            Más
-          </button>
+          {more.length > 0 && (
+            <button
+              onClick={() => setMoreOpen(true)}
+              className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors ${
+                isMoreActive ? "text-primary" : "text-muted-foreground"
+              }`}
+            >
+              <MoreHorizontalIcon className="size-5" />
+              Más
+            </button>
+          )}
         </div>
       </nav>
 
@@ -105,12 +75,13 @@ export default function MobileBottomNav({ modules }: { modules: readonly string[
                   key={href}
                   href={href}
                   onClick={() => setMoreOpen(false)}
-                  className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-colors ${
+                  className={`relative flex flex-col items-center gap-2 p-4 rounded-xl transition-all active:scale-95 ${
                     isActive(href) ? "bg-primary/10 text-primary" : "bg-muted/50 text-foreground hover:bg-muted"
                   }`}
                 >
                   <Icon className="size-5" />
                   <span className="text-xs font-medium text-center leading-tight">{label}</span>
+                  <NavPending className="absolute top-2 right-2" />
                 </Link>
               ))}
             </div>

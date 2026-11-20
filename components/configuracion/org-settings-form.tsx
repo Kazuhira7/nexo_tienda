@@ -20,13 +20,21 @@ const MODEL_INFO = {
   none:       { label: "Sin cobro", desc: "No se aplica ningún cargo a las marcas" },
 };
 
-export default function OrgSettingsForm({ org }: { org: Org }) {
+export default function OrgSettingsForm({ org, modules = [] }: { org: Org; modules?: readonly string[] }) {
+  const hasBrands = modules.includes("brands");
+  const hasRestaurant = modules.includes("restaurant");
   const [pending, start]        = useTransition();
   const [name, setName]         = useState(org.name);
   const [exchangeRate, setRate] = useState(String(org.exchange_rate ?? 36.63));
   const [currency, setCurrency] = useState(org.currency);
   const [model, setModel]       = useState(org.settlement_model);
   const [period, setPeriod]     = useState(org.settlement_period);
+  const [ticket, setTicket]     = useState({
+    ticket_address: org.ticket_address ?? "",
+    ticket_phone:   org.ticket_phone ?? "",
+    ticket_tax_id:  org.ticket_tax_id ?? "",
+    ticket_footer:  org.ticket_footer ?? "",
+  });
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -36,6 +44,9 @@ export default function OrgSettingsForm({ org }: { org: Org }) {
     fd.set("currency", currency);
     fd.set("settlement_model", model);
     fd.set("settlement_period", period);
+    if (hasRestaurant) {
+      for (const [k, v] of Object.entries(ticket)) fd.set(k, v);
+    }
     start(async () => {
       const result = await updateOrgSettings(org.id, fd);
       if (result.error) toast.error(result.error);
@@ -50,7 +61,7 @@ export default function OrgSettingsForm({ org }: { org: Org }) {
       <section className="rounded-xl border bg-card p-5 space-y-4">
         <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Información del negocio</h2>
         <div className="space-y-1.5">
-          <Label htmlFor="name">Nombre de la tienda</Label>
+          <Label htmlFor="name">Nombre del negocio</Label>
           <Input
             id="name"
             name="name"
@@ -107,7 +118,30 @@ export default function OrgSettingsForm({ org }: { org: Org }) {
         </div>
       </section>
 
+      {/* Datos del ticket (restaurante) */}
+      {hasRestaurant && (
+        <section className="rounded-xl border bg-card p-5 space-y-4">
+          <div>
+            <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Datos para el ticket</h2>
+            <p className="text-xs text-muted-foreground mt-1">Aparecen en la pre-cuenta, el recibo y la comanda. Todos son opcionales.</p>
+          </div>
+          {([
+            ["ticket_address", "Dirección", "Ej. Del parque central 2 c. al sur", 120],
+            ["ticket_phone",   "Teléfono",  "Ej. 8888-0000", 40],
+            ["ticket_tax_id",  "RUC",       "Si tienes", 30],
+            ["ticket_footer",  "Mensaje al pie", "Ej. ¡Gracias por su visita!", 120],
+          ] as const).map(([key, label, placeholder, max]) => (
+            <div key={key} className="space-y-1.5">
+              <Label htmlFor={key}>{label}</Label>
+              <Input id={key} value={ticket[key]} maxLength={max} placeholder={placeholder}
+                onChange={(e) => setTicket((t) => ({ ...t, [key]: e.target.value }))} />
+            </div>
+          ))}
+        </section>
+      )}
+
       {/* Modelo de liquidación */}
+      {hasBrands && (
       <section className="rounded-xl border bg-card p-5 space-y-4">
         <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Modelo de cobro a marcas</h2>
         <div className="space-y-2">
@@ -129,7 +163,10 @@ export default function OrgSettingsForm({ org }: { org: Org }) {
         </div>
       </section>
 
+      )}
+
       {/* Periodo de liquidación */}
+      {hasBrands && (
       <section className="rounded-xl border bg-card p-5 space-y-4">
         <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Periodo de liquidación</h2>
         <div className="grid grid-cols-2 gap-3">
@@ -150,6 +187,7 @@ export default function OrgSettingsForm({ org }: { org: Org }) {
           ))}
         </div>
       </section>
+      )}
 
       <Button type="submit" variant="cta" className="w-full h-11 font-semibold" disabled={pending}>
         {pending ? "Guardando…" : "Guardar configuración"}

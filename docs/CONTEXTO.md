@@ -18,7 +18,7 @@ NEXO CORE (se construye una vez)
 VERTICALES (presets de módulos + pantallas propias)
   colectivo    → + marcas, liquidaciones, cuotas      [EN PRODUCCIÓN]
   retail       → + variantes, e-commerce, tienda web  [SIGUIENTE]
-  restaurante  → + mesas, comandas, cocina, delivery  [DESPUÉS]
+  restaurante  → + mesas, comandas, cocina, delivery  [EN CONSTRUCCIÓN — clienta real, ver docs/RESTAURANTE.md]
 ```
 
 Reglas de arquitectura:
@@ -38,14 +38,59 @@ Reglas de arquitectura:
 - Moneda configurable con conversión real NIO↔USD (`lib/money.ts`, `getMoney()`/`useMoney()`).
 - **Sistema de módulos** (Fase B parcial): registro en `lib/modules.ts`, contexto en `lib/org-context.ts`, guards `requireModule()`, navegación dinámica, gestión de módulos por org en el admin.
 
+**Oct 2026 — vertical restaurante adelantado** (llegó clienta real; detalle en `docs/RESTAURANTE.md`):
+- Migraciones `006a_terminal_role` + `006_restaurante` aplicadas: tablas del restaurante + órdenes por RPC atómicas.
+- **Equipo con PIN (Core, sirve a cualquier vertical):** rol de auth `terminal` = "cuenta del local" abierta una vez
+  por dispositivo; cada empleado opera con PIN de 4 dígitos y permisos por puesto (`staff_members`,
+  `lib/permissions.ts`, `lib/staff-session.ts`). Toda RPC operativa exige sesión de PIN.
+- Navegación unificada en `components/nav-items.ts` (filtrada por módulo **y** rol) y shell compartido
+  `components/app-shell.tsx`. Todo redirect de rol pasa por `/` → `homeRoute(role, vertical)`.
+- Módulos nuevos `restaurant` y `kitchen`; preset restaurante = `restaurant, customers, cash` (`kitchen` opcional por org).
+- `organizations.timezone` (007) + `lib/dates.ts`: "hoy" se calcula en la hora local del negocio.
+
+**Identidad visual (oct 2026)** — "nexo by AG Systems":
+- **Superficie de marca** (`components/auth/brand-backdrop.tsx`): azul radial #2A5BFF → #1B4FFF → #0B1E66 con
+  retícula de puntos. Se usa en la portada de acceso y en el bloqueo con PIN.
+- **Elemento distintivo — "la red de nexo"** (`components/auth/nexo-network.tsx`):
+  - restaurante, tienda, almacén, cafetería, ferretería y colectivo se conectan a la "n" central;
+  - chispas naranjas (#FF5C1A) viajan hacia nexo;
+  - SVG + CSS (`nx-*` en globals.css), sin JS.
+- **Mensaje:** "Restaurantes, tiendas, almacenes, administra cualquier negocio, todo en un solo lugar, ¡todo en
+  nexo!".
+- **Pie:** "nexo · Desarrollado por AG Systems".
+- El naranja sigue reservado para la acción principal y las chispas.
+
+**Movimiento en la interfaz** (`app/globals.css`, sección MOVIMIENTO):
+- `template.tsx` por grupo de rutas: cada página entra con `animate-page`.
+- `loading.tsx`: esqueletos al navegar.
+- `NavPending` (`useLinkStatus`): aviso inmediato en el menú al tocar un enlace.
+- `AnimatedNumber`: los montos cuentan hasta el nuevo valor.
+- `animate-enter` con `--i`: entrada escalonada.
+- `animate-shake`, `animate-pop`, `animate-grow`, `animate-check` para errores, confirmaciones y barras.
+- Botones con escala al presionar.
+- Todo respeta `prefers-reduced-motion`.
+
+**Página pública de ventas (oct 2026)** — arranca la Etapa 3 (vender):
+- `/` muestra la página de ventas (`components/landing/`) a quien no tiene sesión. Con sesión, `/` sigue
+  mandando al inicio de cada rol.
+- **Precio y WhatsApp de ventas** viven en `lib/site.ts`: C$1,500/mes por negocio, primer mes gratis, sin contrato.
+  Sin número configurado, los botones llevan a `/registro`.
+- Imagen al compartir el enlace: `app/opengraph-image.tsx`, con las fuentes OFL de `assets/fonts/`.
+- La app instalada (PWA) abre en `/login`, no en la página de ventas.
+- Textos para prospectar por WhatsApp y redes: `docs/ventas/mensajes.md`.
+
 **Deuda / pendientes conocidos:**
+- ✔ `register_sale`/`cancel_sale` protegidos (014) y UPDATE de `organizations` solo para la dueña y columnas de
+  configuración (012).
+- Activar "Leaked password protection" en Supabase Auth (aviso del advisor).
+- Páginas del colectivo (ventas, liquidaciones, reporte por marca, portal de marca) aún calculan fechas en UTC.
 - La clienta nunca definió la regla de cobro de cuotas → `brand_payments` es un libro manual flexible; automatizar cuando haya regla.
 - `products.brand_id` y `sale_items.brand_id` son NOT NULL (herencia colectivo). Para retail hay que hacerlos nullable y ajustar POS/formularios. **Hacerlo al construir retail, no antes.**
 - Separación física `lib/core/` vs `lib/colectivo/` aún no hecha (la separación lógica vía módulos sí).
 - Portal de marca (A3) incompleto; alertas de stock en dashboard sí existen.
 - ⚠️ El proyecto Supabase es plan gratuito y **se pausa por inactividad** → producción se cae. Para vender esto se necesita plan Pro.
 
-**Historia de BD** en `docs/db/` (correr en orden en una base nueva): `000_schema_base` → `001_multitenant` → `002_cash_closures` → `003_brand_payments` → `004_platform_modules`.
+**Historia de BD** en `docs/db/` (correr en orden en una base nueva): `000_schema_base` → `001_multitenant` → `002_cash_closures` → `003_brand_payments` → `004_platform_modules` → `005_fix_handle_new_user` → `006a_terminal_role` (sola) → `006_restaurante` → `007_org_timezone` → `008_orden_ui` → `009_pagos_divididos` → `010_order_payments_read` → `011_reportes` → `012_ticket_info_y_org_update` → `013_kitchen_tickets` → `014_harden_sales_rpcs` → `015_cash_openings` → `016_cobro_requiere_caja_abierta`.
 
 ---
 
@@ -69,21 +114,22 @@ Terminar A3 (portal de marca) y pulir onboarding. Ya no depende de la clienta or
 Sistema de módulos ✔ · navegación dinámica ✔ · admin de módulos ✔ · redirect central ✔. Falta: signup self-service (registro → crea org → elige tipo de negocio), facturación básica core, separación física core/vertical.
 → *Compuerta: un desconocido puede registrarse y operar su negocio sin intervención manual.*
 
-**Etapa 3 — Vender**
+**Etapa 3 — Vender** ← EN CURSO (oct 2026: página pública + mensajes de venta)
 2–3 clientes pagando (colectivos u otros que quepan en los módulos actuales). En paralelo: catálogo web público como módulo transversal.
 → *Compuerta: ingreso mensual estable.*
 
 **Etapa 4 — Vertical retail completo**
 Variantes de producto (talla/color), `brand_id` nullable, catálogo web con carrito, códigos de barras. Reutiliza ~80% del core.
 
-**Etapa 5 — Vertical restaurante**
-POS propio (mesas, comandas, cocina en tiempo real, delivery). Solo con ingresos/equipo — es casi otro producto.
+**Etapa 5 — Vertical restaurante** ← ADELANTADA (oct 2026, clienta real)
+POS propio (mesas, comandas, cocina en tiempo real, delivery). Roadmap R1/R2/R3 en `docs/RESTAURANTE.md`.
 
 ---
 
 ## 5. Guardrails
 
 - RLS activo en toda tabla nueva, con policies owner/brand/superadmin filtrando por `organization_id`.
+- Acciones operativas en dispositivos compartidos: RPC con `p_staff_token` + `require_staff(token, permiso)`; nunca confiar en quién dice el cliente que es.
 - `service_role key` jamás al navegador.
 - Toda pantalla de módulo lleva `requireModule()` además del filtro de navegación (defensa en profundidad).
 - No construir features de un vertical futuro "ya que estamos".
