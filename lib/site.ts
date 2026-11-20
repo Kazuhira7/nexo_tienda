@@ -5,7 +5,7 @@ export const SALES = {
   /** Monthly price per business, in córdobas. */
   monthlyPriceNio: 1500,
   /** Sales WhatsApp: country code + number, digits only (e.g. "50588887777"). Empty hides the WhatsApp buttons. */
-  whatsapp: "",
+  whatsapp: "50589374127",
 } as const;
 
 /** "C$1,500" — Nicaraguan grouping, no decimals (marketing copy, not ledger amounts). */
