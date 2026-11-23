@@ -79,3 +79,13 @@ export function currentFortnight(timeZone?: string | null): { start: string; end
     ? { start: `${y}-${pad(m)}-01`, end: `${y}-${pad(m)}-15` }
     : { start: `${y}-${pad(m)}-16`, end: `${y}-${pad(m)}-${pad(lastDay)}` };
 }
+
+/** "1–15 de noviembre de 2026" / "28 de octubre – 3 de noviembre de 2026" for YYYY-MM-DD bounds. */
+export function periodLabel(from: string, to: string): string {
+  const a = new Date(`${from}T12:00:00Z`);
+  const b = new Date(`${to}T12:00:00Z`);
+  const month = (d: Date) => d.toLocaleDateString("es-NI", { month: "long", year: "numeric", timeZone: "UTC" });
+  return a.getUTCMonth() === b.getUTCMonth() && a.getUTCFullYear() === b.getUTCFullYear()
+    ? `${a.getUTCDate()}–${b.getUTCDate()} de ${month(a)}`
+    : `${a.getUTCDate()} de ${month(a).replace(/ de \d{4}$/, "")} – ${b.getUTCDate()} de ${month(b)}`;
+}

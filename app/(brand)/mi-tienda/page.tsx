@@ -4,20 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getMoney } from "@/lib/get-currency";
-
-function getPeriodRange() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
-  const day = now.getDate();
-  const start = day <= 15
-    ? new Date(year, month, 1)
-    : new Date(year, month, 16);
-  const end = day <= 15
-    ? new Date(year, month, 15, 23, 59, 59)
-    : new Date(year, month + 1, 0, 23, 59, 59);
-  return { start, end };
-}
+import { getOrgContext } from "@/lib/org-context";
+import { currentFortnight, localDateString, localDayRange, localPeriodRange, periodLabel } from "@/lib/dates";
 
 export default async function BrandDashboard() {
   const fmt = await getMoney();
@@ -32,10 +20,14 @@ export default async function BrandDashboard() {
     .eq("id", user!.id)
     .single();
 
-  const brandId = profile?.brand_id!;
+  const brandId = profile?.brand_id;
+  if (!brandId) return <p className="text-muted-foreground">Tu usuario no tiene una marca asignada. Pídele a la dueña que la revise.</p>;
   const brand = profile?.brands as { name: string; space_fee: number } | null;
 
-  const { start, end } = getPeriodRange();
+  const { timezone } = await getOrgContext();
+  const period = currentFortnight(timezone);
+  const range = localPeriodRange(period.start, period.end, timezone);
+  const today = localDayRange(localDateString(timezone), timezone);
 
   const [{ data: products }, { data: saleItems }] = await Promise.all([
     supabase
@@ -43,29 +35,22 @@ export default async function BrandDashboard() {
       .select("id, name, stock_quantity, low_stock_threshold, active")
       .eq("brand_id", brandId)
       .eq("active", true),
+    // This period's non-cancelled sales only, in the business's local days
     supabase
       .from("sale_items")
-      .select("line_total, sales(created_at, cancelled)")
-      .eq("brand_id", brandId),
+      .select("line_total, sales!inner(created_at)")
+      .eq("brand_id", brandId)
+      .eq("sales.cancelled", false)
+      .gte("sales.created_at", range.start)
+      .lt("sales.created_at", range.end),
   ]);
 
-  const todayStr = new Date().toISOString().split("T")[0];
-
-  // Single fetch, two aggregations (exclude cancelled sales)
-  const validItems = (saleItems ?? []).filter((i) => {
-    const s = i.sales as { created_at: string; cancelled: boolean } | null;
-    return s && !s.cancelled;
-  });
-
-  const totalPeriodo = validItems
+  const totalPeriodo = (saleItems ?? []).reduce((sum, i) => sum + i.line_total, 0);
+  const totalHoy = (saleItems ?? [])
     .filter((i) => {
-      const d = new Date((i.sales as { created_at: string }).created_at);
-      return d >= start && d <= end;
+      const at = (i.sales as { created_at: string }).created_at;
+      return at >= today.start && at < today.end;
     })
-    .reduce((sum, i) => sum + i.line_total, 0);
-
-  const totalHoy = validItems
-    .filter((i) => (i.sales as { created_at: string }).created_at.startsWith(todayStr))
     .reduce((sum, i) => sum + i.line_total, 0);
 
   // Real per-product threshold — PostgREST can't compare columns, do it in JS
@@ -73,9 +58,7 @@ export default async function BrandDashboard() {
     (p) => p.stock_quantity <= p.low_stock_threshold
   );
 
-  const periodoLabel = start.getDate() === 1
-    ? `1–15 de ${start.toLocaleDateString("es-NI", { month: "long" })}`
-    : `16–${end.getDate()} de ${start.toLocaleDateString("es-NI", { month: "long" })}`;
+  const periodoLabel = periodLabel(period.start, period.end);
 
   return (
     <div className="space-y-6">

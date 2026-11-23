@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { getMoney } from "@/lib/get-currency";
+import { getOrgContext } from "@/lib/org-context";
+import { currentFortnight, localPeriodRange, periodLabel } from "@/lib/dates";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -8,16 +10,6 @@ import {
 const PAYMENT_LABELS: Record<string, string> = {
   cash: "Efectivo", pos: "POS", transfer: "Transferencia", mixed: "Mixto",
 };
-
-function getPeriodRange() {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = now.getMonth();
-  const d = now.getDate();
-  const start = d <= 15 ? new Date(y, m, 1) : new Date(y, m, 16);
-  const end   = d <= 15 ? new Date(y, m, 15, 23, 59, 59) : new Date(y, m + 1, 0, 23, 59, 59);
-  return { start, end };
-}
 
 export default async function MisVentasPage() {
   const fmt = await getMoney();
@@ -30,40 +22,33 @@ export default async function MisVentasPage() {
     .eq("id", user!.id)
     .single();
 
-  const brandId = profile!.brand_id!;
-  const { start, end } = getPeriodRange();
+  const brandId = profile?.brand_id;
+  if (!brandId) return <p className="text-muted-foreground">Tu usuario no tiene una marca asignada. Pídele a la dueña que la revise.</p>;
+  const { timezone } = await getOrgContext();
+  const period = currentFortnight(timezone);
+  const range = localPeriodRange(period.start, period.end, timezone);
 
-  // Fetch all sale_items for this brand and filter in JS to avoid PostgREST embedded filter issues
-  const { data: allItems } = await supabase
+  // This period's non-cancelled sales of the brand, in the business's local days
+  const { data: periodItems } = await supabase
     .from("sale_items")
     .select(
       `id, quantity, unit_price, discount, line_total,
        products(code, name),
-       sales(sale_number, payment_method, created_at, cancelled)`
+       sales!inner(sale_number, payment_method, created_at, cancelled)`
     )
-    .eq("brand_id", brandId);
+    .eq("brand_id", brandId)
+    .eq("sales.cancelled", false)
+    .gte("sales.created_at", range.start)
+    .lt("sales.created_at", range.end);
 
-  // Filter by period and exclude cancelled sales
-  const items = (allItems ?? [])
-    .filter((item) => {
-      const sale = item.sales as { created_at: string; cancelled: boolean } | null;
-      if (!sale || sale.cancelled) return false;
-      const date = new Date(sale.created_at);
-      return date >= start && date <= end;
-    })
-    .sort((a, b) => {
-      const da = new Date((a.sales as { created_at: string }).created_at).getTime();
-      const db = new Date((b.sales as { created_at: string }).created_at).getTime();
-      return db - da;
-    });
+  const items = (periodItems ?? []).sort((a, b) =>
+    (b.sales as { created_at: string }).created_at.localeCompare((a.sales as { created_at: string }).created_at));
 
   const totalPeriodo = items.reduce((s, i) => s + i.line_total, 0);
   const totalDesc    = items.reduce((s, i) => s + i.discount, 0);
   const totalCant    = items.reduce((s, i) => s + i.quantity, 0);
 
-  const periodoLabel = start.getDate() === 1
-    ? `1–15 de ${start.toLocaleDateString("es-NI", { month: "long", year: "numeric" })}`
-    : `16–${end.getDate()} de ${start.toLocaleDateString("es-NI", { month: "long", year: "numeric" })}`;
+  const periodoLabel = periodLabel(period.start, period.end);
 
   return (
     <div className="space-y-6">
@@ -117,7 +102,7 @@ export default async function MisVentasPage() {
                     <div>
                       <span>#{sale.sale_number}</span>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(sale.created_at).toLocaleDateString("es-NI", { month: "short", day: "numeric" })}
+                        {new Date(sale.created_at).toLocaleDateString("es-NI", { month: "short", day: "numeric", timeZone: timezone })}
                       </p>
                     </div>
                   </TableCell>

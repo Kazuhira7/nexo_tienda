@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import PrintButton from "@/components/reporte/print-button";
 import { getMoney } from "@/lib/get-currency";
 import { requireModule } from "@/lib/require-module";
+import { getOrgContext } from "@/lib/org-context";
+import { currentFortnight, isDayString, localPeriodRange, periodLabel } from "@/lib/dates";
 
 const PAYMENT_LABELS: Record<string, string> = {
   cash: "Efectivo",
@@ -32,50 +34,36 @@ export default async function ReportePage({ params, searchParams }: Props) {
 
   if (!brand) notFound();
 
-  // Rango de fechas: parámetros o periodo actual
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = now.getMonth();
-  const d = now.getDate();
-  const defaultStart = d <= 15 ? new Date(y, m, 1) : new Date(y, m, 16);
-  const defaultEnd = d <= 15
-    ? new Date(y, m, 15, 23, 59, 59)
-    : new Date(y, m + 1, 0, 23, 59, 59);
+  // Rango de fechas: parámetros o quincena actual, en días locales del negocio
+  const { timezone } = await getOrgContext();
+  const period = currentFortnight(timezone);
+  const fromDay = isDayString(from) ? from : period.start;
+  const toDay = isDayString(to) ? to : period.end;
+  const range = localPeriodRange(fromDay, toDay, timezone);
 
-  const start = from ? new Date(from + "T00:00:00") : defaultStart;
-  const end = to ? new Date(to + "T23:59:59") : defaultEnd;
-
-  // Fetch all items for this brand, filter by date in JS (embedded table filters unreliable in PostgREST)
-  const { data: allItems } = await supabase
+  const { data: periodItems } = await supabase
     .from("sale_items")
     .select(
       `quantity, unit_price, discount, line_total,
        products(code, name),
-       sales(sale_number, payment_method, created_at, cancelled)`
+       sales!inner(sale_number, payment_method, created_at, cancelled)`
     )
-    .eq("brand_id", brandId);
+    .eq("brand_id", brandId)
+    .eq("sales.cancelled", false)
+    .gte("sales.created_at", range.start)
+    .lt("sales.created_at", range.end);
 
-  const items = (allItems ?? [])
-    .filter((item) => {
-      const sale = item.sales as { created_at: string; cancelled: boolean } | null;
-      if (!sale || sale.cancelled) return false;
-      const d = new Date(sale.created_at);
-      return d >= start && d <= end;
-    })
-    .sort((a, b) => {
-      const da = new Date((a.sales as { created_at: string }).created_at).getTime();
-      const db = new Date((b.sales as { created_at: string }).created_at).getTime();
-      return da - db;
-    });
+  const items = (periodItems ?? []).sort((a, b) =>
+    (a.sales as { created_at: string }).created_at.localeCompare((b.sales as { created_at: string }).created_at));
 
   const totalVentas = items.reduce((s, i) => s + i.line_total, 0);
   const totalDesc = items.reduce((s, i) => s + i.discount, 0);
   const totalCantidad = items.reduce((s, i) => s + i.quantity, 0);
 
-  const periodoLabel = `${start.toLocaleDateString("es-NI", { day: "numeric", month: "long" })} – ${end.toLocaleDateString("es-NI", { day: "numeric", month: "long", year: "numeric" })}`;
+  const periodoLabel = periodLabel(fromDay, toDay);
 
   const generadoEl = new Date().toLocaleDateString("es-NI", {
-    day: "numeric", month: "long", year: "numeric",
+    day: "numeric", month: "long", year: "numeric", timeZone: timezone,
   });
 
   return (
@@ -168,7 +156,7 @@ export default async function ReportePage({ params, searchParams }: Props) {
                 >
                   <td className="py-2 pr-3 text-gray-500 whitespace-nowrap">
                     {new Date(sale.created_at).toLocaleDateString("es-NI", {
-                      month: "short", day: "numeric",
+                      month: "short", day: "numeric", timeZone: timezone,
                     })}
                   </td>
                   <td className="py-2 pr-3">
@@ -184,7 +172,7 @@ export default async function ReportePage({ params, searchParams }: Props) {
                     {PAYMENT_LABELS[sale.payment_method] ?? sale.payment_method}
                   </td>
                   <td className="py-2 text-right font-semibold">
-                    C${item.line_total.toFixed(2)}
+                    {fmt(item.line_total)}
                   </td>
                 </tr>
               );

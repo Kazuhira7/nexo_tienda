@@ -35,7 +35,8 @@ type CartItem = {
   brand_name: string;
   unit_price: number;
   quantity: number;
-  discount: number;
+  discount: number; // per unit
+  stock: number;    // available when added; the server re-checks
 };
 
 type Customer = { id: string; name: string; phone: string | null };
@@ -43,6 +44,24 @@ type Customer = { id: string; name: string; phone: string | null };
 interface Props {
   soldBy: string;
   customers: Customer[];
+}
+
+/** Quoted PostgREST filter value: commas, parentheses or quotes in the text can't break the filter. */
+function pgrstLike(pattern: string) {
+  return `"${pattern.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+}
+
+/** Splits a sale-wide discount over the lines in proportion to their net amount (cents, exact sum). */
+function spreadDiscount(nets: number[], discount: number): number[] {
+  const total = nets.reduce((a, b) => a + b, 0);
+  if (discount <= 0 || total <= 0) return nets.map(() => 0);
+  const cents = Math.round(Math.min(discount, total) * 100);
+  const shares = nets.map((n) => Math.floor((cents * n) / total));
+  let rest = cents - shares.reduce((a, b) => a + b, 0);
+  // leftover cents to the largest lines
+  const order = nets.map((n, i) => [n, i] as const).sort((a, b) => b[0] - a[0]);
+  for (let k = 0; rest > 0; k = (k + 1) % order.length, rest--) shares[order[k][1]]++;
+  return shares.map((c) => c / 100);
 }
 
 const PAYMENT_LABELS: Record<string, string> = {
@@ -74,17 +93,14 @@ export default function POS({ soldBy, customers }: Props) {
 
   // Autocompletado con debounce
   useEffect(() => {
-    if (code.trim().length < 2) {
-      setSuggestions([]);
-      setShowSuggestions(false);
-      return;
-    }
+    const term = code.trim();
+    if (term.length < 2) return;
     const timer = setTimeout(async () => {
       const supabase = createClient();
       const { data } = await supabase
         .from("products")
         .select("id, code, name, price, stock_quantity, active, brands(name)")
-        .or(`code.ilike.%${code.trim()}%,name.ilike.%${code.trim()}%`)
+        .or(`code.ilike.${pgrstLike(`%${term}%`)},name.ilike.${pgrstLike(`%${term}%`)}`)
         .eq("active", true)
         .limit(6);
       setSuggestions((data as ProductResult[]) ?? []);
@@ -92,6 +108,7 @@ export default function POS({ soldBy, customers }: Props) {
     }, 250);
     return () => clearTimeout(timer);
   }, [code]);
+  const visibleSuggestions = code.trim().length >= 2 && showSuggestions ? suggestions : [];
 
   // Cerrar sugerencias al click fuera
   useEffect(() => {
@@ -106,7 +123,9 @@ export default function POS({ soldBy, customers }: Props) {
 
   const subtotal = cart.reduce((sum, i) => sum + i.unit_price * i.quantity, 0);
   const itemDiscounts = cart.reduce((sum, i) => sum + i.discount * i.quantity, 0);
-  const total = Math.max(0, subtotal - itemDiscounts - globalDiscount);
+  // The sale-wide discount can't exceed what's left after line discounts
+  const appliedGlobal = Math.min(globalDiscount, Math.max(0, subtotal - itemDiscounts));
+  const total = Math.max(0, subtotal - itemDiscounts - appliedGlobal);
 
   const addProductToCart = useCallback((data: ProductResult) => {
     setSearchError(null);
@@ -117,44 +136,56 @@ export default function POS({ soldBy, customers }: Props) {
 
     const existing = cart.find((i) => i.product_id === data.id);
     if (existing) {
-      if (existing.quantity >= data.stock_quantity) { setSearchError("No hay más stock."); return; }
-      setCart((prev) => prev.map((i) => i.product_id === data.id ? { ...i, quantity: i.quantity + 1 } : i));
+      if (existing.quantity >= data.stock_quantity) { setSearchError(`Solo hay ${data.stock_quantity} de "${data.name}".`); return; }
+      setCart((prev) => prev.map((i) => i.product_id === data.id
+        ? { ...i, quantity: i.quantity + 1, stock: data.stock_quantity } : i));
     } else {
-      if (data.stock_quantity < 1) { setSearchError("Sin stock disponible."); return; }
+      if (data.stock_quantity < 1) { setSearchError(`"${data.name}" no tiene existencias.`); return; }
       setCart((prev) => [...prev, {
         product_id: data.id, code: data.code, name: data.name,
         brand_name: data.brands?.name ?? "",
-        unit_price: data.price, quantity: 1, discount: 0,
+        unit_price: data.price, quantity: 1, discount: 0, stock: data.stock_quantity,
       }]);
     }
   }, [cart]);
 
   const searchProduct = useCallback(async () => {
-    if (!code.trim()) return;
+    const term = code.trim();
+    if (!term) return;
     setSearchError(null);
     const supabase = createClient();
-    const { data } = await supabase
-      .from("products")
-      .select("id, code, name, price, stock_quantity, active, brands(name)")
-      .or(`code.ilike.${code.trim()}%,name.ilike.%${code.trim()}%`)
-      .eq("active", true)
-      .limit(1)
-      .single();
-    if (!data) { setSearchError(`No se encontró "${code}".`); return; }
+    const fields = "id, code, name, price, stock_quantity, active, brands(name)";
+    // Exact code first (barcode scanners type the full code + Enter), then a partial match
+    const { data: exact } = await supabase
+      .from("products").select(fields).eq("code", term).eq("active", true).limit(1).maybeSingle();
+    const { data } = exact
+      ? { data: exact }
+      : await supabase
+          .from("products").select(fields)
+          .or(`code.ilike.${pgrstLike(`${term}%`)},name.ilike.${pgrstLike(`%${term}%`)}`)
+          .eq("active", true)
+          .order("code")
+          .limit(1)
+          .maybeSingle();
+    if (!data) { setSearchError(`No se encontró "${term}".`); return; }
     addProductToCart(data as ProductResult);
   }, [code, addProductToCart]);
 
   function updateQty(productId: string, qty: number) {
     if (qty < 1) return removeItem(productId);
+    const item = cart.find((i) => i.product_id === productId);
+    if (item && qty > item.stock) { setSearchError(`Solo hay ${item.stock} de "${item.name}".`); return; }
+    setSearchError(null);
     setCart((prev) =>
       prev.map((i) => (i.product_id === productId ? { ...i, quantity: qty } : i))
     );
   }
 
   function updateDiscount(productId: string, discount: number) {
+    // Per-unit discount: never more than the price itself
     setCart((prev) =>
       prev.map((i) =>
-        i.product_id === productId ? { ...i, discount: Math.max(0, discount) } : i
+        i.product_id === productId ? { ...i, discount: Math.min(i.unit_price, Math.max(0, discount)) } : i
       )
     );
   }
@@ -168,16 +199,16 @@ export default function POS({ soldBy, customers }: Props) {
     setSubmitting(true);
 
     const supabase = createClient();
-    const items = cart.map((i) => ({
+    // The sale-wide discount is shared by every line in proportion to its amount, so in a
+    // collective each brand absorbs its fair part (it used to land entirely on the last line).
+    const nets = cart.map((i) => (i.unit_price - i.discount) * i.quantity);
+    const shares = spreadDiscount(nets, appliedGlobal);
+    const items = cart.map((i, k) => ({
       product_id: i.product_id,
       quantity: i.quantity,
       unit_price: i.unit_price,
-      discount: i.discount * i.quantity,
+      discount: Math.round((i.discount * i.quantity + shares[k]) * 100) / 100,
     }));
-
-    if (globalDiscount > 0 && items.length > 0) {
-      items[items.length - 1].discount += globalDiscount;
-    }
 
     const { data: saleId, error } = await supabase.rpc("register_sale", {
       p_customer_id: customerId || null,
@@ -296,9 +327,9 @@ export default function POS({ soldBy, customers }: Props) {
         </div>
 
         {/* Dropdown de sugerencias */}
-        {showSuggestions && suggestions.length > 0 && (
+        {visibleSuggestions.length > 0 && (
           <div className="absolute z-50 w-full mt-1 bg-card border rounded-lg shadow-lg overflow-hidden">
-            {suggestions.map((p) => (
+            {visibleSuggestions.map((p) => (
               <button
                 key={p.id}
                 className="w-full text-left px-4 py-3 hover:bg-muted transition-colors flex items-center justify-between gap-3"
@@ -312,7 +343,7 @@ export default function POS({ soldBy, customers }: Props) {
                   </p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-sm font-semibold">C${p.price.toFixed(2)}</p>
+                  <p className="text-sm font-semibold">{money(p.price)}</p>
                   <p className="text-xs text-muted-foreground">{p.stock_quantity} en stock</p>
                 </div>
               </button>
@@ -379,7 +410,7 @@ export default function POS({ soldBy, customers }: Props) {
 
                 {/* Precio unitario */}
                 <span className="text-sm text-muted-foreground">
-                  C${item.unit_price.toFixed(2)} c/u
+                  {money(item.unit_price)} c/u
                 </span>
 
                 {/* Descuento */}
@@ -400,7 +431,7 @@ export default function POS({ soldBy, customers }: Props) {
 
                 {/* Total de línea */}
                 <span className="font-bold text-base ml-auto">
-                  C${((item.unit_price - item.discount) * item.quantity).toFixed(2)}
+                  {money((item.unit_price - item.discount) * item.quantity)}
                 </span>
               </div>
             </div>
@@ -463,12 +494,12 @@ export default function POS({ soldBy, customers }: Props) {
           {/* Totales y botón */}
           <div className="flex items-center justify-between gap-4">
             <div className="space-y-0.5">
-              {(itemDiscounts + globalDiscount) > 0 && (
+              {(itemDiscounts + appliedGlobal) > 0 && (
                 <p className="text-xs text-muted-foreground line-through">
-                  C${subtotal.toFixed(2)}
+                  {money(subtotal)}
                 </p>
               )}
-              <p className="text-2xl font-bold">C${total.toFixed(2)}</p>
+              <p className="text-2xl font-bold">{money(total)}</p>
               <Badge variant="outline" className="text-xs">{PAYMENT_LABELS[paymentMethod]}</Badge>
             </div>
 

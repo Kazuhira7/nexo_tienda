@@ -1,21 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-
-function getPeriodRange() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
-  const day = now.getDate();
-  const start = day <= 15 ? new Date(year, month, 1) : new Date(year, month, 16);
-  const end = day <= 15
-    ? new Date(year, month, 15, 23, 59, 59)
-    : new Date(year, month + 1, 0, 23, 59, 59);
-  return { start, end };
-}
+import { getOrgContext } from "@/lib/org-context";
+import { currentFortnight, localPeriodRange, periodLabel } from "@/lib/dates";
 
 type PeriodItem = {
-  brand_id: string;
+  brand_id: string | null;
   line_total: number;
   quantity: number;
   product_id: string;
@@ -29,7 +19,9 @@ interface Props {
 
 export default async function PeriodReport({ fmt, showBrands = true }: Props) {
   const supabase = await createClient();
-  const { start, end } = getPeriodRange();
+  const { timezone } = await getOrgContext();
+  const period = currentFortnight(timezone);
+  const range = localPeriodRange(period.start, period.end, timezone);
 
   const [{ data: brands }, { data: periodSalesData }, { data: allActiveProducts }] =
     await Promise.all([
@@ -39,8 +31,8 @@ export default async function PeriodReport({ fmt, showBrands = true }: Props) {
       supabase
         .from("sales")
         .select("sale_items(brand_id, line_total, quantity, product_id, products(name))")
-        .gte("created_at", start.toISOString())
-        .lte("created_at", end.toISOString())
+        .gte("created_at", range.start)
+        .lt("created_at", range.end)
         .eq("cancelled", false),
       supabase
         .from("products")
@@ -54,7 +46,7 @@ export default async function PeriodReport({ fmt, showBrands = true }: Props) {
   );
 
   const salesByBrand = periodItems.reduce<Record<string, number>>((acc, item) => {
-    acc[item.brand_id] = (acc[item.brand_id] ?? 0) + item.line_total;
+    if (item.brand_id) acc[item.brand_id] = (acc[item.brand_id] ?? 0) + item.line_total;
     return acc;
   }, {});
 
@@ -77,12 +69,8 @@ export default async function PeriodReport({ fmt, showBrands = true }: Props) {
     .filter((p) => !soldProductIds.has(p.id))
     .slice(0, 5);
 
-  const totalPeriodo = Object.values(salesByBrand).reduce((a, b) => a + b, 0);
-
-  const periodoLabel =
-    start.getDate() === 1
-      ? `1–15 de ${start.toLocaleDateString("es-NI", { month: "long", year: "numeric" })}`
-      : `16–${end.getDate()} de ${start.toLocaleDateString("es-NI", { month: "long", year: "numeric" })}`;
+  const totalPeriodo = periodItems.reduce((sum, i) => sum + i.line_total, 0);
+  const periodoLabel = periodLabel(period.start, period.end);
 
   return (
     <div className="space-y-4">

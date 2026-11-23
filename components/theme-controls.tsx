@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { SunIcon, MoonIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -18,26 +18,37 @@ interface Props {
   showOnlyDark?: boolean;  // mostrar solo el toggle de oscuro
 }
 
-export default function ThemeControls({ showLabels, showOnlyDark }: Props) {
-  const [dark, setDark]   = useState(false);
-  const [theme, setTheme] = useState<ThemeId>("default");
+// The saved preference lives in localStorage; read it as an external store (server: defaults).
+const CHANGE_EVENT = "nexo-theme-change";
+function subscribe(onChange: () => void) {
+  window.addEventListener("storage", onChange);
+  window.addEventListener(CHANGE_EVENT, onChange);
+  return () => {
+    window.removeEventListener("storage", onChange);
+    window.removeEventListener(CHANGE_EVENT, onChange);
+  };
+}
+function save(key: string, value: string) {
+  try { localStorage.setItem(key, value); } catch { /* private mode: applies to this page only */ }
+  window.dispatchEvent(new Event(CHANGE_EVENT));
+}
+function read(key: string): string | null {
+  try { return localStorage.getItem(key); } catch { return null; }
+}
 
-  useEffect(() => {
-    setDark(localStorage.getItem("nexo-dark") === "true");
-    setTheme((localStorage.getItem("nexo-theme") as ThemeId) ?? "default");
-  }, []);
+export default function ThemeControls({ showLabels, showOnlyDark }: Props) {
+  const dark  = useSyncExternalStore(subscribe, () => read("nexo-dark") === "true", () => false);
+  const theme = useSyncExternalStore(subscribe, () => (read("nexo-theme") as ThemeId | null) ?? "default", () => "default" as ThemeId);
 
   function toggleDark() {
     const next = !dark;
-    setDark(next);
-    localStorage.setItem("nexo-dark", String(next));
+    save("nexo-dark", String(next));
     if (next) document.documentElement.classList.add("dark");
     else document.documentElement.classList.remove("dark");
   }
 
   function changeTheme(id: ThemeId) {
-    setTheme(id);
-    localStorage.setItem("nexo-theme", id);
+    save("nexo-theme", id);
     if (id === "default") document.documentElement.removeAttribute("data-theme");
     else document.documentElement.setAttribute("data-theme", id);
   }
@@ -52,7 +63,7 @@ export default function ThemeControls({ showLabels, showOnlyDark }: Props) {
         ].map(({ label, value, icon }) => (
           <button
             key={label}
-            onClick={() => { setDark(value); localStorage.setItem("nexo-dark", String(value)); if (value) document.documentElement.classList.add("dark"); else document.documentElement.classList.remove("dark"); }}
+            onClick={() => { save("nexo-dark", String(value)); document.documentElement.classList.toggle("dark", value); }}
             className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
               dark === value ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
             }`}
