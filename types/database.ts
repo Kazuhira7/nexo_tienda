@@ -1046,7 +1046,9 @@ export type Database = {
         };
         Insert: Record<string, never>;
         Update: Record<string, never>;
-        Relationships: [];
+        Relationships: [
+          { foreignKeyName: "admin_audit_log_organization_id_fkey"; columns: ["organization_id"]; isOneToOne: false; referencedRelation: "organizations"; referencedColumns: ["id"] },
+        ];
       };
       // ── signup_attempts (límite de registros por IP; solo servidor) ──
       signup_attempts: {

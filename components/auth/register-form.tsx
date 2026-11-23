@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { registerBusiness } from "@/app/(auth)/registro/actions";
 import { VERTICAL_INFO } from "@/lib/modules";
+import { SALES } from "@/lib/site";
 import type { VerticalType } from "@/types/database";
 
 const VERTICAL_ICON: Record<VerticalType, typeof StoreIcon> = {
@@ -25,6 +26,7 @@ export default function RegisterForm() {
   const [vertical, setVertical] = useState<VerticalType>("restaurante");
   const [businessName, setBusinessName] = useState("");
   const [ownerName, setOwnerName] = useState("");
+  const [ownerPhone, setOwnerPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -37,6 +39,7 @@ export default function RegisterForm() {
     fd.set("business_name", businessName);
     fd.set("vertical", vertical);
     fd.set("owner_name", ownerName);
+    fd.set("owner_phone", ownerPhone);
     fd.set("email", email);
     fd.set("password", password);
 
@@ -60,7 +63,7 @@ export default function RegisterForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      <p className="text-muted-foreground">En un minuto tienes tu sistema funcionando. Sin tarjeta.</p>
+      <p className="text-muted-foreground">En un minuto tienes tu sistema funcionando. {SALES.trialDays} días gratis, sin tarjeta.</p>
 
       <div className="space-y-2">
         <Label>¿Qué tipo de negocio tienes?</Label>
@@ -98,6 +101,13 @@ export default function RegisterForm() {
         <Label htmlFor="owner_name">Tu nombre</Label>
         <Input id="owner_name" placeholder="Nombre completo" value={ownerName}
           onChange={(e) => setOwnerName(e.target.value)} required autoComplete="name" className="h-12 rounded-xl px-4 text-base" />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="owner_phone">WhatsApp</Label>
+        <Input id="owner_phone" type="tel" inputMode="tel" placeholder="8888 8888" value={ownerPhone}
+          onChange={(e) => setOwnerPhone(e.target.value)} required autoComplete="tel" className="h-12 rounded-xl px-4 text-base" />
+        <p className="text-xs text-muted-foreground">Para ayudarte a empezar y avisarte antes de que termine tu prueba.</p>
       </div>
 
       <div className="space-y-2">

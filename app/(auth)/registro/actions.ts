@@ -1,5 +1,6 @@
 "use server";
 
+import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { VERTICAL_PRESETS } from "@/lib/modules";
 import { z } from "zod";
@@ -8,9 +9,14 @@ const RegisterSchema = z.object({
   business_name: z.string().min(2, "El nombre del negocio es muy corto").max(80),
   vertical:      z.enum(["colectivo", "retail", "restaurante"]),
   owner_name:    z.string().min(1, "Tu nombre es requerido").max(80),
+  owner_phone:   z.string().trim()
+                   .transform((v) => v.replace(/[^\d+]/g, ""))
+                   .refine((v) => v.replace(/\D/g, "").length >= 8, "Escribe un número de WhatsApp válido"),
   email:         z.string().email("Correo inválido"),
   password:      z.string().min(8, "La contraseña debe tener al menos 8 caracteres"),
 });
+
+const SIGNUP_LIMIT = 3;
 
 function slugify(name: string): string {
   const base = name
@@ -30,8 +36,22 @@ export async function registerBusiness(formData: FormData) {
   const parsed = RegisterSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const { business_name, vertical, owner_name, email, password } = parsed.data;
+  const { business_name, vertical, owner_name, owner_phone, email, password } = parsed.data;
   const admin = createAdminClient();
+
+  // 0. Abuse guard: at most SIGNUP_LIMIT new businesses per connection per hour
+  const ip = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const { count } = await admin
+    .from("signup_attempts")
+    .select("id", { count: "exact", head: true })
+    .eq("ip", ip)
+    .gte("created_at", since);
+  const blocked = (count ?? 0) >= SIGNUP_LIMIT;
+  await admin.from("signup_attempts").insert({ ip, email, blocked });
+  if (blocked) {
+    return { error: "Se crearon varios negocios desde esta conexión. Intenta de nuevo en una hora o escríbenos por WhatsApp." };
+  }
 
   // 1. Auth user
   const { data: authData, error: authError } = await admin.auth.admin.createUser({
@@ -55,6 +75,7 @@ export async function registerBusiness(formData: FormData) {
       slug: slugify(business_name),
       vertical,
       enabled_modules: VERTICAL_PRESETS[vertical],
+      owner_phone,
     })
     .select("id")
     .single();
