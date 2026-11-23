@@ -73,6 +73,8 @@ export default function CobrarScreen({ order, items, payments, business, cashOpe
   }
 
   const amountNum = round2(Number(amount) || 0);
+  // 100 % discount (courtesy): nothing to collect, but the order still has to close
+  const courtesy = balance === 0 && paid === 0;
   const receivedNum = Number(received) || 0;
   const change = method === "cash" && receivedNum > 0 ? round2(receivedNum - amountNum) : null;
 
@@ -89,6 +91,12 @@ export default function CobrarScreen({ order, items, payments, business, cashOpe
   }
 
   function pay() {
+    if (courtesy) {
+      run((pin) => payOrder(order.id, 0, method, pin), {
+        onSuccess: () => toast.success("Cuenta cerrada como cortesía"),
+      });
+      return;
+    }
     if (amountNum <= 0 || amountNum > balance) {
       toast.error(`El monto debe ser entre ${fmt(0.01)} y ${fmt(balance)}`);
       return;
@@ -259,8 +267,10 @@ export default function CobrarScreen({ order, items, payments, business, cashOpe
             )}
 
             <Button variant="cta" className="w-full h-14 text-base font-semibold" onClick={pay}
-              disabled={pending || amountNum <= 0 || amountNum > balance}>
-              {pending ? "Cobrando…" : amountNum === balance ? `Cobrar ${fmt(amountNum)}` : `Cobrar ${fmt(amountNum)} (parcial)`}
+              disabled={pending || (!courtesy && (amountNum <= 0 || amountNum > balance))}>
+              {pending ? "Cobrando…"
+                : courtesy ? "Cerrar cuenta (cortesía)"
+                : amountNum === balance ? `Cobrar ${fmt(amountNum)}` : `Cobrar ${fmt(amountNum)} (parcial)`}
             </Button>
           </div>
         )}
