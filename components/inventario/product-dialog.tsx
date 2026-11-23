@@ -29,9 +29,11 @@ interface Props {
   product?: Product;
   brands: Pick<Brand, "id" | "name">[];
   trigger: React.ReactNode;
+  /** Collectives: every product belongs to a brand. Stores: no brand field. */
+  useBrands?: boolean;
 }
 
-export default function ProductDialog({ product, brands, trigger }: Props) {
+export default function ProductDialog({ product, brands, trigger, useBrands = true }: Props) {
   const [open, setOpen] = useState(false);
   const [brandId, setBrandId] = useState(product?.brand_id ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -76,7 +78,7 @@ export default function ProductDialog({ product, brands, trigger }: Props) {
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-4 mt-2">
-            <div className="space-y-1.5">
+            {useBrands && <div className="space-y-1.5">
               <Label>Marca *</Label>
               <Select
                 value={brandId}
@@ -97,7 +99,7 @@ export default function ProductDialog({ product, brands, trigger }: Props) {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </div>}
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">

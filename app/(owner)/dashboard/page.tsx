@@ -55,7 +55,7 @@ export default async function OwnerDashboard() {
           <h1 className="text-2xl font-bold">Panel principal</h1>
           <p className="text-muted-foreground text-sm mt-1">
             {new Date().toLocaleDateString("es-NI", {
-              weekday: "long", year: "numeric", month: "long", day: "numeric",
+              weekday: "long", year: "numeric", month: "long", day: "numeric", timeZone: timezone,
             })}
           </p>
         </div>

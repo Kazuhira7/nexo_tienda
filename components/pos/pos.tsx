@@ -123,7 +123,7 @@ export default function POS({ soldBy, customers }: Props) {
       if (data.stock_quantity < 1) { setSearchError("Sin stock disponible."); return; }
       setCart((prev) => [...prev, {
         product_id: data.id, code: data.code, name: data.name,
-        brand_name: data.brands?.name ?? "—",
+        brand_name: data.brands?.name ?? "",
         unit_price: data.price, quantity: 1, discount: 0,
       }]);
     }
@@ -345,7 +345,7 @@ export default function POS({ soldBy, customers }: Props) {
                 <div className="min-w-0">
                   <p className="font-medium leading-tight">{item.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {item.brand_name} · <span className="font-mono">{item.code}</span>
+                    {item.brand_name && <>{item.brand_name} · </>}<span className="font-mono">{item.code}</span>
                   </p>
                 </div>
                 <button

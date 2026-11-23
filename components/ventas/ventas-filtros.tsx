@@ -63,7 +63,7 @@ export default function VentasFiltros({ brands }: Props) {
             onChange={(e) => updateParam("hasta", e.target.value)}
           />
         </div>
-        <div className="space-y-1">
+        {brands.length > 0 && <div className="space-y-1">
           <Label className="text-xs">Marca</Label>
           <Select
             value={searchParams.get("marca") ?? ""}
@@ -81,7 +81,7 @@ export default function VentasFiltros({ brands }: Props) {
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </div>}
         <div className="space-y-1">
           <Label className="text-xs">Método de pago</Label>
           <Select

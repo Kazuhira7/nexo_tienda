@@ -256,7 +256,7 @@ export type Database = {
         Row: {
           id:                  string;
           organization_id:     string;
-          brand_id:            string;
+          brand_id:            string | null;
           code:                string;
           name:                string;
           description:         string | null;
@@ -272,7 +272,7 @@ export type Database = {
         Insert: {
           id?:                  string;
           organization_id:      string;
-          brand_id:             string;
+          brand_id:             string | null;
           code:                 string;
           name:                 string;
           description?:         string | null;
@@ -288,7 +288,7 @@ export type Database = {
         Update: {
           id?:                  string;
           organization_id?:     string;
-          brand_id?:            string;
+          brand_id?:            string | null;
           code?:                string;
           name?:                string;
           description?:         string | null;
@@ -405,7 +405,7 @@ export type Database = {
           organization_id: string;
           sale_id:         string;
           product_id:      string;
-          brand_id:        string;
+          brand_id:        string | null;
           quantity:        number;
           unit_price:      number;
           discount:        number;
@@ -416,7 +416,7 @@ export type Database = {
           organization_id:  string;
           sale_id:          string;
           product_id:       string;
-          brand_id:         string;
+          brand_id:         string | null;
           quantity:         number;
           unit_price:       number;
           discount?:        number;
@@ -427,7 +427,7 @@ export type Database = {
           organization_id?: string;
           sale_id?:         string;
           product_id?:      string;
-          brand_id?:        string;
+          brand_id?:        string | null;
           quantity?:        number;
           unit_price?:      number;
           discount?:        number;

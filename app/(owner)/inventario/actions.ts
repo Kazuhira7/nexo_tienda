@@ -3,10 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getOrgId } from "@/lib/supabase/get-org";
+import { getOrgContext } from "@/lib/org-context";
 import { z } from "zod";
 
 const ProductSchema = z.object({
-  brand_id:            z.string().uuid("Marca requerida"),
+  brand_id:            z.union([z.string().uuid(), z.literal("")]).optional()
+                         .transform((v) => v || null),
   code:                z.string().min(1, "El código es requerido"),
   name:                z.string().min(1, "El nombre es requerido"),
   description:         z.string().optional(),
@@ -16,9 +18,18 @@ const ProductSchema = z.object({
   low_stock_threshold: z.coerce.number().int().min(0),
 });
 
-export async function createProduct(formData: FormData) {
+// Collectives sell other people's products: every product belongs to a brand. Stores own their stock.
+async function parseProduct(formData: FormData) {
   const parsed = ProductSchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  if (!parsed.success) return { error: parsed.error.issues[0].message } as const;
+  const { modules } = await getOrgContext();
+  if (modules.includes("brands") && !parsed.data.brand_id) return { error: "Elige la marca del producto" } as const;
+  return { data: parsed.data } as const;
+}
+
+export async function createProduct(formData: FormData) {
+  const parsed = await parseProduct(formData);
+  if ("error" in parsed) return { error: parsed.error };
 
   const supabase = await createClient();
   const orgId = await getOrgId();
@@ -36,8 +47,8 @@ export async function createProduct(formData: FormData) {
 }
 
 export async function updateProduct(id: string, formData: FormData) {
-  const parsed = ProductSchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  const parsed = await parseProduct(formData);
+  if ("error" in parsed) return { error: parsed.error };
 
   const supabase = await createClient();
   const { error } = await supabase

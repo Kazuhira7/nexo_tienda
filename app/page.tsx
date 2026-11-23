@@ -6,7 +6,7 @@ import LandingPage from "@/components/landing/landing-page";
 import { SALES, formatNio } from "@/lib/site";
 
 const DESCRIPTION =
-  `Vende desde el celular, controla tu inventario y cuadra la caja. Para tiendas colectivas y restaurantes en ` +
+  `Vende desde el celular, controla tu inventario y cuadra la caja. Para tiendas, colectivos y restaurantes en ` +
   `Nicaragua. ${formatNio(SALES.monthlyPriceNio)} al mes, ${SALES.trialDays} días gratis.`;
 
 export const metadata: Metadata = {

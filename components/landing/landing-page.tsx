@@ -5,12 +5,13 @@ import {
   ArrowRightIcon, BanknoteIcon, CalculatorIcon, ChartColumnIcon, CheckIcon, ChefHatIcon, ChevronDownIcon,
   ClipboardListIcon, CoinsIcon, FileSpreadsheetIcon, HandCoinsIcon, KeyRoundIcon, LayoutGridIcon, MapPinIcon,
   MessageCircleIcon, MonitorSmartphoneIcon, PackageIcon, ReceiptTextIcon, ShieldCheckIcon, ShoppingCartIcon,
-  SmartphoneIcon, SplitIcon, StoreIcon, UserRoundCheckIcon, UsersIcon, UtensilsCrossedIcon, WalletIcon,
+  ScanBarcodeIcon, ShoppingBagIcon, SmartphoneIcon, SplitIcon, StoreIcon, TrendingUpIcon, UserRoundCheckIcon,
+  UsersIcon, UtensilsCrossedIcon, WalletIcon,
 } from "lucide-react";
 import BrandBackdrop from "@/components/auth/brand-backdrop";
 import NexoNetwork from "@/components/auth/nexo-network";
 import { Wordmark } from "@/components/auth/hero-parts";
-import { CollectivePreview, RestaurantPreview } from "@/components/landing/product-previews";
+import { CollectivePreview, RestaurantPreview, StorePreview } from "@/components/landing/product-previews";
 import PwaRedirect from "@/components/landing/pwa-redirect";
 import { SALES, formatNio, whatsappUrl } from "@/lib/site";
 
@@ -59,6 +60,17 @@ const RESTAURANT: Feature[] = [
     text: "Tu equipo entra con un PIN de 4 dígitos y solo hace lo que su puesto permite." },
   { icon: ChartColumnIcon, title: "Reportes que sí usas",
     text: "Ventas del día, platillos más vendidos, ventas por mesero y por forma de pago." },
+];
+
+const STORE: Feature[] = [
+  { icon: ScanBarcodeIcon, title: "Cobra con el lector",
+    text: "Escanea el código de barras o búscalo por nombre, cobra en efectivo, POS o transferencia y entrega el recibo." },
+  { icon: PackageIcon, title: "Existencias al día",
+    text: "Cada venta descuenta del inventario. Te avisa qué se está agotando para que pidas a tiempo." },
+  { icon: FileSpreadsheetIcon, title: "Tu catálogo desde Excel",
+    text: "Sube cientos de productos de una vez con su código, precio, costo y existencias." },
+  { icon: TrendingUpIcon, title: "Qué se vende más",
+    text: "Ventas por día y por forma de pago, y los productos que más salen." },
 ];
 
 const CORE: Feature[] = [
@@ -196,6 +208,7 @@ export default function LandingPage() {
             <nav className="flex items-center gap-6 text-sm font-medium">
               <a href="#colectivos" className="hidden md:inline text-white/75 hover:text-white transition-colors">Tiendas colectivas</a>
               <a href="#restaurantes" className="hidden md:inline text-white/75 hover:text-white transition-colors">Restaurantes</a>
+              <a href="#tiendas" className="hidden lg:inline text-white/75 hover:text-white transition-colors">Tiendas</a>
               <a href="#precio" className="hidden md:inline text-white/75 hover:text-white transition-colors">Precio</a>
               <Link href="/login"
                 className="h-10 px-4 rounded-xl border border-white/30 bg-white/10 font-semibold inline-flex items-center
@@ -210,7 +223,7 @@ export default function LandingPage() {
               <p className="nx-fade inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs sm:text-sm font-medium text-white/85"
                 style={{ "--d": "0.1s" } as Style}>
                 <MapPinIcon className="size-3.5" />
-                Hecho en Nicaragua · colectivos y restaurantes
+                Hecho en Nicaragua para tu negocio
               </p>
               <h1 className="nx-fade mt-5 font-heading font-bold tracking-tight text-balance text-[2.35rem] leading-[1.05] sm:text-5xl lg:text-[3.5rem]"
                 style={{ "--d": "0.2s" } as Style}>
@@ -308,6 +321,25 @@ export default function LandingPage() {
           </div>
           <div className="lg:col-start-1 lg:row-start-2">
             <FeatureGrid items={RESTAURANT} />
+          </div>
+        </div>
+      </section>
+
+      {/* ───────────── Tiendas, almacenes, ferreterías ───────────── */}
+      <section id="tiendas" className="scroll-mt-6 border-t py-16 sm:py-24">
+        <div className={`${CONTAINER} grid gap-10 lg:grid-cols-2 lg:gap-x-16`}>
+          <div className="lg:col-start-2 lg:row-start-1">
+            <SectionHeading
+              eyebrow={{ icon: ShoppingBagIcon, label: "Tiendas, almacenes y ferreterías" }}
+              title="Tu inventario y tu caja, siempre cuadrados"
+              text="Para tiendas, almacenes, bodegas, ferreterías y todo negocio que vende productos propios."
+            />
+          </div>
+          <div className="mx-auto w-full max-w-md lg:col-start-1 lg:row-start-1 lg:row-span-2 lg:self-center">
+            <StorePreview />
+          </div>
+          <div className="lg:col-start-2 lg:row-start-2">
+            <FeatureGrid items={STORE} />
           </div>
         </div>
       </section>

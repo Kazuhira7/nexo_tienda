@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { SALES, formatNio } from "@/lib/site";
 
 // Link preview card (WhatsApp, Facebook, Instagram…) on the brand surface. Rendered once at build time.
-export const alt = "nexo: ventas, inventario y caja para tiendas colectivas y restaurantes en Nicaragua";
+export const alt = "nexo: ventas, inventario y caja para tiendas, colectivos y restaurantes en Nicaragua";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -40,7 +40,7 @@ export default async function OpengraphImage() {
               Deja el cuaderno. Lleva tu negocio en nexo.
             </div>
             <div style={{ display: "flex", marginTop: 22, fontSize: 30, color: "rgba(255,255,255,0.82)" }}>
-              Tiendas colectivas y restaurantes · Nicaragua
+              Tiendas, colectivos y restaurantes · Nicaragua
             </div>
           </div>
 

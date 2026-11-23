@@ -80,13 +80,19 @@ Reglas de arquitectura:
 - La app instalada (PWA) abre en `/login`, no en la página de ventas.
 - Textos para prospectar por WhatsApp y redes: `docs/ventas/mensajes.md`.
 
+**Tiendas / almacenes / ferreterías (nov 2026)** — vertical `retail` usable:
+- Migración 020: `products.brand_id` y `sale_items.brand_id` son opcionales. El colectivo la sigue exigiendo
+  desde la app (`brands` activo ⇒ marca obligatoria en inventario e importación).
+- Inventario, importación (CSV real: comillas, `;`, separador de miles), POS, ventas y recibos funcionan sin
+  marcas; el filtro y la columna de marca solo aparecen con el módulo `brands`.
+- Pendiente para ferreterías: cantidades fraccionarias (libras, metros); hoy el stock es entero.
+
 **Deuda / pendientes conocidos:**
 - ✔ `register_sale`/`cancel_sale` protegidos (014) y UPDATE de `organizations` solo para la dueña y columnas de
   configuración (012).
 - Activar "Leaked password protection" en Supabase Auth (aviso del advisor).
 - Páginas del colectivo (ventas, liquidaciones, reporte por marca, portal de marca) aún calculan fechas en UTC.
 - La clienta nunca definió la regla de cobro de cuotas → `brand_payments` es un libro manual flexible; automatizar cuando haya regla.
-- `products.brand_id` y `sale_items.brand_id` son NOT NULL (herencia colectivo). Para retail hay que hacerlos nullable y ajustar POS/formularios. **Hacerlo al construir retail, no antes.**
 - Separación física `lib/core/` vs `lib/colectivo/` aún no hecha (la separación lógica vía módulos sí).
 - Portal de marca (A3) incompleto; alertas de stock en dashboard sí existen.
 - ⚠️ El proyecto Supabase es plan gratuito y **se pausa por inactividad** → producción se cae. Para vender esto se necesita plan Pro.
