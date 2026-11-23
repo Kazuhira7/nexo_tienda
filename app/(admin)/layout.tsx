@@ -15,6 +15,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   if (profile?.role !== "superadmin") redirect("/");
 
+  // The database only honors superadmin rights with a second factor (018)
+  const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  if (aal?.currentLevel !== "aal2") redirect("/verificacion");
+
   return (
     <div className="min-h-screen flex flex-col">
       <AdminNav userName={profile.full_name ?? user.email ?? "Super Admin"} />
