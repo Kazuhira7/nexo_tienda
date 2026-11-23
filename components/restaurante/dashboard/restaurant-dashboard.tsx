@@ -51,7 +51,7 @@ export default async function RestaurantDashboard() {
     <div className="space-y-6 max-w-5xl">
       <div>
         <h1 className="text-2xl font-bold">Inicio</h1>
-        <p className="text-muted-foreground text-sm mt-1 capitalize">{todayLabel}</p>
+        <p className="text-muted-foreground text-sm mt-1 first-letter:uppercase">{todayLabel}</p>
       </div>
 
       {/* Setup reminders */}
