@@ -1,5 +1,5 @@
 // Illustrative product previews for the landing page: static sample data (the demo's brands), not live data.
-import { ChefHatIcon, PackageIcon } from "lucide-react";
+import { ChefHatIcon, PackageIcon, ScanBarcodeIcon } from "lucide-react";
 import { formatNio } from "@/lib/site";
 
 const BRANDS = [
@@ -122,6 +122,55 @@ export function RestaurantPreview() {
         <div className="leading-tight">
           <p className="text-xs font-semibold">Comanda a cocina</p>
           <p className="text-[11px] text-muted-foreground">Mesa 5 · 2 platillos nuevos</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const STOCK = [
+  { code: "7501001", name: "Martillo de uña 16 oz",   stock: 12, low: 4 },
+  { code: "7501002", name: "Clavo 2\" (libra)",       stock: 3,  low: 10 },
+  { code: "7501003", name: "Pintura blanca, galón",   stock: 6,  low: 3 },
+  { code: "7501004", name: "Cinta métrica 5 m",       stock: 0,  low: 2 },
+];
+
+export function StorePreview() {
+  return (
+    <div role="img" aria-label="Ejemplo: ventas del día y existencias de una ferretería" className="relative pb-10">
+      <div className="rounded-3xl border bg-card p-5 sm:p-6 shadow-[0_30px_60px_-30px_rgba(11,30,102,0.35)]">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-medium text-muted-foreground">Ventas de hoy</p>
+            <p className="mt-1 font-heading text-2xl font-bold tabular-nums">{formatNio(18640)}</p>
+            <p className="text-xs text-muted-foreground">42 ventas · caja abierta</p>
+          </div>
+          <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">Inventario</span>
+        </div>
+        <ul className="mt-5 divide-y">
+          {STOCK.map((p) => {
+            const low = p.stock <= p.low;
+            return (
+              <li key={p.code} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{p.name}</p>
+                  <p className="font-mono text-[11px] text-muted-foreground">{p.code}</p>
+                </div>
+                <span className={`shrink-0 text-xs font-semibold tabular-nums ${low ? "text-destructive" : "text-muted-foreground"}`}>
+                  {p.stock === 0 ? "Agotado" : `${p.stock} en stock`}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+      <div className="absolute bottom-0 left-3 sm:-left-5 flex items-center gap-2.5 rounded-2xl border bg-card px-3.5 py-2.5 shadow-lg">
+        <span className="grid size-8 place-items-center rounded-xl bg-primary/10 text-primary">
+          <ScanBarcodeIcon className="size-4" />
+        </span>
+        <div className="leading-tight">
+          <p className="text-xs font-semibold">Código escaneado</p>
+          <p className="text-[11px] text-muted-foreground">Pintura blanca, galón · {formatNio(980)}</p>
         </div>
       </div>
     </div>

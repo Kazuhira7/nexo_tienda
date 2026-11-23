@@ -4,6 +4,8 @@
 export const SALES = {
   /** Monthly price per business, in córdobas. */
   monthlyPriceNio: 1500,
+  /** Free trial in days. Must match platform_settings.trial_days (019), which starts each new org's trial. */
+  trialDays: 14,
   /** Sales WhatsApp: country code + number, digits only (e.g. "50588887777"). Empty hides the WhatsApp buttons. */
   whatsapp: "50589374127",
 } as const;

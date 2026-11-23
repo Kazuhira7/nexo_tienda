@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
+import { isSuperadmin, NOT_SUPERADMIN } from "@/lib/admin-guard";
 import { VERTICAL_PRESETS } from "@/lib/modules";
 import { z } from "zod";
 
@@ -23,11 +23,7 @@ export async function createOrganization(formData: FormData) {
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
   // Verify caller is superadmin
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "No autenticado" };
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (profile?.role !== "superadmin") return { error: "Sin permisos" };
+  if (!(await isSuperadmin())) return { error: NOT_SUPERADMIN };
 
   const admin = createAdminClient();
   const { name, slug, vertical, currency, settlement_model, settlement_period, owner_email, owner_password, owner_name } = parsed.data;

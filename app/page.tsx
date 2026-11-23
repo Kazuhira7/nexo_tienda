@@ -6,8 +6,8 @@ import LandingPage from "@/components/landing/landing-page";
 import { SALES, formatNio } from "@/lib/site";
 
 const DESCRIPTION =
-  `Vende desde el celular, controla tu inventario y cuadra la caja. Para tiendas colectivas y restaurantes en ` +
-  `Nicaragua. ${formatNio(SALES.monthlyPriceNio)} al mes, primer mes gratis.`;
+  `Vende desde el celular, controla tu inventario y cuadra la caja. Para tiendas, colectivos y restaurantes en ` +
+  `Nicaragua. ${formatNio(SALES.monthlyPriceNio)} al mes, ${SALES.trialDays} días gratis.`;
 
 export const metadata: Metadata = {
   title: "nexo · Ventas, inventario y caja para tu negocio",

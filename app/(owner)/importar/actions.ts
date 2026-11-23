@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getOrgId } from "@/lib/supabase/get-org";
+import { getOrgContext } from "@/lib/org-context";
 
 export interface ImportRow {
   brand_name:     string;
@@ -24,24 +25,27 @@ export async function importProducts(rows: ImportRow[]): Promise<ImportResult> {
   const supabase = await createClient();
   const orgId = await getOrgId();
   const result: ImportResult = { imported: 0, skipped: 0, errors: [] };
+  const { modules } = await getOrgContext();
+  if (!modules.includes("inventory")) return { ...result, errors: ["Tu negocio no tiene inventario activado"] };
+  const useBrands = modules.includes("brands");
 
-  const { data: existingBrands } = await supabase
-    .from("brands")
-    .select("id, name");
+  const { data: existingBrands } = useBrands
+    ? await supabase.from("brands").select("id, name")
+    : { data: [] as { id: string; name: string }[] };
 
   const brandMap = new Map(existingBrands?.map((b) => [b.name.toLowerCase().trim(), b.id]) ?? []);
 
   for (const row of rows) {
     try {
-      if (!row.brand_name?.trim() || !row.code?.trim() || !row.name?.trim()) {
+      if ((useBrands && !row.brand_name?.trim()) || !row.code?.trim() || !row.name?.trim()) {
         result.skipped++;
         continue;
       }
 
-      const brandKey = row.brand_name.toLowerCase().trim();
-      let brandId = brandMap.get(brandKey);
+      const brandKey = useBrands ? row.brand_name.toLowerCase().trim() : "";
+      let brandId: string | null = useBrands ? brandMap.get(brandKey) ?? null : null;
 
-      if (!brandId) {
+      if (useBrands && !brandId) {
         const { data: newBrand, error } = await supabase
           .from("brands")
           .insert({ name: row.brand_name.trim(), organization_id: orgId })
@@ -54,7 +58,7 @@ export async function importProducts(rows: ImportRow[]): Promise<ImportResult> {
           continue;
         }
         brandId = newBrand.id;
-        brandMap.set(brandKey, brandId);
+        brandMap.set(brandKey, newBrand.id);
       }
 
       const { error: productError } = await supabase

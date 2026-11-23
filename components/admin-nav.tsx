@@ -27,6 +27,10 @@ export default function AdminNav({ userName }: { userName: string }) {
             <ShieldIcon className="size-3" />
             Super Admin
           </div>
+          <nav className="flex items-center gap-3 text-sm ml-2">
+            <Link href="/admin" className="text-muted-foreground hover:text-foreground">Negocios</Link>
+            <Link href="/admin/ajustes" className="text-muted-foreground hover:text-foreground">Ajustes</Link>
+          </nav>
         </div>
         <div className="flex items-center gap-3">
           <span className="text-sm text-muted-foreground hidden sm:block">{userName}</span>

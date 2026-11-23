@@ -83,7 +83,7 @@ export default function SaleDetail({
                 <p className="font-medium truncate">{item.product_name}</p>
                 <p className="text-xs text-muted-foreground">
                   <span className="font-mono">{item.product_code}</span>
-                  <span className="ml-2">· {item.brand_name}</span>
+                  {item.brand_name && <span className="ml-2">· {item.brand_name}</span>}
                   <span className="ml-2">× {item.quantity}</span>
                 </p>
               </div>

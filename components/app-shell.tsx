@@ -17,10 +17,11 @@ interface Props {
   modules:      ModuleId[];
   role:         UserRole;
   topBar?:      React.ReactNode; // e.g. the active staff member bar
+  banner?:      React.ReactNode; // e.g. trial days left (owner)
 }
 
 export default function AppShell({
-  children, userName, orgName, currency, exchangeRate, vertical, modules, role, topBar,
+  children, userName, orgName, currency, exchangeRate, vertical, modules, role, topBar, banner,
 }: Props) {
   return (
     <OrgProvider
@@ -34,6 +35,7 @@ export default function AppShell({
         <OwnerSidebar userName={userName} orgName={orgName} modules={modules} role={role} />
         <div className="lg:pl-56">
           <MobileHeader userName={userName} orgName={orgName} modules={modules} role={role} />
+          {banner}
           {topBar}
           <main className="p-4 sm:p-6 pb-24 lg:pb-8 min-h-screen">
             {children}

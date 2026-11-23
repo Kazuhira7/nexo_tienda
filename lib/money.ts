@@ -15,12 +15,12 @@ export function formatMoney(
   exchangeRate: number = DEFAULT_EXCHANGE_RATE
 ): string {
   const rounded = Math.round(amountNIO * 100) / 100;
-  if (currency === "USD") {
-    const usd = rounded / exchangeRate;
-    return `$${usd.toFixed(2)}`;
-  }
-  return `C$${rounded.toFixed(2)}`;
+  if (currency === "USD") return `$${GROUPED.format(rounded / exchangeRate)}`;
+  return `C$${GROUPED.format(rounded)}`;
 }
+
+// "1,560.00": comma thousands, dot decimals, as written in Nicaragua
+const GROUPED = new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export function currencySymbol(currency: CurrencyCode = "NIO"): string {
   return currency === "USD" ? "$" : "C$";

@@ -63,3 +63,29 @@ export function shiftDay(day: string, days: number): string {
 export function isDayString(value: string | undefined | null): value is string {
   return !!value && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(`${value}T00:00:00Z`));
 }
+
+/** UTC instants [start, end) covering local days `from`..`to` (inclusive) in `timeZone`. */
+export function localPeriodRange(from: string, to: string, timeZone?: string | null): { start: string; end: string } {
+  return { start: localDayRange(from, timeZone).start, end: localDayRange(to, timeZone).end };
+}
+
+/** Current half-month (1–15 or 16–end) in `timeZone`, as YYYY-MM-DD bounds. */
+export function currentFortnight(timeZone?: string | null): { start: string; end: string } {
+  const today = localDateString(timeZone);
+  const [y, m, d] = today.split("-").map(Number);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const lastDay = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  return d <= 15
+    ? { start: `${y}-${pad(m)}-01`, end: `${y}-${pad(m)}-15` }
+    : { start: `${y}-${pad(m)}-16`, end: `${y}-${pad(m)}-${pad(lastDay)}` };
+}
+
+/** "1–15 de noviembre de 2026" / "28 de octubre – 3 de noviembre de 2026" for YYYY-MM-DD bounds. */
+export function periodLabel(from: string, to: string): string {
+  const a = new Date(`${from}T12:00:00Z`);
+  const b = new Date(`${to}T12:00:00Z`);
+  const month = (d: Date) => d.toLocaleDateString("es-NI", { month: "long", year: "numeric", timeZone: "UTC" });
+  return a.getUTCMonth() === b.getUTCMonth() && a.getUTCFullYear() === b.getUTCFullYear()
+    ? `${a.getUTCDate()}–${b.getUTCDate()} de ${month(a)}`
+    : `${a.getUTCDate()} de ${month(a).replace(/ de \d{4}$/, "")} – ${b.getUTCDate()} de ${month(b)}`;
+}

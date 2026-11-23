@@ -11,6 +11,11 @@ import VentasFiltros from "@/components/ventas/ventas-filtros";
 import SaleDetail from "@/components/ventas/sale-detail";
 import EmptyState from "@/components/empty-state";
 import { getMoney } from "@/lib/get-currency";
+import { getOrgContext } from "@/lib/org-context";
+import { requireModule } from "@/lib/require-module";
+import { isDayString, localDateString, localPeriodRange, shiftDay } from "@/lib/dates";
+
+const PAGE_SIZE = 200;
 
 const PAYMENT_LABELS: Record<string, string> = {
   cash: "Efectivo", pos: "POS", transfer: "Transferencia", mixed: "Mixto",
@@ -21,16 +26,33 @@ interface Props {
 }
 
 export default async function VentasPage({ searchParams }: Props) {
+  await requireModule("pos");
   const fmt = await getMoney();
   const { desde, hasta, marca, pago } = await searchParams;
   const supabase = await createClient();
+  const { timezone, modules } = await getOrgContext();
+  const useBrands = modules.includes("brands");
 
-  const today = new Date();
-  const defaultDesde = new Date(today);
-  defaultDesde.setDate(today.getDate() - 30);
+  // Days are the business's local days (the server runs in UTC)
+  const today = localDateString(timezone);
+  const range = localPeriodRange(
+    isDayString(desde) ? desde : shiftDay(today, -30),
+    isDayString(hasta) ? hasta : today,
+    timezone,
+  );
+  const brandFilter = useBrands && marca ? marca : null;
+  const payFilter = pago && ["cash", "pos", "transfer", "mixed"].includes(pago)
+    ? (pago as "cash" | "pos" | "transfer" | "mixed") : null;
 
-  const fechaDesde = desde ? `${desde}T00:00:00` : `${defaultDesde.toISOString().split("T")[0]}T00:00:00`;
-  const fechaHasta = hasta ? `${hasta}T23:59:59` : `${today.toISOString().split("T")[0]}T23:59:59`;
+  // Totals over the whole period (the list below is capped)
+  let totalsQ = supabase
+    .from("sales")
+    .select(brandFilter ? "total, sale_items!inner(brand_id)" : "total")
+    .eq("cancelled", false)
+    .gte("created_at", range.start)
+    .lt("created_at", range.end);
+  if (brandFilter) totalsQ = totalsQ.eq("sale_items.brand_id", brandFilter);
+  if (payFilter) totalsQ = totalsQ.eq("payment_method", payFilter);
 
   let q = supabase
     .from("sales")
@@ -39,22 +61,27 @@ export default async function VentasPage({ searchParams }: Props) {
        customers(name),
        sale_items(brand_id, quantity, unit_price, discount, line_total,
          brands(name), products(name, code))`)
-    .gte("created_at", fechaDesde)
-    .lte("created_at", fechaHasta)
+    .gte("created_at", range.start)
+    .lt("created_at", range.end)
     .order("created_at", { ascending: false })
-    .limit(200);
+    .limit(PAGE_SIZE);
 
-  if (pago) q = q.eq("payment_method", pago as "cash" | "pos" | "transfer" | "mixed");
-  const { data: sales } = await q;
+  if (payFilter) q = q.eq("payment_method", payFilter);
+  const [{ data: sales }, { data: totals }, { data: brands }] = await Promise.all([
+    q,
+    totalsQ,
+    useBrands
+      ? supabase.from("brands").select("id, name").eq("active", true).order("name")
+      : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+  ]);
 
-  const filteredSales = marca
-    ? sales?.filter((s) => (s.sale_items as { brand_id: string }[])?.some((i) => i.brand_id === marca))
+  const filteredSales = brandFilter
+    ? sales?.filter((s) => (s.sale_items as { brand_id: string | null }[])?.some((i) => i.brand_id === brandFilter))
     : sales;
 
-  const { data: brands } = await supabase.from("brands").select("id, name").eq("active", true).order("name");
-
-  const totalPeriodo = filteredSales?.filter((s) => !s.cancelled).reduce((sum, s) => sum + s.total, 0) ?? 0;
-  const ventasActivas = filteredSales?.filter((s) => !s.cancelled).length ?? 0;
+  const totalPeriodo = ((totals ?? []) as unknown as { total: number }[]).reduce((sum, s) => sum + s.total, 0);
+  const ventasActivas = (totals ?? []).length;
+  const capped = (sales?.length ?? 0) >= PAGE_SIZE;
 
   return (
     <div className="space-y-4">
@@ -73,6 +100,11 @@ export default async function VentasPage({ searchParams }: Props) {
       <Suspense>
         <VentasFiltros brands={brands ?? []} />
       </Suspense>
+      {capped && (
+        <p className="text-xs text-muted-foreground">
+          Se muestran las {PAGE_SIZE} ventas más recientes del periodo; los totales sí incluyen todas.
+        </p>
+      )}
 
       {!filteredSales?.length ? (
         <EmptyState
@@ -90,7 +122,7 @@ export default async function VentasPage({ searchParams }: Props) {
                 <TableRow>
                   <TableHead>#</TableHead>
                   <TableHead>Fecha</TableHead>
-                  <TableHead>Marcas</TableHead>
+                  <TableHead>{useBrands ? "Marcas" : "Productos"}</TableHead>
                   <TableHead className="hidden md:table-cell">Cliente</TableHead>
                   <TableHead className="text-right hidden md:table-cell">Descuento</TableHead>
                   <TableHead className="text-center">Pago</TableHead>
@@ -101,9 +133,10 @@ export default async function VentasPage({ searchParams }: Props) {
               <TableBody>
                 {filteredSales.map((sale) => {
                   const isCancelled = sale.cancelled === true;
+                  // Collectives: which brands sold. Stores: which products.
                   const saleMarks = [...new Set(
-                    (sale.sale_items as { brands: { name: string } | null }[])
-                      ?.map((si) => si.brands?.name).filter(Boolean)
+                    (sale.sale_items as { brands: { name: string } | null; products: { name: string } | null }[])
+                      ?.map((si) => useBrands ? si.brands?.name : si.products?.name).filter(Boolean)
                   )] as string[];
 
                   return (
@@ -111,7 +144,7 @@ export default async function VentasPage({ searchParams }: Props) {
                       <TableCell className="font-mono text-sm font-medium">#{sale.sale_number}</TableCell>
                       <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                         {new Date(sale.created_at).toLocaleString("es-NI", {
-                          month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
+                          month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", timeZone: timezone,
                         })}
                       </TableCell>
                       <TableCell>
@@ -159,7 +192,7 @@ export default async function VentasPage({ searchParams }: Props) {
                 brands: { name: string } | null;
                 products: { name: string; code: string } | null;
               }[])?.map((si) => ({
-                brand_name: si.brands?.name ?? "—",
+                brand_name: si.brands?.name ?? "",
                 product_name: si.products?.name ?? "—",
                 product_code: si.products?.code ?? "—",
                 quantity: si.quantity,
@@ -174,7 +207,7 @@ export default async function VentasPage({ searchParams }: Props) {
                   saleId={sale.id}
                   saleNumber={sale.sale_number}
                   date={new Date(sale.created_at).toLocaleString("es-NI", {
-                    month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
+                    month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", timeZone: timezone,
                   })}
                   total={sale.total}
                   paymentMethod={sale.payment_method}

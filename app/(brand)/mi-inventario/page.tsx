@@ -83,7 +83,7 @@ export default async function MiInventarioPage() {
                     )}
                   </TableCell>
                   <TableCell className="text-right font-medium">
-                    C${product.price.toFixed(2)}
+                    {fmt(product.price)}
                   </TableCell>
                   <TableCell className="text-right">
                     <span className={isLow ? "text-destructive font-semibold" : ""}>

@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -19,7 +18,6 @@ export default function EditOrgForm({ org }: { org: Org }) {
   const [currency, setCurrency] = useState(org.currency);
   const [model, setModel]       = useState(org.settlement_model);
   const [period, setPeriod]     = useState(org.settlement_period);
-  const [active, setActive]     = useState(org.active);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -27,7 +25,6 @@ export default function EditOrgForm({ org }: { org: Org }) {
     formData.set("currency", currency);
     formData.set("settlement_model", model);
     formData.set("settlement_period", period);
-    formData.set("active", String(active));
 
     startTransition(async () => {
       const result = await updateOrganization(org.id, formData);
@@ -77,11 +74,6 @@ export default function EditOrgForm({ org }: { org: Org }) {
             <SelectItem value="none">Sin cobro</SelectItem>
           </SelectContent>
         </Select>
-      </div>
-
-      <div className="flex items-center justify-between">
-        <Label>Negocio activo</Label>
-        <Switch checked={active} onCheckedChange={setActive} />
       </div>
 
       <Button type="submit" variant="default" className="w-full" disabled={pending}>

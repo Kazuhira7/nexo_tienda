@@ -9,21 +9,8 @@ import MarkPaidButton from "@/components/liquidaciones/mark-paid-button";
 import PeriodoSelector from "@/components/liquidaciones/periodo-selector";
 import { getMoney } from "@/lib/get-currency";
 import { requireModule } from "@/lib/require-module";
-
-function getCurrentPeriod() {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = now.getMonth();
-  const d = now.getDate();
-  const start = d <= 15 ? new Date(y, m, 1) : new Date(y, m, 16);
-  const end = d <= 15
-    ? new Date(y, m, 15, 23, 59, 59)
-    : new Date(y, m + 1, 0, 23, 59, 59);
-  return {
-    start: start.toISOString().split("T")[0],
-    end: end.toISOString().split("T")[0],
-  };
-}
+import { getOrgContext } from "@/lib/org-context";
+import { currentFortnight, isDayString, localPeriodRange } from "@/lib/dates";
 
 interface Props {
   searchParams: Promise<{ from?: string; to?: string }>;
@@ -35,12 +22,14 @@ export default async function LiquidacionesPage({ searchParams }: Props) {
   const { from, to } = await searchParams;
   const supabase = await createClient();
 
-  const defaultPeriod = getCurrentPeriod();
-  const periodStart = from ?? defaultPeriod.start;
-  const periodEnd = to ?? defaultPeriod.end;
-
-  const startDt = new Date(periodStart + "T00:00:00");
-  const endDt = new Date(periodEnd + "T23:59:59");
+  const { timezone } = await getOrgContext();
+  const defaultPeriod = currentFortnight(timezone);
+  const periodStart = isDayString(from) ? from : defaultPeriod.start;
+  const periodEnd = isDayString(to) ? to : defaultPeriod.end;
+  // Labels only (calendar days, no time zone math)
+  const startDt = new Date(periodStart + "T12:00:00");
+  const endDt = new Date(periodEnd + "T12:00:00");
+  const range = localPeriodRange(periodStart, periodEnd, timezone);
 
   const [{ data: brands }, { data: existingSettlements }, { data: periodItems }] =
     await Promise.all([
@@ -50,30 +39,28 @@ export default async function LiquidacionesPage({ searchParams }: Props) {
         .select("*")
         .eq("period_start", periodStart)
         .eq("period_end", periodEnd),
+      // Only this period's non-cancelled sales, in the business's local days
       supabase
         .from("sale_items")
-        .select("brand_id, line_total, sales(created_at, cancelled)"),
+        .select("brand_id, line_total, sales!inner(created_at, cancelled)")
+        .eq("sales.cancelled", false)
+        .gte("sales.created_at", range.start)
+        .lt("sales.created_at", range.end),
     ]);
 
-  const salesByBrand = (periodItems ?? [])
-    .filter((i) => {
-      const s = i.sales as { created_at: string; cancelled: boolean } | null;
-      if (!s || s.cancelled) return false;
-      const d = new Date(s.created_at);
-      return d >= startDt && d <= endDt;
-    })
-    .reduce<Record<string, number>>((acc, i) => {
-      acc[i.brand_id] = (acc[i.brand_id] ?? 0) + i.line_total;
-      return acc;
-    }, {});
+  const salesByBrand = (periodItems ?? []).reduce<Record<string, number>>((acc, i) => {
+    if (i.brand_id) acc[i.brand_id] = (acc[i.brand_id] ?? 0) + i.line_total;
+    return acc;
+  }, {});
 
   const settlementByBrand = Object.fromEntries(
     (existingSettlements ?? []).map((s) => [s.brand_id, s])
   );
 
-  const periodoLabel = startDt.getDate() === 1
-    ? `1–15 de ${startDt.toLocaleDateString("es-NI", { month: "long", year: "numeric" })}`
-    : `16–${endDt.getDate()} de ${startDt.toLocaleDateString("es-NI", { month: "long", year: "numeric" })}`;
+  const monthLabel = (d: Date) => d.toLocaleDateString("es-NI", { month: "long", year: "numeric" });
+  const periodoLabel = startDt.getMonth() === endDt.getMonth()
+    ? `${startDt.getDate()}–${endDt.getDate()} de ${monthLabel(startDt)}`
+    : `${startDt.getDate()} de ${monthLabel(startDt)} – ${endDt.getDate()} de ${monthLabel(endDt)}`;
 
   const totalVendido = Object.values(salesByBrand).reduce((a, b) => a + b, 0);
   const paidCount = (brands ?? []).filter((b) => settlementByBrand[b.id]?.status === "paid").length;
@@ -140,7 +127,7 @@ export default async function LiquidacionesPage({ searchParams }: Props) {
                     {isPaid && settlement.paid_at && (
                       <p className="text-xs text-muted-foreground mt-1">
                         Pagada el{" "}
-                        {new Date(settlement.paid_at).toLocaleDateString("es-NI")}
+                        {new Date(settlement.paid_at).toLocaleDateString("es-NI", { timeZone: timezone })}
                       </p>
                     )}
                   </div>

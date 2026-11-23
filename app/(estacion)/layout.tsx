@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { requireOpenOrg } from "@/lib/org-access";
 
 // Fixed device screens (print station): owner or the device account ("terminal"),
 // no staff PIN and no idle lock — nobody operates orders from here.
@@ -16,6 +17,7 @@ export default async function EstacionLayout({ children }: { children: React.Rea
     .single();
 
   if (!profile || (profile.role !== "owner" && profile.role !== "terminal")) redirect("/");
+  await requireOpenOrg();
   const modules = (profile.organizations as { enabled_modules: string[] } | null)?.enabled_modules ?? [];
   if (!modules.includes("restaurant")) redirect("/");
 

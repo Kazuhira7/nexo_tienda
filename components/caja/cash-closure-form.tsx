@@ -47,14 +47,8 @@ export default function CashClosureForm({
     e.preventDefault();
     start(async () => {
       const result = await saveCashClosure({
-        closureDate,
-        openingCash,
-        cashSales,
-        countedCash:      countedNum,
-        expectedPos,
-        expectedTransfer,
-        expectedMixed,
-        notes:            notes.trim() || null,
+        countedCash: countedNum,
+        notes:       notes.trim() || null,
       });
       if (result.error) toast.error(result.error);
       else toast.success("Cierre de caja guardado");

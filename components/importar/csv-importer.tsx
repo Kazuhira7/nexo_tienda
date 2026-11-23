@@ -6,50 +6,56 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { UploadIcon, FileIcon, CheckIcon, XIcon, DownloadIcon } from "lucide-react";
 import { importProducts, type ImportRow } from "@/app/(owner)/importar/actions";
+import { parseAmount, parseCsv } from "@/lib/csv";
 
-const COLUMNS = ["marca", "codigo", "nombre", "precio", "costo", "stock", "descripcion"] as const;
-const EXAMPLE_CSV = `marca,codigo,nombre,precio,costo,stock,descripcion
+const EXAMPLE_BRANDS = `marca,codigo,nombre,precio,costo,stock,descripcion
 Glam Express,GE-001,Perfume Jean Paul,5000,3200,10,Fragancia masculina 100ml
 Glam Express,GE-002,Labial rojo,250,120,25,
-Flor Boutique,FB-001,Blusa floreada talla S,680,350,8,Tela algodón`;
+Flor Boutique,FB-001,Blusa floreada talla S,680,350,8,"Tela algodón, manga corta"`;
+const EXAMPLE_STORE = `codigo,nombre,precio,costo,stock,descripcion
+7501001,Martillo de uña 16 oz,450,280,12,
+7501002,Clavo 2 pulgadas (libra),45,28,80,
+7501003,Pintura blanca galón,980,690,6,"Látex, interior"`;
 
-function parseCSV(text: string): ImportRow[] {
-  const lines = text.trim().split("\n").map((l) => l.trim()).filter(Boolean);
-  if (lines.length < 2) return [];
+const HEADER_KEYS = {
+  brand_name:     ["marca", "brand", "brand_name"],
+  code:           ["codigo", "código", "code", "sku", "barras", "codigo de barras", "código de barras"],
+  name:           ["nombre", "name", "producto", "descripcion corta"],
+  price:          ["precio", "price", "precio venta", "precio de venta"],
+  cost:           ["costo", "cost", "precio compra", "precio de compra"],
+  stock_quantity: ["stock", "stock_quantity", "cantidad", "existencias", "existencia"],
+  description:    ["descripcion", "descripción", "description", "detalle"],
+} as const;
 
-  const header = lines[0].toLowerCase().split(",").map((h) => h.trim());
-  const rows: ImportRow[] = [];
+function parseRows(text: string, useBrands: boolean): ImportRow[] {
+  const [header, ...lines] = parseCsv(text);
+  if (!header || lines.length === 0) return [];
+  const cols = header.map((h) => h.toLowerCase());
+  const col = (keys: readonly string[]) => cols.findIndex((h) => keys.includes(h));
+  const idx = Object.fromEntries(Object.entries(HEADER_KEYS).map(([k, keys]) => [k, col(keys)])) as Record<keyof typeof HEADER_KEYS, number>;
+  const at = (values: string[], i: number) => (i >= 0 ? values[i] ?? "" : "");
 
-  for (let i = 1; i < lines.length; i++) {
-    const values = lines[i].split(",").map((v) => v.trim());
-    const get = (keys: string[]) => {
-      for (const k of keys) {
-        const idx = header.indexOf(k);
-        if (idx >= 0) return values[idx] ?? "";
-      }
-      return "";
-    };
-
-    const price = parseFloat(get(["precio", "price"])) || 0;
-    const cost = parseFloat(get(["costo", "cost"])) || 0;
-    const stock = parseInt(get(["stock", "stock_quantity", "cantidad"])) || 0;
-
-    rows.push({
-      brand_name: get(["marca", "brand", "brand_name"]),
-      code: get(["codigo", "code", "sku", "código"]),
-      name: get(["nombre", "name", "producto"]),
-      price,
-      cost: cost > 0 ? cost : undefined,
-      stock_quantity: stock,
-      description: get(["descripcion", "description", "descripción"]) || undefined,
-    });
-  }
-
-  return rows.filter((r) => r.brand_name && r.code && r.name);
+  return lines
+    .map((values) => {
+      const price = parseAmount(at(values, idx.price));
+      const cost = parseAmount(at(values, idx.cost));
+      const stock = parseAmount(at(values, idx.stock_quantity));
+      return {
+        brand_name:     at(values, idx.brand_name),
+        code:           at(values, idx.code),
+        name:           at(values, idx.name),
+        price:          Number.isFinite(price) ? price : 0,
+        cost:           Number.isFinite(cost) && cost > 0 ? cost : undefined,
+        stock_quantity: Number.isFinite(stock) ? Math.trunc(stock) : 0,
+        description:    at(values, idx.description) || undefined,
+      };
+    })
+    .filter((r) => r.code && r.name && (!useBrands || r.brand_name));
 }
 
-function downloadTemplate() {
-  const blob = new Blob([EXAMPLE_CSV], { type: "text/csv;charset=utf-8;" });
+function downloadTemplate(useBrands: boolean) {
+  // BOM so Excel opens the accents correctly
+  const blob = new Blob(["\uFEFF" + (useBrands ? EXAMPLE_BRANDS : EXAMPLE_STORE)], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -58,7 +64,7 @@ function downloadTemplate() {
   URL.revokeObjectURL(url);
 }
 
-export default function CSVImporter() {
+export default function CSVImporter({ useBrands = true }: { useBrands?: boolean }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [rows, setRows] = useState<ImportRow[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -71,7 +77,7 @@ export default function CSVImporter() {
     const reader = new FileReader();
     reader.onload = (e) => {
       const text = e.target?.result as string;
-      const parsed = parseCSV(text);
+      const parsed = parseRows(text, useBrands);
       setRows(parsed);
       if (parsed.length === 0) {
         toast.error("No se encontraron filas válidas. Revisa el formato del archivo.");
@@ -110,7 +116,7 @@ export default function CSVImporter() {
         </p>
         <div className="flex flex-wrap gap-2">
           {[
-            { col: "marca", req: true },
+            ...(useBrands ? [{ col: "marca", req: true }] : []),
             { col: "codigo", req: true },
             { col: "nombre", req: true },
             { col: "precio", req: true },
@@ -126,9 +132,11 @@ export default function CSVImporter() {
           ))}
         </div>
         <p className="text-xs text-muted-foreground">
-          Si la marca no existe, se crea automáticamente. Si el código ya existe, se actualiza el producto.
+          {useBrands && "Si la marca no existe, se crea automáticamente. "}
+          Si el código ya existe, se actualiza el producto (incluidas sus existencias). En Excel: Archivo → Guardar
+          como → CSV.
         </p>
-        <Button variant="outline" size="sm" onClick={downloadTemplate} className="gap-1.5">
+        <Button variant="outline" size="sm" onClick={() => downloadTemplate(useBrands)} className="gap-1.5">
           <DownloadIcon className="size-3.5" />
           Descargar plantilla de ejemplo
         </Button>
@@ -158,7 +166,9 @@ export default function CSVImporter() {
           <div className="flex flex-col items-center gap-2">
             <FileIcon className="size-10 text-primary" />
             <p className="font-semibold text-primary">{fileName}</p>
-            <p className="text-sm text-muted-foreground">{rows.length} productos · {Object.keys(brandCounts).length} marcas</p>
+            <p className="text-sm text-muted-foreground">
+              {rows.length} productos{useBrands && ` · ${Object.keys(brandCounts).length} marcas`}
+            </p>
             <p className="text-xs text-muted-foreground">Haz clic para cambiar el archivo</p>
           </div>
         ) : (
@@ -176,7 +186,7 @@ export default function CSVImporter() {
           <div className="flex items-center justify-between">
             <h2 className="font-semibold">Vista previa</h2>
             <div className="flex flex-wrap gap-2">
-              {Object.entries(brandCounts).map(([brand, count]) => (
+              {useBrands && Object.entries(brandCounts).map(([brand, count]) => (
                 <Badge key={brand} variant="outline">{brand} · {count} productos</Badge>
               ))}
             </div>
@@ -187,7 +197,7 @@ export default function CSVImporter() {
               <table className="w-full text-sm">
                 <thead className="bg-muted/40">
                   <tr>
-                    {["Marca", "Código", "Nombre", "Precio", "Stock"].map((h) => (
+                    {[...(useBrands ? ["Marca"] : []), "Código", "Nombre", "Precio", "Stock"].map((h) => (
                       <th key={h} className="text-left px-3 py-2 font-medium text-muted-foreground text-xs">{h}</th>
                     ))}
                   </tr>
@@ -195,7 +205,7 @@ export default function CSVImporter() {
                 <tbody className="divide-y">
                   {rows.slice(0, 10).map((row, i) => (
                     <tr key={i} className="hover:bg-muted/20">
-                      <td className="px-3 py-2 text-muted-foreground">{row.brand_name}</td>
+                      {useBrands && <td className="px-3 py-2 text-muted-foreground">{row.brand_name}</td>}
                       <td className="px-3 py-2 font-mono">{row.code}</td>
                       <td className="px-3 py-2 font-medium max-w-[200px] truncate">{row.name}</td>
                       <td className="px-3 py-2">C${row.price.toFixed(2)}</td>
@@ -204,7 +214,7 @@ export default function CSVImporter() {
                   ))}
                   {rows.length > 10 && (
                     <tr>
-                      <td colSpan={5} className="px-3 py-2 text-center text-muted-foreground text-xs">
+                      <td colSpan={useBrands ? 5 : 4} className="px-3 py-2 text-center text-muted-foreground text-xs">
                         … y {rows.length - 10} productos más
                       </td>
                     </tr>

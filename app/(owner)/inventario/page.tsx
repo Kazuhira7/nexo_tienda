@@ -9,13 +9,18 @@ import ToggleProductActive from "@/components/inventario/toggle-active";
 import StockDialog from "@/components/inventario/stock-dialog";
 import EmptyState from "@/components/empty-state";
 import { getMoney } from "@/lib/get-currency";
+import { getOrgContext } from "@/lib/org-context";
 
 export default async function InventarioPage() {
   const fmt = await getMoney();
   const supabase = await createClient();
+  const { modules } = await getOrgContext();
+  const useBrands = modules.includes("brands");
   const [{ data: products }, { data: brands }] = await Promise.all([
     supabase.from("products").select("*, brands(name)").order("name"),
-    supabase.from("brands").select("*").eq("active", true).order("name"),
+    useBrands
+      ? supabase.from("brands").select("id, name").eq("active", true).order("name")
+      : Promise.resolve({ data: [] as { id: string; name: string }[] }),
   ]);
 
   const lowCount = products?.filter(p => p.active && p.stock_quantity <= p.low_stock_threshold).length ?? 0;
@@ -27,10 +32,10 @@ export default async function InventarioPage() {
           <h1 className="text-2xl font-bold">{products?.length ?? 0} productos</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             {lowCount > 0 && <span className="text-destructive font-medium">{lowCount} con stock bajo · </span>}
-            Inventario completo de la tienda
+            Inventario completo del negocio
           </p>
         </div>
-        <ProductDialog brands={brands ?? []}
+        <ProductDialog brands={brands ?? []} useBrands={useBrands}
           trigger={<Button variant="cta">+ Nuevo producto</Button>} />
       </div>
 
@@ -38,8 +43,10 @@ export default async function InventarioPage() {
         <EmptyState
           icon="box"
           title="Sin productos en inventario"
-          description="Primero agrega al menos una marca, luego agrega productos con su código y precio."
-          action={<ProductDialog brands={brands ?? []} trigger={<Button variant="cta">Agregar primer producto</Button>} />}
+          description={useBrands
+            ? "Primero agrega al menos una marca, luego agrega productos con su código y precio."
+            : "Agrega tus productos con su código, precio y existencias, o súbelos todos desde Excel en Importar."}
+          action={<ProductDialog brands={brands ?? []} useBrands={useBrands} trigger={<Button variant="cta">Agregar primer producto</Button>} />}
         />
       ) : (
         <>
@@ -50,7 +57,7 @@ export default async function InventarioPage() {
                 <TableRow>
                   <TableHead>Código</TableHead>
                   <TableHead>Producto</TableHead>
-                  <TableHead>Marca</TableHead>
+                  {useBrands && <TableHead>Marca</TableHead>}
                   <TableHead className="text-right">Precio</TableHead>
                   <TableHead className="text-right">Stock</TableHead>
                   <TableHead className="text-center">Activo</TableHead>
@@ -69,9 +76,9 @@ export default async function InventarioPage() {
                           <p className="text-xs text-muted-foreground truncate max-w-[160px]">{product.description}</p>
                         )}
                       </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">
+                      {useBrands && <TableCell className="text-muted-foreground text-sm">
                         {(product.brands as { name: string } | null)?.name ?? "—"}
-                      </TableCell>
+                      </TableCell>}
                       <TableCell className="text-right font-medium">{fmt(product.price)}</TableCell>
                       <TableCell className="text-right">
                         <span className={isLow ? "text-destructive font-semibold" : ""}>{product.stock_quantity}</span>
@@ -84,7 +91,7 @@ export default async function InventarioPage() {
                         <div className="flex justify-end gap-1">
                           <StockDialog productId={product.id} productName={product.name} currentStock={product.stock_quantity}
                             trigger={<Button variant="ghost" size="sm" className="text-muted-foreground">Stock</Button>} />
-                          <ProductDialog product={product} brands={brands ?? []}
+                          <ProductDialog product={product} brands={brands ?? []} useBrands={useBrands}
                             trigger={<Button variant="ghost" size="sm">Editar</Button>} />
                         </div>
                       </TableCell>
@@ -124,7 +131,7 @@ export default async function InventarioPage() {
                   <div className="flex gap-2 pt-1 border-t">
                     <StockDialog productId={product.id} productName={product.name} currentStock={product.stock_quantity}
                       trigger={<Button variant="outline" size="sm" className="flex-1">Ajustar stock</Button>} />
-                    <ProductDialog product={product} brands={brands ?? []}
+                    <ProductDialog product={product} brands={brands ?? []} useBrands={useBrands}
                       trigger={<Button variant="outline" size="sm" className="flex-1">Editar</Button>} />
                   </div>
                 </div>

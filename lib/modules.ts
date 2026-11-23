@@ -17,7 +17,7 @@ export const MODULE_IDS = Object.keys(MODULES) as ModuleId[];
 
 export const VERTICAL_INFO: Record<VerticalType, { label: string; description: string }> = {
   colectivo:   { label: "Tienda colectiva", description: "Varias marcas venden bajo un mismo techo (consignación)" },
-  retail:      { label: "Tienda / retail",  description: "Conveniencia, ropa o comercio general" },
+  retail:      { label: "Tienda",           description: "Tienda, almacén, bodega, ferretería o comercio en general" },
   restaurante: { label: "Restaurante",      description: "Mesas, comandas y cocina" },
 };
 

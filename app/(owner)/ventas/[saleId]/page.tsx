@@ -18,7 +18,7 @@ interface Props {
 export default async function ReciboPage({ params }: Props) {
   const { saleId } = await params;
   const fmt = await getMoney();
-  const { orgName } = await getOrgContext();
+  const { orgName, timezone } = await getOrgContext();
   const supabase = await createClient();
 
   const { data: sale } = await supabase
@@ -37,7 +37,7 @@ export default async function ReciboPage({ params }: Props) {
 
   const fecha = new Date(sale.created_at).toLocaleString("es-NI", {
     weekday: "short", day: "numeric", month: "short", year: "numeric",
-    hour: "2-digit", minute: "2-digit",
+    hour: "2-digit", minute: "2-digit", timeZone: timezone,
   });
 
   return (

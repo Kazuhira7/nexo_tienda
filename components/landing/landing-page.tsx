@@ -5,12 +5,13 @@ import {
   ArrowRightIcon, BanknoteIcon, CalculatorIcon, ChartColumnIcon, CheckIcon, ChefHatIcon, ChevronDownIcon,
   ClipboardListIcon, CoinsIcon, FileSpreadsheetIcon, HandCoinsIcon, KeyRoundIcon, LayoutGridIcon, MapPinIcon,
   MessageCircleIcon, MonitorSmartphoneIcon, PackageIcon, ReceiptTextIcon, ShieldCheckIcon, ShoppingCartIcon,
-  SmartphoneIcon, SplitIcon, StoreIcon, UserRoundCheckIcon, UsersIcon, UtensilsCrossedIcon, WalletIcon,
+  ScanBarcodeIcon, ShoppingBagIcon, SmartphoneIcon, SplitIcon, StoreIcon, TrendingUpIcon, UserRoundCheckIcon,
+  UsersIcon, UtensilsCrossedIcon, WalletIcon,
 } from "lucide-react";
 import BrandBackdrop from "@/components/auth/brand-backdrop";
 import NexoNetwork from "@/components/auth/nexo-network";
 import { Wordmark } from "@/components/auth/hero-parts";
-import { CollectivePreview, RestaurantPreview } from "@/components/landing/product-previews";
+import { CollectivePreview, RestaurantPreview, StorePreview } from "@/components/landing/product-previews";
 import PwaRedirect from "@/components/landing/pwa-redirect";
 import { SALES, formatNio, whatsappUrl } from "@/lib/site";
 
@@ -18,8 +19,9 @@ type Style = React.CSSProperties & Record<`--${string}`, string | number>;
 type Feature = { icon: typeof StoreIcon; title: string; text: string };
 
 const PRICE = formatNio(SALES.monthlyPriceNio);
+const TRIAL = `${SALES.trialDays} días gratis`;
 const DEMO_MESSAGE = "Hola, quiero conocer nexo para mi negocio.";
-const START_MESSAGE = "Hola, quiero empezar mi mes gratis de nexo.";
+const START_MESSAGE = "Hola, quiero empezar mi prueba gratis de nexo.";
 
 const PAINS: Feature[] = [
   { icon: ClipboardListIcon, title: "Todo va al cuaderno",
@@ -60,6 +62,17 @@ const RESTAURANT: Feature[] = [
     text: "Ventas del día, platillos más vendidos, ventas por mesero y por forma de pago." },
 ];
 
+const STORE: Feature[] = [
+  { icon: ScanBarcodeIcon, title: "Cobra con el lector",
+    text: "Escanea el código de barras o búscalo por nombre, cobra en efectivo, POS o transferencia y entrega el recibo." },
+  { icon: PackageIcon, title: "Existencias al día",
+    text: "Cada venta descuenta del inventario. Te avisa qué se está agotando para que pidas a tiempo." },
+  { icon: FileSpreadsheetIcon, title: "Tu catálogo desde Excel",
+    text: "Sube cientos de productos de una vez con su código, precio, costo y existencias." },
+  { icon: TrendingUpIcon, title: "Qué se vende más",
+    text: "Ventas por día y por forma de pago, y los productos que más salen." },
+];
+
 const CORE: Feature[] = [
   { icon: HandCoinsIcon, title: "Apertura y cierre de caja",
     text: "Abre con tu fondo inicial y cuadra el efectivo al final del día." },
@@ -97,7 +110,7 @@ const FAQS = [
   { q: "¿Necesito comprar equipo o instalar algo?",
     a: "No. nexo funciona en el navegador del celular, la tablet o la computadora que ya tienes. Si quieres imprimir recibos o comandas, te ayudamos a configurar tu impresora." },
   { q: "¿Puedo probarlo antes de pagar?",
-    a: "Sí. El primer mes es gratis y lo usas con tus datos reales. Si nexo no te sirve, no pagas nada." },
+    a: `Sí. Los primeros ${SALES.trialDays} días son gratis y lo usas con tus datos reales. Si nexo no te sirve, no pagas nada.` },
   { q: "¿Funciona sin internet?",
     a: "Necesita conexión a internet. Funciona bien con wifi o con los datos del celular." },
   { q: "¿Mi información está segura?",
@@ -195,6 +208,7 @@ export default function LandingPage() {
             <nav className="flex items-center gap-6 text-sm font-medium">
               <a href="#colectivos" className="hidden md:inline text-white/75 hover:text-white transition-colors">Tiendas colectivas</a>
               <a href="#restaurantes" className="hidden md:inline text-white/75 hover:text-white transition-colors">Restaurantes</a>
+              <a href="#tiendas" className="hidden lg:inline text-white/75 hover:text-white transition-colors">Tiendas</a>
               <a href="#precio" className="hidden md:inline text-white/75 hover:text-white transition-colors">Precio</a>
               <Link href="/login"
                 className="h-10 px-4 rounded-xl border border-white/30 bg-white/10 font-semibold inline-flex items-center
@@ -209,7 +223,7 @@ export default function LandingPage() {
               <p className="nx-fade inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs sm:text-sm font-medium text-white/85"
                 style={{ "--d": "0.1s" } as Style}>
                 <MapPinIcon className="size-3.5" />
-                Hecho en Nicaragua · colectivos y restaurantes
+                Hecho en Nicaragua para tu negocio
               </p>
               <h1 className="nx-fade mt-5 font-heading font-bold tracking-tight text-balance text-[2.35rem] leading-[1.05] sm:text-5xl lg:text-[3.5rem]"
                 style={{ "--d": "0.2s" } as Style}>
@@ -234,7 +248,7 @@ export default function LandingPage() {
                   : <a href="#precio" className={CTA_GHOST}>Ver precio</a>}
               </div>
               <ul className="nx-fade mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm text-white/80" style={{ "--d": "0.65s" } as Style}>
-                {["Primer mes gratis", `Luego ${PRICE} al mes`, "Sin contrato"].map((t) => (
+                {[TRIAL, `Luego ${PRICE} al mes`, "Sin contrato"].map((t) => (
                   <li key={t} className="flex items-center gap-1.5">
                     <CheckIcon className="size-4 text-[#FF5C1A]" strokeWidth={3} />
                     {t}
@@ -311,6 +325,25 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ───────────── Tiendas, almacenes, ferreterías ───────────── */}
+      <section id="tiendas" className="scroll-mt-6 border-t py-16 sm:py-24">
+        <div className={`${CONTAINER} grid gap-10 lg:grid-cols-2 lg:gap-x-16`}>
+          <div className="lg:col-start-2 lg:row-start-1">
+            <SectionHeading
+              eyebrow={{ icon: ShoppingBagIcon, label: "Tiendas, almacenes y ferreterías" }}
+              title="Tu inventario y tu caja, siempre cuadrados"
+              text="Para tiendas, almacenes, bodegas, ferreterías y todo negocio que vende productos propios."
+            />
+          </div>
+          <div className="mx-auto w-full max-w-md lg:col-start-1 lg:row-start-1 lg:row-span-2 lg:self-center">
+            <StorePreview />
+          </div>
+          <div className="lg:col-start-2 lg:row-start-2">
+            <FeatureGrid items={STORE} />
+          </div>
+        </div>
+      </section>
+
       {/* ───────────── Core: every business ───────────── */}
       <section className="border-t py-16 sm:py-24">
         <div className={CONTAINER}>
@@ -362,7 +395,7 @@ export default function LandingPage() {
           <div className="mx-auto mt-10 max-w-md rounded-3xl border-2 border-primary bg-card p-6 sm:p-8 shadow-[0_30px_60px_-30px_rgba(27,79,255,0.45)]">
             <div className="flex items-center justify-between gap-3">
               <p className="font-heading text-lg font-bold">Plan nexo</p>
-              <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">Primer mes gratis</span>
+              <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">{TRIAL}</span>
             </div>
             <p className="mt-5 flex items-baseline gap-1.5">
               <span className="font-heading text-5xl font-bold tracking-tight tabular-nums">{PRICE}</span>
@@ -380,10 +413,10 @@ export default function LandingPage() {
               ))}
             </ul>
             <div className="mt-8 flex flex-col">
-              <PrimaryCta href={startHref} label="Empezar mi mes gratis" fallbackLabel="Empezar mi mes gratis" />
+              <PrimaryCta href={startHref} label="Empezar mi prueba gratis" fallbackLabel="Empezar mi prueba gratis" />
             </div>
             <p className="mt-3 text-center text-xs text-muted-foreground">
-              Pagas desde el segundo mes, solo si nexo te sirve.
+              Pagas al terminar la prueba, solo si nexo te sirve.
             </p>
           </div>
         </div>
@@ -414,8 +447,8 @@ export default function LandingPage() {
           <h2 className="font-heading text-3xl sm:text-5xl font-bold tracking-tight text-balance">¿Vemos nexo con tu negocio?</h2>
           <p className="mx-auto mt-4 max-w-xl text-lg text-white/80 text-pretty">
             {hasWhatsapp
-              ? "Te lo mostramos en una llamada corta, sin compromiso. Si te convence, empiezas tu mes gratis ese mismo día."
-              : "Crea tu negocio en un minuto y úsalo gratis el primer mes, con tus datos reales."}
+              ? "Te lo mostramos en una llamada corta, sin compromiso. Si te convence, empiezas tu prueba gratis ese mismo día."
+              : `Crea tu negocio en un minuto y úsalo ${SALES.trialDays} días gratis, con tus datos reales.`}
           </p>
           <div className="mt-8 flex flex-col sm:flex-row justify-center gap-3">
             <PrimaryCta href={demoHref} label="Escríbenos por WhatsApp" />

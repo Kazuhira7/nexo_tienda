@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getOrgId } from "@/lib/supabase/get-org";
+import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
 
 const Schema = z.object({
@@ -15,8 +15,17 @@ export async function createBrandUser(brandId: string, formData: FormData) {
   const parsed = Schema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
+  // The service role skips RLS: check here that the caller owns the business and the brand is theirs
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "No autenticado" };
+  const { data: me } = await supabase.from("profiles").select("role, organization_id").eq("id", user.id).single();
+  if (me?.role !== "owner" || !me.organization_id) return { error: "Solo la dueña puede crear accesos de marca" };
+  const { data: brand } = await supabase.from("brands").select("id").eq("id", brandId).maybeSingle();
+  if (!brand) return { error: "Marca no encontrada" };
+
   const admin = createAdminClient();
-  const orgId = await getOrgId();
+  const orgId = me.organization_id;
 
   const { data: authData, error: authError } = await admin.auth.admin.createUser({
     email:         parsed.data.email,
