@@ -29,10 +29,8 @@ export default async function BrandAccountPage() {
 
   // RLS already limits every query to this brand — the eq() is defense in depth
   const [{ data: items }, { data: payments }, { data: settlements }] = await Promise.all([
-    supabase
-      .from("sale_items")
-      .select("line_total, sales(cancelled)")
-      .eq("brand_id", brandId!),
+    // sales isn't readable by brands; brand_sales() returns this brand's non-cancelled lines
+    supabase.rpc("brand_sales", {}),
     supabase
       .from("brand_payments")
       .select("*")
@@ -45,9 +43,7 @@ export default async function BrandAccountPage() {
       .order("period_end", { ascending: false }),
   ]);
 
-  const ventasAcum = (items ?? [])
-    .filter((i) => !(i.sales as { cancelled: boolean } | null)?.cancelled)
-    .reduce((acc, i) => acc + i.line_total, 0);
+  const ventasAcum = (items ?? []).reduce((acc, i) => acc + Number(i.line_total), 0);
 
   const sumType = (t: BrandPaymentType) =>
     (payments ?? []).filter((p) => p.type === t).reduce((acc, p) => acc + p.amount, 0);

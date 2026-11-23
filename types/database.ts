@@ -1070,6 +1070,15 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      // ── Portal de marca (023): solo las líneas de la propia marca, ventas no anuladas ──
+      brand_sales: {
+        Args: { p_from?: string | null; p_to?: string | null };
+        Returns: {
+          sale_item_id: string; sale_number: number; created_at: string; payment_method: PaymentMethod;
+          product_code: string | null; product_name: string | null;
+          quantity: number; unit_price: number; discount: number; line_total: number;
+        }[];
+      };
       // ── Suscripciones (017) ──
       my_org_access:        { Args: Record<string, never>; Returns: OrgAccess | null };
       admin_orgs_overview:  { Args: Record<string, never>; Returns: AdminOrgOverview[] };

@@ -87,14 +87,20 @@ Reglas de arquitectura:
   marcas; el filtro y la columna de marca solo aparecen con el módulo `brands`.
 - Pendiente para ferreterías: cantidades fraccionarias (libras, metros); hoy el stock es entero.
 
+**Repaso "Gold Standard" (nov 2026)** — migraciones 021–023:
+- Fechas: todo periodo/día se calcula en `organizations.timezone` (`lib/dates.ts`: `localPeriodRange`,
+  `currentFortnight`, `periodLabel`); nada de `new Date(y, m, d)` en el servidor (corre en UTC).
+- Portal de marca: las marcas no leen `sales`; usan la RPC `brand_sales()` (solo sus líneas, sin anuladas).
+- POS: descuento general repartido entre líneas; tope de existencias; búsqueda por código exacto primero.
+- Cortesías (100 % de descuento) se cierran con un cobro de 0 (022).
+- Acciones con service role verifican rol y pertenencia antes de escribir.
+
 **Deuda / pendientes conocidos:**
 - ✔ `register_sale`/`cancel_sale` protegidos (014) y UPDATE de `organizations` solo para la dueña y columnas de
   configuración (012).
-- Activar "Leaked password protection" en Supabase Auth (aviso del advisor).
-- Páginas del colectivo (ventas, liquidaciones, reporte por marca, portal de marca) aún calculan fechas en UTC.
+- Activar "Leaked password protection" en Supabase Auth (aviso del advisor; se hace en el dashboard).
 - La clienta nunca definió la regla de cobro de cuotas → `brand_payments` es un libro manual flexible; automatizar cuando haya regla.
 - Separación física `lib/core/` vs `lib/colectivo/` aún no hecha (la separación lógica vía módulos sí).
-- Portal de marca (A3) incompleto; alertas de stock en dashboard sí existen.
 - ⚠️ El proyecto Supabase es plan gratuito y **se pausa por inactividad** → producción se cae. Para vender esto se necesita plan Pro.
 
 **Historia de BD** en `docs/db/` (correr en orden en una base nueva): `000_schema_base` → `001_multitenant` → `002_cash_closures` → `003_brand_payments` → `004_platform_modules` → `005_fix_handle_new_user` → `006a_terminal_role` (sola) → `006_restaurante` → `007_org_timezone` → `008_orden_ui` → `009_pagos_divididos` → `010_order_payments_read` → `011_reportes` → `012_ticket_info_y_org_update` → `013_kitchen_tickets` → `014_harden_sales_rpcs` → `015_cash_openings` → `016_cobro_requiere_caja_abierta`.

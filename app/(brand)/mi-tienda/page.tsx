@@ -35,23 +35,17 @@ export default async function BrandDashboard() {
       .select("id, name, stock_quantity, low_stock_threshold, active")
       .eq("brand_id", brandId)
       .eq("active", true),
-    // This period's non-cancelled sales only, in the business's local days
-    supabase
-      .from("sale_items")
-      .select("line_total, sales!inner(created_at)")
-      .eq("brand_id", brandId)
-      .eq("sales.cancelled", false)
-      .gte("sales.created_at", range.start)
-      .lt("sales.created_at", range.end),
+    // This period's non-cancelled sales of the brand (brands can't read sales directly)
+    supabase.rpc("brand_sales", { p_from: range.start, p_to: range.end }),
   ]);
 
-  const totalPeriodo = (saleItems ?? []).reduce((sum, i) => sum + i.line_total, 0);
+  const totalPeriodo = (saleItems ?? []).reduce((sum, i) => sum + Number(i.line_total), 0);
   const totalHoy = (saleItems ?? [])
     .filter((i) => {
-      const at = (i.sales as { created_at: string }).created_at;
-      return at >= today.start && at < today.end;
+      const at = new Date(i.created_at).getTime();
+      return at >= new Date(today.start).getTime() && at < new Date(today.end).getTime();
     })
-    .reduce((sum, i) => sum + i.line_total, 0);
+    .reduce((sum, i) => sum + Number(i.line_total), 0);
 
   // Real per-product threshold — PostgREST can't compare columns, do it in JS
   const lowStock = (products ?? []).filter(

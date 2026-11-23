@@ -28,25 +28,13 @@ export default async function MisVentasPage() {
   const period = currentFortnight(timezone);
   const range = localPeriodRange(period.start, period.end, timezone);
 
-  // This period's non-cancelled sales of the brand, in the business's local days
-  const { data: periodItems } = await supabase
-    .from("sale_items")
-    .select(
-      `id, quantity, unit_price, discount, line_total,
-       products(code, name),
-       sales!inner(sale_number, payment_method, created_at, cancelled)`
-    )
-    .eq("brand_id", brandId)
-    .eq("sales.cancelled", false)
-    .gte("sales.created_at", range.start)
-    .lt("sales.created_at", range.end);
+  // This period's non-cancelled sales of the brand (brands can't read sales directly)
+  const { data: items } = await supabase.rpc("brand_sales", { p_from: range.start, p_to: range.end });
+  const rows = items ?? [];
 
-  const items = (periodItems ?? []).sort((a, b) =>
-    (b.sales as { created_at: string }).created_at.localeCompare((a.sales as { created_at: string }).created_at));
-
-  const totalPeriodo = items.reduce((s, i) => s + i.line_total, 0);
-  const totalDesc    = items.reduce((s, i) => s + i.discount, 0);
-  const totalCant    = items.reduce((s, i) => s + i.quantity, 0);
+  const totalPeriodo = rows.reduce((s, i) => s + Number(i.line_total), 0);
+  const totalDesc    = rows.reduce((s, i) => s + Number(i.discount), 0);
+  const totalCant    = rows.reduce((s, i) => s + i.quantity, 0);
 
   const periodoLabel = periodLabel(period.start, period.end);
 
@@ -86,39 +74,37 @@ export default async function MisVentasPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {items.length === 0 && (
+            {rows.length === 0 && (
               <TableRow>
                 <TableCell colSpan={7} className="text-center text-muted-foreground py-10">
                   Sin ventas en este periodo.
                 </TableCell>
               </TableRow>
             )}
-            {items.map((item) => {
-              const sale    = item.sales as { sale_number: number; payment_method: string; created_at: string };
-              const product = item.products as { code: string; name: string } | null;
+            {rows.map((item) => {
               return (
-                <TableRow key={item.id}>
+                <TableRow key={item.sale_item_id}>
                   <TableCell className="font-mono text-sm">
                     <div>
-                      <span>#{sale.sale_number}</span>
+                      <span>#{item.sale_number}</span>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(sale.created_at).toLocaleDateString("es-NI", { month: "short", day: "numeric", timeZone: timezone })}
+                        {new Date(item.created_at).toLocaleDateString("es-NI", { month: "short", day: "numeric", timeZone: timezone })}
                       </p>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <p className="font-medium">{product?.name ?? "—"}</p>
-                    <p className="text-xs text-muted-foreground font-mono">{product?.code}</p>
+                    <p className="font-medium">{item.product_name ?? "—"}</p>
+                    <p className="text-xs text-muted-foreground font-mono">{item.product_code}</p>
                   </TableCell>
                   <TableCell className="text-right">{item.quantity}</TableCell>
-                  <TableCell className="text-right">{fmt(item.unit_price)}</TableCell>
+                  <TableCell className="text-right">{fmt(Number(item.unit_price))}</TableCell>
                   <TableCell className="text-right hidden sm:table-cell text-muted-foreground">
-                    {item.discount > 0 ? `−${fmt(item.discount)}` : "—"}
+                    {Number(item.discount) > 0 ? `−${fmt(Number(item.discount))}` : "—"}
                   </TableCell>
                   <TableCell className="text-center hidden sm:table-cell">
-                    <Badge variant="outline">{PAYMENT_LABELS[sale.payment_method] ?? sale.payment_method}</Badge>
+                    <Badge variant="outline">{PAYMENT_LABELS[item.payment_method] ?? item.payment_method}</Badge>
                   </TableCell>
-                  <TableCell className="text-right font-semibold">{fmt(item.line_total)}</TableCell>
+                  <TableCell className="text-right font-semibold">{fmt(Number(item.line_total))}</TableCell>
                 </TableRow>
               );
             })}

@@ -2,6 +2,7 @@
 
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { localDateString, periodLabel } from "@/lib/dates";
 import {
   Select,
   SelectContent,
@@ -10,46 +11,22 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-function getPeriods() {
-  const periods = [];
-  const now = new Date();
-  for (let i = 0; i < 6; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - Math.floor(i / 2), 1);
-    const isFirstHalf = i % 2 === 0 ? now.getDate() > 15 || Math.floor(i / 2) > 0 : true;
+const pad = (n: number) => String(n).padStart(2, "0");
 
-    // Primera quincena
-    if (i % 2 === 0) {
-      const start = new Date(d.getFullYear(), d.getMonth() - Math.floor(i / 2), 1);
-      const end = new Date(d.getFullYear(), d.getMonth() - Math.floor(i / 2), 15);
-      const label = `1–15 ${start.toLocaleDateString("es-NI", { month: "long", year: "numeric" })}`;
-      periods.push({
-        label,
-        from: start.toISOString().split("T")[0],
-        to: end.toISOString().split("T")[0],
-      });
-    }
-    // Segunda quincena
-    const month = d.getMonth() - Math.floor((i + 1) / 2);
-    const year = d.getFullYear();
-    const start2 = new Date(year, month, 16);
-    const end2 = new Date(year, month + 1, 0);
-    const label2 = `16–${end2.getDate()} ${start2.toLocaleDateString("es-NI", { month: "long", year: "numeric" })}`;
-    periods.push({
-      label: label2,
-      from: start2.toISOString().split("T")[0],
-      to: end2.toISOString().split("T")[0],
-    });
+/** The last 8 half-months (1–15, 16–end), newest first, from calendar dates only (no time zone math). */
+function getPeriods(today: string) {
+  let [y, m] = today.split("-").map(Number);
+  let firstHalf = Number(today.slice(8, 10)) <= 15;
+  const periods: { from: string; to: string; label: string }[] = [];
+  while (periods.length < 8) {
+    const last = new Date(Date.UTC(y, m, 0)).getUTCDate();
+    const from = `${y}-${pad(m)}-${firstHalf ? "01" : "16"}`;
+    const to = `${y}-${pad(m)}-${firstHalf ? "15" : pad(last)}`;
+    periods.push({ from, to, label: periodLabel(from, to) });
+    if (firstHalf) { m -= 1; if (m === 0) { m = 12; y -= 1; } }
+    firstHalf = !firstHalf;
   }
-  // Deduplica y ordena de más reciente a más antiguo
-  const seen = new Set<string>();
-  return periods
-    .filter((p) => {
-      if (seen.has(p.from)) return false;
-      seen.add(p.from);
-      return new Date(p.from) <= now;
-    })
-    .sort((a, b) => new Date(b.from).getTime() - new Date(a.from).getTime())
-    .slice(0, 8);
+  return periods;
 }
 
 export default function PeriodoSelector({
@@ -61,8 +38,10 @@ export default function PeriodoSelector({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const periods = getPeriods();
+  const periods = getPeriods(localDateString());
   const currentValue = `${currentFrom}|${currentTo}`;
+  const currentLabel = periods.find((p) => p.from === currentFrom && p.to === currentTo)?.label
+    ?? periodLabel(currentFrom, currentTo);
 
   function handleChange(val: string) {
     if (!val) return;
@@ -95,8 +74,8 @@ export default function PeriodoSelector({
         ‹
       </Button>
       <Select value={currentValue} onValueChange={(val) => handleChange(val ?? "")}>
-        <SelectTrigger className="h-8 text-sm w-52">
-          <SelectValue />
+        <SelectTrigger className="h-8 text-sm w-64">
+          <SelectValue>{currentLabel}</SelectValue>
         </SelectTrigger>
         <SelectContent>
           {periods.map((p) => (
