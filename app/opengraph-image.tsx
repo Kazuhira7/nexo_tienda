@@ -49,7 +49,7 @@ export default async function OpengraphImage() {
               display: "flex", backgroundColor: "#FF5C1A", borderRadius: 20, padding: "14px 26px",
               fontFamily: "Sora", fontSize: 28,
             }}>
-              {`Primer mes gratis · luego ${formatNio(SALES.monthlyPriceNio)} al mes`}
+              {`${SALES.trialDays} días gratis · luego ${formatNio(SALES.monthlyPriceNio)} al mes`}
             </div>
           </div>
         </div>

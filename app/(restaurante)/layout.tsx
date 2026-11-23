@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentStaff } from "@/lib/staff-session";
 import AppShell from "@/components/app-shell";
+import BillingBanner from "@/components/billing-banner";
+import { requireOpenOrg } from "@/lib/org-access";
 import PinPad from "@/components/staff/pin-pad";
 import StaffBar from "@/components/staff/staff-bar";
 import type { CurrencyCode, ModuleId, VerticalType } from "@/types/database";
@@ -21,6 +23,7 @@ export default async function RestauranteLayout({ children }: { children: React.
     .single();
 
   if (!profile || (profile.role !== "owner" && profile.role !== "terminal")) redirect("/");
+  const access = await requireOpenOrg();
 
   const orgData = profile.organizations as {
     name:            string;
@@ -51,6 +54,7 @@ export default async function RestauranteLayout({ children }: { children: React.
       modules={modules}
       role={profile.role}
       topBar={<StaffBar name={staff.name} position={staff.position} />}
+      banner={profile.role === "owner" ? <BillingBanner access={access} /> : null}
     >
       {children}
     </AppShell>

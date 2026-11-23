@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import AppShell from "@/components/app-shell";
+import BillingBanner from "@/components/billing-banner";
+import { requireOpenOrg } from "@/lib/org-access";
 import type { CurrencyCode, ModuleId, VerticalType } from "@/types/database";
 
 export default async function OwnerLayout({ children }: { children: React.ReactNode }) {
@@ -15,6 +17,7 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
     .single();
 
   if (!profile || profile.role !== "owner") redirect("/");
+  const access = await requireOpenOrg();
 
   const orgData = profile.organizations as {
     name:            string;
@@ -33,6 +36,7 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
       vertical={orgData?.vertical ?? "colectivo"}
       modules={orgData?.enabled_modules ?? []}
       role="owner"
+      banner={<BillingBanner access={access} />}
     >
       {children}
     </AppShell>

@@ -73,7 +73,8 @@ Reglas de arquitectura:
 **Página pública de ventas (oct 2026)** — arranca la Etapa 3 (vender):
 - `/` muestra la página de ventas (`components/landing/`) a quien no tiene sesión. Con sesión, `/` sigue
   mandando al inicio de cada rol.
-- **Precio y WhatsApp de ventas** viven en `lib/site.ts`: C$1,500/mes por negocio, primer mes gratis, sin contrato.
+- **Precio y WhatsApp de ventas** viven en `lib/site.ts`: C$1,500/mes por negocio, 14 días gratis, sin contrato
+  (la prueba real la fija `platform_settings.trial_days`, migración 019).
   Sin número configurado, los botones llevan a `/registro`.
 - Imagen al compartir el enlace: `app/opengraph-image.tsx`, con las fuentes OFL de `assets/fonts/`.
 - La app instalada (PWA) abre en `/login`, no en la página de ventas.

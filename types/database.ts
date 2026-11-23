@@ -22,6 +22,57 @@ export type OrderType        = "dine_in" | "takeaway" | "delivery";
 export type OrderItemStatus  = "pending" | "sent" | "preparing" | "ready" | "served" | "cancelled";
 export type PrepStation      = "kitchen" | "bar";
 
+export type SubscriptionPaymentMethod = "efectivo" | "transferencia" | "tarjeta" | "otro";
+export type BillingStatus = "prueba" | "al_dia" | "por_vencer" | "gracia" | "vencido" | "suspendido" | "exento";
+
+/** my_org_access(): the business's subscription state, readable even while it is blocked. */
+export interface OrgAccess {
+  org_id:         string;
+  org_name:       string;
+  vertical:       VerticalType;
+  status:         BillingStatus;
+  days_left:      number | null;
+  is_open:        boolean;
+  trial_ends_at:  string | null;
+  paid_until:     string | null;
+  grace_days:     number;
+  monthly_fee:    number | null;
+  currency:       CurrencyCode;
+  sales_whatsapp: string | null;
+  support_hours:  string;
+  last_payment:   { amount: number; paid_at: string; period_start: string; period_end: string } | null;
+}
+
+/** admin_orgs_overview(): one row per business for the superadmin panel. */
+export interface AdminOrgOverview {
+  id:             string;
+  name:           string;
+  slug:           string;
+  vertical:       VerticalType;
+  created_at:     string;
+  active:         boolean;
+  billing_exempt: boolean;
+  trial_ends_at:  string | null;
+  paid_until:     string | null;
+  monthly_fee:    number | null;
+  currency:       CurrencyCode;
+  owner_phone:    string | null;
+  owner_name:     string | null;
+  owner_email:    string | null;
+  users:          number;
+  status:         BillingStatus;
+  days_left:      number | null;
+  is_open:        boolean;
+  last_activity:  string | null;
+  sales_month:    number;
+  sales_count:    number;
+  menu_items:     number;
+  dining_tables:  number;
+  staff_with_pin: number;
+  products:       number;
+  paid_total:     number;
+}
+
 /** Snapshot of a modifier stored in order_items.modifiers */
 export interface OrderItemModifier {
   id:          string;
@@ -72,6 +123,11 @@ export type Database = {
           ticket_tax_id:      string | null;
           ticket_footer:      string | null;
           active:             boolean;
+          trial_ends_at:      string | null;
+          paid_until:         string | null;
+          billing_exempt:     boolean;
+          monthly_fee:        number | null;
+          owner_phone:        string | null;
           created_at:         string;
         };
         Insert: {
@@ -90,6 +146,11 @@ export type Database = {
           ticket_tax_id?:     string | null;
           ticket_footer?:     string | null;
           active?:            boolean;
+          trial_ends_at?:     string | null;
+          paid_until?:        string | null;
+          billing_exempt?:    boolean;
+          monthly_fee?:       number | null;
+          owner_phone?:       string | null;
           created_at?:        string;
         };
         Update: {
@@ -108,6 +169,11 @@ export type Database = {
           ticket_tax_id?:     string | null;
           ticket_footer?:     string | null;
           active?:            boolean;
+          trial_ends_at?:     string | null;
+          paid_until?:        string | null;
+          billing_exempt?:    boolean;
+          monthly_fee?:       number | null;
+          owner_phone?:       string | null;
           created_at?:        string;
         };
         Relationships: [];
@@ -902,9 +968,124 @@ export type Database = {
           { foreignKeyName: "order_items_voided_by_staff_fkey"; columns: ["voided_by_staff"]; isOneToOne: false; referencedRelation: "staff_members"; referencedColumns: ["id"] },
         ];
       };
+      // ── platform_settings (fila única: prueba, gracia, tarifas, contacto de ventas) ──
+      platform_settings: {
+        Row: {
+          id:              number;
+          trial_days:      number;
+          grace_days:      number;
+          warn_days:       number;
+          fee_restaurante: number;
+          fee_retail:      number | null;
+          fee_colectivo:   number | null;
+          sales_whatsapp:  string | null;
+          support_hours:   string;
+          updated_at:      string;
+        };
+        Insert: Record<string, never>;
+        Update: {
+          trial_days?:      number;
+          grace_days?:      number;
+          warn_days?:       number;
+          fee_restaurante?: number;
+          fee_retail?:      number | null;
+          fee_colectivo?:   number | null;
+          sales_whatsapp?:  string | null;
+          support_hours?:   string;
+          updated_at?:      string;
+        };
+        Relationships: [];
+      };
+      // ── subscription_payments (mensualidades; se escriben vía admin_record_payment) ──
+      subscription_payments: {
+        Row: {
+          id:              string;
+          organization_id: string;
+          amount:          number;
+          currency:        string;
+          method:          SubscriptionPaymentMethod;
+          months:          number;
+          paid_at:         string;
+          period_start:    string;
+          period_end:      string;
+          notes:           string | null;
+          recorded_by:     string | null;
+          created_at:      string;
+        };
+        Insert: Record<string, never>;
+        Update: Record<string, never>;
+        Relationships: [];
+      };
+      // ── admin_notes (notas internas del superadmin por negocio) ──
+      admin_notes: {
+        Row: {
+          id:              string;
+          organization_id: string;
+          author_id:       string | null;
+          body:            string;
+          created_at:      string;
+        };
+        Insert: {
+          organization_id: string;
+          author_id?:      string | null;
+          body:            string;
+        };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
+      // ── admin_audit_log (bitácora; se escribe vía admin_log) ──
+      admin_audit_log: {
+        Row: {
+          id:              number;
+          actor_id:        string | null;
+          actor_email:     string | null;
+          action:          string;
+          organization_id: string | null;
+          details:         Json;
+          created_at:      string;
+        };
+        Insert: Record<string, never>;
+        Update: Record<string, never>;
+        Relationships: [];
+      };
+      // ── signup_attempts (límite de registros por IP; solo servidor) ──
+      signup_attempts: {
+        Row: {
+          id:         number;
+          ip:         string;
+          email:      string | null;
+          blocked:    boolean;
+          created_at: string;
+        };
+        Insert: {
+          ip:       string;
+          email?:   string | null;
+          blocked?: boolean;
+        };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
+      // ── Suscripciones (017) ──
+      my_org_access:        { Args: Record<string, never>; Returns: OrgAccess | null };
+      admin_orgs_overview:  { Args: Record<string, never>; Returns: AdminOrgOverview[] };
+      admin_record_payment: {
+        Args: {
+          p_org:      string;
+          p_amount:   number;
+          p_months?:  number;
+          p_method?:  SubscriptionPaymentMethod;
+          p_paid_at?: string | null;
+          p_start?:   string | null;
+          p_notes?:   string | null;
+        };
+        Returns: Database["public"]["Tables"]["subscription_payments"]["Row"];
+      };
+      admin_delete_payment: { Args: { p_payment_id: string }; Returns: void };
+      admin_update_billing: { Args: { p_org: string; p_patch: Json }; Returns: void };
+      admin_log:            { Args: { p_action: string; p_org?: string | null; p_details?: Json }; Returns: void };
       cancel_sale:             { Args: { p_sale_id: string }; Returns: void };
       current_org_id:          { Args: Record<string, never>; Returns: string | null };
       current_role_is_owner:   { Args: Record<string, never>; Returns: boolean };

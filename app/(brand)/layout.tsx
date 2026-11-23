@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import BrandNav from "@/components/brand-nav";
+import { requireOpenOrg } from "@/lib/org-access";
 
 export default async function BrandLayout({
   children,
@@ -21,6 +22,7 @@ export default async function BrandLayout({
     .single();
 
   if (!profile || profile.role !== "brand") redirect("/");
+  await requireOpenOrg();
 
   const brandName =
     (profile.brands as { name: string } | null)?.name ?? "Mi tienda";
