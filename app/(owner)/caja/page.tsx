@@ -77,7 +77,7 @@ export default async function CajaPage() {
     <div className="space-y-6 max-w-2xl">
       <div>
         <h1 className="text-2xl font-bold">Caja</h1>
-        <p className="text-sm text-muted-foreground mt-0.5 capitalize">{todayLabel}</p>
+        <p className="text-sm text-muted-foreground mt-0.5 first-letter:uppercase">{todayLabel}</p>
       </div>
 
       {/* Apertura del día */}
@@ -157,7 +157,7 @@ export default async function CajaPage() {
                 <div key={c.id} style={{ "--i": idx } as React.CSSProperties}
                   className="animate-enter flex items-center justify-between px-4 py-3">
                   <div>
-                    <p className="font-medium text-sm capitalize">{dateLabel}</p>
+                    <p className="font-medium text-sm first-letter:uppercase">{dateLabel}</p>
                     <p className="text-xs text-muted-foreground">
                       Esperado {fmt(c.expected_cash)} · Contado {fmt(c.counted_cash)}
                     </p>
