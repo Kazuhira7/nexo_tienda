@@ -3,6 +3,7 @@
 import {
   UtensilsCrossedIcon, ShoppingBagIcon, WarehouseIcon, CoffeeIcon, WrenchIcon, StoreIcon,
 } from "lucide-react";
+import { BRAND } from "@/lib/brand";
 
 const CENTER = { x: 320, y: 196 };
 
@@ -22,7 +23,7 @@ type Style = React.CSSProperties & Record<`--${string}`, string | number>;
 export default function NexoNetwork({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 640 430" className={className} role="img"
-      aria-label="Restaurantes, tiendas, almacenes y más negocios conectados a nexo">
+      aria-label={`Restaurantes, tiendas, almacenes y más negocios conectados a ${BRAND.name}`}>
       {/* Connections + sparks traveling toward nexo */}
       {NODES.map((n, i) => {
         const d = 0.25 + i * 0.12;
@@ -32,8 +33,8 @@ export default function NexoNetwork({ className }: { className?: string }) {
               className="nx-line" stroke="rgba(255,255,255,0.28)" strokeWidth={1.5}
               style={{ "--d": `${d}s` } as Style} />
             <line x1={n.x} y1={n.y} x2={CENTER.x} y2={CENTER.y} pathLength={1}
-              className="nx-spark" stroke="#FF5C1A" strokeWidth={3} strokeLinecap="round"
-              style={{ "--d": `${d}s`, "--t": `${2.2 + (i % 3) * 0.5}s` } as Style} />
+              className="nx-spark" strokeWidth={3} strokeLinecap="round"
+              style={{ stroke: "var(--color-brand-accent)", "--d": `${d}s`, "--t": `${2.2 + (i % 3) * 0.5}s` } as Style} />
           </g>
         );
       })}
@@ -64,7 +65,7 @@ export default function NexoNetwork({ className }: { className?: string }) {
       <g className="nx-center">
         <circle cx={CENTER.x} cy={CENTER.y} r={46} fill="#fff" />
         <svg x={CENTER.x - 30} y={CENTER.y - 30} width={60} height={60} viewBox="0 0 512 512" aria-hidden>
-          <path d="M168 376V196M168 268c0-56 38-92 92-92s88 36 88 96v104" stroke="#1B4FFF" strokeWidth={64}
+          <path d={BRAND.markPath} style={{ stroke: "var(--color-brand)" }} strokeWidth={64}
             strokeLinecap="round" strokeLinejoin="round" fill="none" />
         </svg>
       </g>

@@ -8,6 +8,7 @@ import NexoNetwork from "@/components/auth/nexo-network";
 import { Headline, Wordmark } from "@/components/auth/hero-parts";
 import LoginForm from "@/components/auth/login-form";
 import RegisterForm from "@/components/auth/register-form";
+import { BRAND } from "@/lib/brand";
 
 type Tab = "login" | "register";
 
@@ -75,7 +76,7 @@ export default function AuthExperience({ initial = "intro", children }: Props) {
   }, [open, isStatic, close]);
 
   return (
-    <div className="relative h-[100svh] w-full overflow-hidden bg-[#0B1E66]">
+    <div className="relative h-[100svh] w-full overflow-hidden bg-brand-deep">
       {/* ───────────── Hero / welcome ───────────── */}
       <section
         className={`absolute inset-y-0 left-0 w-full text-white overflow-hidden transition-[width] duration-700 ${EASE} ${
@@ -107,7 +108,7 @@ export default function AuthExperience({ initial = "intro", children }: Props) {
             open ? "opacity-0 translate-y-8 pointer-events-none max-h-0 mt-0 overflow-hidden" : "max-h-40"
           }`} aria-hidden={open}>
             <button type="button" onClick={() => openTab("login")} tabIndex={open ? -1 : 0}
-              className="group h-14 sm:px-10 rounded-2xl bg-[#FF5C1A] text-white text-base font-semibold flex items-center justify-center gap-2
+              className="group h-14 sm:px-10 rounded-2xl bg-brand-accent text-white text-base font-semibold flex items-center justify-center gap-2
                          shadow-[0_14px_32px_-12px_rgba(255,92,26,0.85)] hover:brightness-110 active:scale-[0.97] transition-all duration-150">
               Iniciar sesión
               <ArrowRightIcon className="size-5 transition-transform duration-200 group-hover:translate-x-1" />
@@ -121,7 +122,7 @@ export default function AuthExperience({ initial = "intro", children }: Props) {
           </div>
 
           <p className={`mt-5 text-center sm:text-left text-xs text-white/50 transition-opacity duration-300 ${open ? "opacity-0 lg:opacity-100" : ""}`}>
-            Desarrollado por AG Systems
+            Desarrollado por {BRAND.company}
           </p>
         </div>
 
@@ -190,9 +191,9 @@ export default function AuthExperience({ initial = "intro", children }: Props) {
         </div>
 
         <p className="pb-[max(env(safe-area-inset-bottom),1rem)] pt-2 text-center text-xs text-muted-foreground">
-          <span className="font-heading font-bold text-foreground/80">nexo</span>
+          <span className="font-heading font-bold text-foreground/80">{BRAND.name}</span>
           <span className="mx-1.5">·</span>
-          Desarrollado por <span className="font-medium text-foreground/80">AG Systems</span>
+          Desarrollado por <span className="font-medium text-foreground/80">{BRAND.company}</span>
         </p>
       </div>
     </div>

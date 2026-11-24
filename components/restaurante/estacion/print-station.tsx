@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { printTicket } from "@/components/restaurante/print-ticket";
 import KitchenTicket, { type KitchenTicketView } from "./kitchen-ticket";
 import { markPrinted, reprint } from "@/app/(estacion)/impresion/actions";
+import { BRAND } from "@/lib/brand";
 
 const AUTO_KEY = "nexo-print-auto";
 const POLL_MS = 20_000; // backstop if the Realtime connection drops
@@ -208,7 +209,7 @@ export default function PrintStation({ tickets, timezone }: { tickets: KitchenTi
           <li>Crea un acceso directo de Google Chrome y en <b>Destino</b> agrega al final:
             <code className="block mt-1 rounded bg-muted px-2 py-1 text-foreground text-xs">--kiosk-printing</code>
             Así Chrome imprime sin preguntar.</li>
-          <li>Abre Nexo con ese acceso directo, inicia sesión con la cuenta del local y entra a esta pantalla.</li>
+          <li>Abre {BRAND.displayName} con ese acceso directo, inicia sesión con la cuenta del local y entra a esta pantalla.</li>
           <li>Toca <b>Imprimir prueba</b>. Si sale el ticket, listo: deja esta pestaña abierta durante el servicio.</li>
         </ol>
       </details>

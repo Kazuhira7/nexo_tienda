@@ -7,6 +7,7 @@ import BillingStatusBadge from "@/components/admin/billing-status";
 import { VERTICAL_INFO } from "@/lib/modules";
 import { formatNio } from "@/lib/site";
 import type { AdminOrgOverview, BillingStatus } from "@/types/database";
+import { BRAND } from "@/lib/brand";
 
 const PAYING: BillingStatus[] = ["al_dia", "por_vencer", "gracia"];
 
@@ -22,7 +23,7 @@ const FILTERS: { id: Filter; label: string; match: (o: AdminOrgOverview) => bool
 function waLink(phone: string, orgName: string) {
   const digits = phone.replace(/\D/g, "");
   const full = digits.length === 8 ? `505${digits}` : digits; // Nicaraguan local numbers
-  return `https://wa.me/${full}?text=${encodeURIComponent(`Hola, te escribo de nexo sobre "${orgName}".`)}`;
+  return `https://wa.me/${full}?text=${encodeURIComponent(`Hola, te escribo de ${BRAND.name} sobre "${orgName}".`)}`;
 }
 
 function relative(date: string | null) {
@@ -52,7 +53,7 @@ export default async function AdminPage({ searchParams }: Props) {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold font-heading">Negocios</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">{orgs.length} negocios en nexo</p>
+          <p className="text-sm text-muted-foreground mt-0.5">{orgs.length} negocios en {BRAND.name}</p>
         </div>
         <Link href="/admin/nueva-org">
           <Button variant="cta" className="gap-1.5"><PlusIcon className="size-4" /> Nuevo negocio</Button>

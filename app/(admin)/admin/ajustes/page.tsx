@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import SettingsForm from "@/components/admin/settings-form";
+import { BRAND } from "@/lib/brand";
 
 export default async function AjustesPage() {
   const supabase = await createClient();
@@ -12,7 +13,7 @@ export default async function AjustesPage() {
   return (
     <div className="space-y-8 max-w-2xl">
       <div>
-        <h1 className="text-2xl font-bold font-heading">Ajustes de nexo</h1>
+        <h1 className="text-2xl font-bold font-heading">Ajustes de {BRAND.name}</h1>
         <p className="text-sm text-muted-foreground mt-0.5">
           Aplican a los negocios nuevos y a los que no tienen tarifa propia.
         </p>

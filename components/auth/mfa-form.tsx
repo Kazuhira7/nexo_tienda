@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { BRAND } from "@/lib/brand";
 
 type Step =
   | { kind: "loading" }
@@ -38,7 +39,7 @@ export default function MfaForm() {
         await supabase.auth.mfa.unenroll({ factorId: f.id });
       }
       const { data, error: enrollError } = await supabase.auth.mfa.enroll({
-        factorType: "totp", friendlyName: "nexo admin", issuer: "nexo",
+        factorType: "totp", friendlyName: `${BRAND.name} admin`, issuer: BRAND.name,
       });
       if (enrollError || !data) { setStep({ kind: "error", message: enrollError?.message ?? "No se pudo iniciar" }); return; }
       setStep({ kind: "enroll", factorId: data.id, qr: data.totp.qr_code, secret: data.totp.secret });

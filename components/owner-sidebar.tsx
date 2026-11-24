@@ -8,6 +8,7 @@ import UserMenu from "@/components/user-menu";
 import NavPending from "@/components/nav-pending";
 import { NAV_SECTION_LABELS, isNavActive, visibleNavItems, type NavItem } from "@/components/nav-items";
 import type { UserRole } from "@/types/database";
+import { BRAND } from "@/lib/brand";
 
 const SIDEBAR_SECTIONS: NavItem["section"][] = ["main", "operations", "finance"];
 
@@ -44,7 +45,7 @@ export default function OwnerSidebar({ userName, orgName, modules, role = "owner
       {/* Logo + org */}
       <div className="px-4 py-5 border-b">
         <Link href="/" className="block">
-          <p className="text-xl font-bold font-heading text-primary leading-none">nexo</p>
+          <p className="text-xl font-bold font-heading text-primary leading-none">{BRAND.name}</p>
           {orgName && (
             <p className="text-xs text-muted-foreground mt-1 truncate">{orgName}</p>
           )}

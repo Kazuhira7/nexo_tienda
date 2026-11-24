@@ -2,9 +2,12 @@ import { ImageResponse } from "next/og";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { SALES, formatNio } from "@/lib/site";
+import { BRAND } from "@/lib/brand";
+
+const C = BRAND.colors;
 
 // Link preview card (WhatsApp, Facebook, Instagram…) on the brand surface. Rendered once at build time.
-export const alt = "nexo: ventas, inventario y caja para tiendas, colectivos y restaurantes en Nicaragua";
+export const alt = `${BRAND.name}: ventas, inventario y caja para tiendas, colectivos y restaurantes en Nicaragua`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -25,19 +28,19 @@ export default async function OpengraphImage() {
           padding: "64px 72px",
           color: "white",
           fontFamily: "Jakarta",
-          backgroundColor: "#0B1E66",
-          backgroundImage: "radial-gradient(120% 80% at 50% 30%, #2A5BFF 0%, #1B4FFF 38%, #1238C9 70%, #0B1E66 100%)",
+          backgroundColor: C.deep,
+          backgroundImage: `radial-gradient(120% 80% at 50% 30%, ${C.bright} 0%, ${C.primary} 38%, ${C.mid} 70%, ${C.deep} 100%)`,
         }}
       >
         <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", flex: 1 }}>
           <div style={{ display: "flex", alignItems: "baseline" }}>
-            <span style={{ fontFamily: "Sora", fontSize: 54, letterSpacing: -1.5 }}>nexo</span>
-            <span style={{ marginLeft: 14, fontSize: 22, color: "rgba(255,255,255,0.65)" }}>by AG Systems</span>
+            <span style={{ fontFamily: "Sora", fontSize: 54, letterSpacing: -1.5 }}>{BRAND.name}</span>
+            <span style={{ marginLeft: 14, fontSize: 22, color: "rgba(255,255,255,0.65)" }}>by {BRAND.company}</span>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div style={{ display: "flex", fontFamily: "Sora", fontSize: 70, lineHeight: 1.05, letterSpacing: -2, maxWidth: 760 }}>
-              Deja el cuaderno. Lleva tu negocio en nexo.
+              {`Deja el cuaderno. Lleva tu negocio en ${BRAND.name}.`}
             </div>
             <div style={{ display: "flex", marginTop: 22, fontSize: 30, color: "rgba(255,255,255,0.82)" }}>
               Tiendas, colectivos y restaurantes · Nicaragua
@@ -46,7 +49,7 @@ export default async function OpengraphImage() {
 
           <div style={{ display: "flex" }}>
             <div style={{
-              display: "flex", backgroundColor: "#FF5C1A", borderRadius: 20, padding: "14px 26px",
+              display: "flex", backgroundColor: C.accent, borderRadius: 20, padding: "14px 26px",
               fontFamily: "Sora", fontSize: 28,
             }}>
               {`${SALES.trialDays} días gratis · luego ${formatNio(SALES.monthlyPriceNio)} al mes`}
@@ -54,7 +57,7 @@ export default async function OpengraphImage() {
           </div>
         </div>
 
-        {/* The "n" mark, as in the center of "la red de nexo" */}
+        {/* The logo mark, as in the center of the brand network */}
         <div style={{ display: "flex", alignItems: "center", paddingLeft: 24 }}>
           <div style={{
             width: 240, height: 240, borderRadius: 9999, backgroundColor: "white",
@@ -62,7 +65,7 @@ export default async function OpengraphImage() {
             boxShadow: "0 0 0 18px rgba(255,255,255,0.12)",
           }}>
             <svg width="150" height="150" viewBox="0 0 512 512">
-              <path d="M168 376V196M168 268c0-56 38-92 92-92s88 36 88 96v104" stroke="#1B4FFF" strokeWidth={64}
+              <path d={BRAND.markPath} stroke={C.primary} strokeWidth={64}
                 strokeLinecap="round" strokeLinejoin="round" fill="none" />
             </svg>
           </div>

@@ -3,9 +3,10 @@
 import { useSyncExternalStore } from "react";
 import { SunIcon, MoonIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BRAND } from "@/lib/brand";
 
 const THEMES = [
-  { id: "default",   label: "Nexo",      color: "#1B4FFF" },
+  { id: "default",   label: BRAND.displayName, color: BRAND.colors.primary },
   { id: "rosa",      label: "Rosa",       color: "#C2185B" },
   { id: "esmeralda", label: "Esmeralda",  color: "#00796B" },
   { id: "ciruelo",   label: "Ciruelo",    color: "#6A1B9A" },

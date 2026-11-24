@@ -95,6 +95,13 @@ Reglas de arquitectura:
 - Cortesías (100 % de descuento) se cierran con un cobro de 0 (022).
 - Acciones con service role verifican rol y pertenencia antes de escribir.
 
+**Cambiar de marca** (el nombre "nexo" es genérico y ya existe; candidatos: Ventti, Tiangue):
+1. `lib/brand.ts`: nombre, empresa, colores y trazo del logo (`markPath`, cuadrícula 512×512).
+2. `app/globals.css`: `--color-brand*` (iguales a `BRAND.colors`) y `--primary` / `--accent` / `--ring` del tema.
+3. Íconos: `public/icons/*` (PWA, 192/512 y apple-touch) y `app/favicon.ico`.
+4. Textos de venta: `docs/ventas/mensajes.md`; dominio nuevo en Vercel.
+El resto de la app lee esos valores (`BRAND`, `<BrandName/>`, `<BrandMark/>`, clases `bg-brand*`).
+
 **Deuda / pendientes conocidos:**
 - ✔ `register_sale`/`cancel_sale` protegidos (014) y UPDATE de `organizations` solo para la dueña y columnas de
   configuración (012).

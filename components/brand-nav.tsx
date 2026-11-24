@@ -15,6 +15,7 @@ import {
   UserIcon,
 } from "lucide-react";
 import ThemeControls from "@/components/theme-controls";
+import { BRAND } from "@/lib/brand";
 
 const NAV_LINKS = [
   { href: "/mi-tienda",     label: "Inicio",        icon: LayoutDashboardIcon },
@@ -54,7 +55,7 @@ export default function BrandNav({
       <div className="container max-w-5xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 min-w-0">
           <Link href="/mi-tienda" className="text-xl font-bold font-heading text-primary shrink-0">
-            nexo
+            {BRAND.name}
           </Link>
           <span className="hidden sm:block text-sm text-muted-foreground truncate">{brandName}</span>
         </div>
@@ -83,7 +84,7 @@ export default function BrandNav({
           <SheetContent side="right" className="w-64 p-0">
             <div className="flex flex-col h-full">
               <div className="px-4 py-4 border-b">
-                <p className="text-xl font-bold font-heading text-primary">nexo</p>
+                <p className="text-xl font-bold font-heading text-primary">{BRAND.name}</p>
                 <p className="text-sm font-medium mt-0.5">{brandName}</p>
                 <p className="text-xs text-muted-foreground truncate">{userName}</p>
               </div>

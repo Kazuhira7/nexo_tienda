@@ -4,20 +4,21 @@ import { createClient } from "@/lib/supabase/server";
 import { homeRoute } from "@/lib/home-route";
 import LandingPage from "@/components/landing/landing-page";
 import { SALES, formatNio } from "@/lib/site";
+import { BRAND } from "@/lib/brand";
 
 const DESCRIPTION =
   `Vende desde el celular, controla tu inventario y cuadra la caja. Para tiendas, colectivos y restaurantes en ` +
   `Nicaragua. ${formatNio(SALES.monthlyPriceNio)} al mes, ${SALES.trialDays} días gratis.`;
 
 export const metadata: Metadata = {
-  title: "nexo · Ventas, inventario y caja para tu negocio",
+  title: `${BRAND.name} · Ventas, inventario y caja para tu negocio`,
   description: DESCRIPTION,
   openGraph: {
-    title: "nexo · Deja el cuaderno, lleva tu negocio en nexo",
+    title: `${BRAND.name} · Deja el cuaderno, lleva tu negocio en ${BRAND.name}`,
     description: DESCRIPTION,
     type: "website",
     locale: "es_NI",
-    siteName: "nexo",
+    siteName: BRAND.name,
   },
 };
 

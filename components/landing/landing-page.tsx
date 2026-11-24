@@ -14,14 +14,15 @@ import { Wordmark } from "@/components/auth/hero-parts";
 import { CollectivePreview, RestaurantPreview, StorePreview } from "@/components/landing/product-previews";
 import PwaRedirect from "@/components/landing/pwa-redirect";
 import { SALES, formatNio, whatsappUrl } from "@/lib/site";
+import { BRAND } from "@/lib/brand";
 
 type Style = React.CSSProperties & Record<`--${string}`, string | number>;
 type Feature = { icon: typeof StoreIcon; title: string; text: string };
 
 const PRICE = formatNio(SALES.monthlyPriceNio);
 const TRIAL = `${SALES.trialDays} días gratis`;
-const DEMO_MESSAGE = "Hola, quiero conocer nexo para mi negocio.";
-const START_MESSAGE = "Hola, quiero empezar mi prueba gratis de nexo.";
+const DEMO_MESSAGE = `Hola, quiero conocer ${BRAND.name} para mi negocio.`;
+const START_MESSAGE = `Hola, quiero empezar mi prueba gratis de ${BRAND.name}.`;
 
 const PAINS: Feature[] = [
   { icon: ClipboardListIcon, title: "Todo va al cuaderno",
@@ -90,7 +91,7 @@ const CORE: Feature[] = [
 
 const STEPS = [
   { title: "Escríbenos",
-    text: "Te mostramos nexo funcionando, en persona o por videollamada, con ejemplos de tu tipo de negocio." },
+    text: `Te mostramos ${BRAND.name} funcionando, en persona o por videollamada, con ejemplos de tu tipo de negocio.` },
   { title: "Lo dejamos listo contigo",
     text: "Creamos tu negocio, cargamos tus productos o tu menú y te enseñamos a usarlo." },
   { title: "Empiezas a vender",
@@ -108,22 +109,22 @@ const INCLUDED = [
 
 const FAQS = [
   { q: "¿Necesito comprar equipo o instalar algo?",
-    a: "No. nexo funciona en el navegador del celular, la tablet o la computadora que ya tienes. Si quieres imprimir recibos o comandas, te ayudamos a configurar tu impresora." },
+    a: `No. ${BRAND.name} funciona en el navegador del celular, la tablet o la computadora que ya tienes. Si quieres imprimir recibos o comandas, te ayudamos a configurar tu impresora.` },
   { q: "¿Puedo probarlo antes de pagar?",
-    a: `Sí. Los primeros ${SALES.trialDays} días son gratis y lo usas con tus datos reales. Si nexo no te sirve, no pagas nada.` },
+    a: `Sí. Los primeros ${SALES.trialDays} días son gratis y lo usas con tus datos reales. Si ${BRAND.name} no te sirve, no pagas nada.` },
   { q: "¿Funciona sin internet?",
     a: "Necesita conexión a internet. Funciona bien con wifi o con los datos del celular." },
   { q: "¿Mi información está segura?",
     a: "Cada negocio tiene su información separada de los demás. Dentro de tu negocio, cada marca solo ve lo suyo y cada empleado solo lo que su puesto permite." },
   { q: "¿Puedo ver mis montos en dólares?",
-    a: "Sí. Eliges si nexo te muestra los montos en córdobas o en dólares, con tu propia tasa de cambio." },
+    a: `Sí. Eliges si ${BRAND.name} te muestra los montos en córdobas o en dólares, con tu propia tasa de cambio.` },
   { q: "Tengo otro tipo de negocio, ¿me sirve?",
-    a: "Escríbenos. Si tienes una tienda, una cafetería u otro negocio, vemos juntos si nexo ya cubre lo que necesitas." },
+    a: `Escríbenos. Si tienes una tienda, una cafetería u otro negocio, vemos juntos si ${BRAND.name} ya cubre lo que necesitas.` },
 ];
 
 const CONTAINER = "mx-auto w-full max-w-6xl px-5 sm:px-8";
 const CTA_PRIMARY =
-  "group h-14 px-8 rounded-2xl bg-[#FF5C1A] text-white text-base font-semibold inline-flex items-center justify-center gap-2 " +
+  "group h-14 px-8 rounded-2xl bg-brand-accent text-white text-base font-semibold inline-flex items-center justify-center gap-2 " +
   "shadow-[0_14px_32px_-12px_rgba(255,92,26,0.85)] hover:brightness-110 active:scale-[0.97] transition-all duration-150";
 const CTA_GHOST =
   "h-14 px-8 rounded-2xl border border-white/30 bg-white/10 text-white text-base font-semibold inline-flex items-center " +
@@ -200,7 +201,7 @@ export default function LandingPage() {
       <PwaRedirect />
 
       {/* ───────────── Hero ───────────── */}
-      <section className="relative overflow-hidden bg-[#0B1E66] text-white">
+      <section className="relative overflow-hidden bg-brand-deep text-white">
         <BrandBackdrop />
         <div className={`relative z-10 ${CONTAINER}`}>
           <header className="flex items-center justify-between gap-4 pt-[max(env(safe-area-inset-top),1.25rem)] pb-2">
@@ -229,11 +230,11 @@ export default function LandingPage() {
                 style={{ "--d": "0.2s" } as Style}>
                 Deja el cuaderno. Lleva tu negocio en{" "}
                 <span className="relative inline-block">
-                  nexo
+                  {BRAND.name}
                   <svg aria-hidden viewBox="0 0 120 12" preserveAspectRatio="none"
                     className="absolute left-0 -bottom-1.5 h-2.5 w-full overflow-visible">
-                    <path d="M2 8 C 30 2, 70 2, 118 6" pathLength={1} fill="none" stroke="#FF5C1A" strokeWidth={4}
-                      strokeLinecap="round" className="nx-line" style={{ "--d": "0.7s" } as Style} />
+                    <path d="M2 8 C 30 2, 70 2, 118 6" pathLength={1} fill="none" strokeWidth={4}
+                      strokeLinecap="round" className="nx-line" style={{ stroke: "var(--color-brand-accent)", "--d": "0.7s" } as Style} />
                   </svg>
                 </span>.
               </h1>
@@ -250,7 +251,7 @@ export default function LandingPage() {
               <ul className="nx-fade mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm text-white/80" style={{ "--d": "0.65s" } as Style}>
                 {[TRIAL, `Luego ${PRICE} al mes`, "Sin contrato"].map((t) => (
                   <li key={t} className="flex items-center gap-1.5">
-                    <CheckIcon className="size-4 text-[#FF5C1A]" strokeWidth={3} />
+                    <CheckIcon className="size-4 text-brand-accent" strokeWidth={3} />
                     {t}
                   </li>
                 ))}
@@ -280,7 +281,7 @@ export default function LandingPage() {
             ))}
           </ul>
           <p className="mx-auto mt-10 max-w-2xl text-center text-lg font-medium text-pretty">
-            Con <span className="font-heading font-bold text-primary">nexo</span> cada venta queda registrada en el
+            Con <span className="font-heading font-bold text-primary">{BRAND.name}</span> cada venta queda registrada en el
             momento. Las cuentas ya están hechas cuando las necesitas.
           </p>
         </div>
@@ -294,7 +295,7 @@ export default function LandingPage() {
             <SectionHeading
               eyebrow={{ icon: StoreIcon, label: "Tiendas colectivas" }}
               title="Cada marca, sus ventas y sus cuentas claras"
-              text="Para tiendas donde varias marcas venden bajo un mismo techo. Tú vendes; nexo lleva la cuenta de cada una."
+              text={`Para tiendas donde varias marcas venden bajo un mismo techo. Tú vendes; ${BRAND.name} lleva la cuenta de cada una.`}
             />
           </div>
           <div className="mx-auto w-full max-w-md lg:col-start-1 lg:row-start-1 lg:row-span-2 lg:self-center">
@@ -348,7 +349,7 @@ export default function LandingPage() {
       <section className="border-t py-16 sm:py-24">
         <div className={CONTAINER}>
           <SectionHeading center title="Lo básico de todo negocio, incluido"
-            text="Sin importar tu rubro, nexo trae lo que necesitas para el día a día." />
+            text={`Sin importar tu rubro, ${BRAND.name} trae lo que necesitas para el día a día.`} />
           <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {CORE.map(({ icon: Icon, title, text }) => (
               <li key={title} className="flex gap-4 rounded-3xl border bg-card p-5">
@@ -394,7 +395,7 @@ export default function LandingPage() {
             text="Sin costos de instalación ni letra pequeña." />
           <div className="mx-auto mt-10 max-w-md rounded-3xl border-2 border-primary bg-card p-6 sm:p-8 shadow-[0_30px_60px_-30px_rgba(27,79,255,0.45)]">
             <div className="flex items-center justify-between gap-3">
-              <p className="font-heading text-lg font-bold">Plan nexo</p>
+              <p className="font-heading text-lg font-bold">Plan {BRAND.name}</p>
               <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">{TRIAL}</span>
             </div>
             <p className="mt-5 flex items-baseline gap-1.5">
@@ -416,7 +417,7 @@ export default function LandingPage() {
               <PrimaryCta href={startHref} label="Empezar mi prueba gratis" fallbackLabel="Empezar mi prueba gratis" />
             </div>
             <p className="mt-3 text-center text-xs text-muted-foreground">
-              Pagas al terminar la prueba, solo si nexo te sirve.
+              Pagas al terminar la prueba, solo si {BRAND.name} te sirve.
             </p>
           </div>
         </div>
@@ -441,10 +442,10 @@ export default function LandingPage() {
       </section>
 
       {/* ───────────── Closing CTA ───────────── */}
-      <section className="relative overflow-hidden bg-[#0B1E66] text-white">
+      <section className="relative overflow-hidden bg-brand-deep text-white">
         <BrandBackdrop />
         <div className={`relative z-10 ${CONTAINER} py-16 sm:py-24 text-center`}>
-          <h2 className="font-heading text-3xl sm:text-5xl font-bold tracking-tight text-balance">¿Vemos nexo con tu negocio?</h2>
+          <h2 className="font-heading text-3xl sm:text-5xl font-bold tracking-tight text-balance">¿Vemos {BRAND.name} con tu negocio?</h2>
           <p className="mx-auto mt-4 max-w-xl text-lg text-white/80 text-pretty">
             {hasWhatsapp
               ? "Te lo mostramos en una llamada corta, sin compromiso. Si te convence, empiezas tu prueba gratis ese mismo día."
@@ -460,9 +461,9 @@ export default function LandingPage() {
       <footer className="border-t pt-8 pb-[max(env(safe-area-inset-bottom),2rem)]">
         <div className={`${CONTAINER} flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left text-sm text-muted-foreground`}>
           <p>
-            <span className="font-heading font-bold text-foreground/80">nexo</span>
+            <span className="font-heading font-bold text-foreground/80">{BRAND.name}</span>
             <span className="mx-1.5">·</span>
-            Desarrollado por <span className="font-medium text-foreground/80">AG Systems</span>
+            Desarrollado por <span className="font-medium text-foreground/80">{BRAND.company}</span>
             <span className="mx-1.5">·</span>
             Hecho en Nicaragua
           </p>
@@ -477,7 +478,7 @@ export default function LandingPage() {
       {demoHref && (
         <a href={demoHref} target="_blank" rel="noopener noreferrer" aria-label="Escríbenos por WhatsApp"
           className="fixed z-40 right-4 bottom-[max(env(safe-area-inset-bottom),1rem)] grid size-14 place-items-center rounded-full
-                     bg-[#FF5C1A] text-white shadow-[0_14px_32px_-10px_rgba(255,92,26,0.9)] hover:brightness-110 active:scale-95 transition-all">
+                     bg-brand-accent text-white shadow-[0_14px_32px_-10px_rgba(255,92,26,0.9)] hover:brightness-110 active:scale-95 transition-all">
           <MessageCircleIcon className="size-6" />
         </a>
       )}

@@ -2,6 +2,7 @@ import { ClockIcon, MessageCircleIcon } from "lucide-react";
 import { billingNotice } from "@/lib/org-access";
 import { SALES } from "@/lib/site";
 import type { OrgAccess } from "@/types/database";
+import { BRAND } from "@/lib/brand";
 
 // Owner-only strip while the trial runs or the monthly payment is about to lapse.
 export default function BillingBanner({ access }: { access: OrgAccess | null }) {
@@ -10,7 +11,7 @@ export default function BillingBanner({ access }: { access: OrgAccess | null }) 
 
   const number = (access.sales_whatsapp || SALES.whatsapp).replace(/\D/g, "");
   const wa = number
-    ? `https://wa.me/${number}?text=${encodeURIComponent(`Hola, quiero activar nexo para "${access.org_name}".`)}`
+    ? `https://wa.me/${number}?text=${encodeURIComponent(`Hola, quiero activar ${BRAND.name} para "${access.org_name}".`)}`
     : null;
 
   return (

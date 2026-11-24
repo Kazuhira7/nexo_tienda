@@ -1,7 +1,7 @@
-// Nexo brand surface: deep blue radial + fine dot grid. Used by the sign-in hero and the PIN lock screen.
+// Brand surface: deep radial + fine dot grid. Used by the sign-in hero and the PIN lock screen.
 
 export const BRAND_GRADIENT =
-  "radial-gradient(120% 80% at 50% 30%, #2A5BFF 0%, #1B4FFF 38%, #1238C9 70%, #0B1E66 100%)";
+  "radial-gradient(120% 80% at 50% 30%, var(--color-brand-bright) 0%, var(--color-brand) 38%, var(--color-brand-mid) 70%, var(--color-brand-deep) 100%)";
 
 export default function BrandBackdrop() {
   return (

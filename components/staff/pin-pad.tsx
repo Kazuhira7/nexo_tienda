@@ -7,6 +7,7 @@ import { LockIcon } from "lucide-react";
 import { loginWithPin } from "@/lib/staff-actions";
 import PinKeypad from "@/components/staff/pin-keypad";
 import BrandBackdrop from "@/components/auth/brand-backdrop";
+import { BRAND } from "@/lib/brand";
 
 interface Props {
   orgName:   string;
@@ -34,7 +35,7 @@ export default function PinPad({ orgName, canLeave }: Props) {
       <div className="relative z-10 w-full max-w-sm space-y-6">
         <div className="text-center text-white nx-fade">
           <div className="flex items-baseline justify-center gap-2">
-            <span className="font-heading text-4xl font-bold tracking-tight">nexo</span>
+            <span className="font-heading text-4xl font-bold tracking-tight">{BRAND.name}</span>
           </div>
           <p className="mt-1 text-white/75 truncate">{orgName}</p>
         </div>
@@ -54,7 +55,7 @@ export default function PinPad({ orgName, canLeave }: Props) {
               Ir al panel de administración
             </Link>
           )}
-          <p className="text-xs text-white/50">nexo · Desarrollado por AG Systems</p>
+          <p className="text-xs text-white/50">{BRAND.name} · Desarrollado por {BRAND.company}</p>
         </div>
       </div>
     </div>

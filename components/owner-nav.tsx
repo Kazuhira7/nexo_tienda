@@ -17,6 +17,7 @@ import {
   WalletIcon,
   UploadIcon,
 } from "lucide-react";
+import { BRAND } from "@/lib/brand";
 
 const NAV_LINKS = [
   { href: "/dashboard",     label: "Inicio",        icon: LayoutDashboardIcon },
@@ -53,7 +54,7 @@ export default function OwnerNav({ userName, orgName }: Props) {
         {/* Logo + nombre del negocio */}
         <div className="flex items-center gap-2 shrink-0">
           <Link href="/dashboard" className="text-xl font-bold font-heading text-primary">
-            nexo
+            {BRAND.name}
           </Link>
           {orgName && (
             <span className="hidden lg:block text-xs text-muted-foreground border-l pl-2 max-w-[140px] truncate">
@@ -87,7 +88,7 @@ export default function OwnerNav({ userName, orgName }: Props) {
             <SheetContent side="right" className="w-64 p-0">
               <div className="flex flex-col h-full">
                 <div className="px-4 py-4 border-b bg-muted/30">
-                  <p className="text-xl font-bold font-heading text-primary">nexo</p>
+                  <p className="text-xl font-bold font-heading text-primary">{BRAND.name}</p>
                   {orgName && <p className="text-xs text-muted-foreground mt-0.5 truncate">{orgName}</p>}
                 </div>
                 <nav className="flex-1 py-2 px-3 space-y-0.5 overflow-y-auto">

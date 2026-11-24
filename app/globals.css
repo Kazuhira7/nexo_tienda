@@ -5,12 +5,13 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  /* Nexo brand colors (static) */
-  --color-nexo-blue:   #1B4FFF;
-  --color-nexo-orange: #FF5C1A;
-  --color-nexo-dark:   #0F0F0F;
-  --color-nexo-cream:  #F5F5F3;
-  --color-nexo-gray:   #6B7280;
+  /* Brand palette (static; keep in sync with lib/brand.ts → BRAND.colors).
+     Rebrand: change these five and --primary / --accent below. */
+  --color-brand:        #1B4FFF;
+  --color-brand-accent: #FF5C1A;
+  --color-brand-deep:   #0B1E66;
+  --color-brand-bright: #2A5BFF;
+  --color-brand-mid:    #1238C9;
 
   /* shadcn/ui token mapping */
   --color-background:                var(--background);

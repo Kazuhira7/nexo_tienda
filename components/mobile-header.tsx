@@ -10,6 +10,7 @@ import { MenuIcon } from "lucide-react";
 import { isNavActive, visibleNavItems } from "@/components/nav-items";
 import NavPending from "@/components/nav-pending";
 import type { UserRole } from "@/types/database";
+import { BRAND } from "@/lib/brand";
 
 interface Props {
   userName: string;
@@ -28,7 +29,7 @@ export default function MobileHeader({ userName, orgName, modules, role = "owner
   return (
     <header className="lg:hidden sticky top-0 z-50 border-b bg-card shadow-sm h-14 flex items-center justify-between px-4">
       <Link href="/" className="flex items-center gap-2">
-        <span className="text-xl font-bold font-heading text-primary">nexo</span>
+        <span className="text-xl font-bold font-heading text-primary">{BRAND.name}</span>
         {orgName && (
           <span className="text-xs text-muted-foreground border-l pl-2 truncate max-w-[120px]">
             {orgName}
@@ -45,7 +46,7 @@ export default function MobileHeader({ userName, orgName, modules, role = "owner
           <SheetContent side="left" className="w-64 p-0">
             <div className="flex flex-col h-full">
               <div className="px-4 py-5 border-b bg-muted/30">
-                <p className="text-xl font-bold font-heading text-primary">nexo</p>
+                <p className="text-xl font-bold font-heading text-primary">{BRAND.name}</p>
                 {orgName && <p className="text-xs text-muted-foreground mt-0.5 truncate">{orgName}</p>}
               </div>
               <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">

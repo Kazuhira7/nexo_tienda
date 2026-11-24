@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ShieldIcon } from "lucide-react";
+import { BRAND } from "@/lib/brand";
 
 export default function AdminNav({ userName }: { userName: string }) {
   const router = useRouter();
@@ -21,7 +22,7 @@ export default function AdminNav({ userName }: { userName: string }) {
       <div className="container max-w-5xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Link href="/admin" className="text-xl font-bold font-heading text-primary">
-            nexo
+            {BRAND.name}
           </Link>
           <div className="flex items-center gap-1.5 rounded-md bg-primary/10 text-primary px-2 py-1 text-xs font-semibold">
             <ShieldIcon className="size-3" />

@@ -6,8 +6,9 @@ import { getOrgAccess } from "@/lib/org-access";
 import { SALES, formatNio, whatsappUrl } from "@/lib/site";
 import BrandBackdrop from "@/components/auth/brand-backdrop";
 import SignOutButton from "@/components/sign-out-button";
+import { BRAND } from "@/lib/brand";
 
-export const metadata: Metadata = { title: "Activa tu cuenta · nexo" };
+export const metadata: Metadata = { title: `Activa tu cuenta · ${BRAND.name}` };
 
 const DATE = new Intl.DateTimeFormat("es-NI", { day: "numeric", month: "long", year: "numeric", timeZone: "America/Managua" });
 
@@ -29,20 +30,20 @@ export default async function SuscripcionPage() {
     ? "El acceso a este negocio está pausado. Escríbenos y lo resolvemos."
     : hadPaid
       ? `Tu último periodo pagado terminó el ${DATE.format(new Date(access.paid_until + "T12:00:00"))}.`
-      : "Esperamos que nexo te haya servido estos días. Para seguir usándolo, activa tu mensualidad.";
+      : `Esperamos que ${BRAND.name} te haya servido estos días. Para seguir usándolo, activa tu mensualidad.`;
 
   const number = access.sales_whatsapp || SALES.whatsapp;
   const wa = number
-    ? `https://wa.me/${number.replace(/\D/g, "")}?text=${encodeURIComponent(`Hola, quiero activar nexo para "${access.org_name}".`)}`
-    : whatsappUrl(`Hola, quiero activar nexo para "${access.org_name}".`);
+    ? `https://wa.me/${number.replace(/\D/g, "")}?text=${encodeURIComponent(`Hola, quiero activar ${BRAND.name} para "${access.org_name}".`)}`
+    : whatsappUrl(`Hola, quiero activar ${BRAND.name} para "${access.org_name}".`);
 
   return (
-    <main className="relative min-h-[100svh] overflow-hidden bg-[#0B1E66] text-white flex items-center justify-center px-5 py-10">
+    <main className="relative min-h-[100svh] overflow-hidden bg-brand-deep text-white flex items-center justify-center px-5 py-10">
       <BrandBackdrop />
       <div className="relative z-10 w-full max-w-md">
         <div className="flex items-baseline gap-2 mb-8">
-          <span className="font-heading text-3xl font-bold tracking-tight">nexo</span>
-          <span className="text-xs font-medium text-white/60">by AG Systems</span>
+          <span className="font-heading text-3xl font-bold tracking-tight">{BRAND.name}</span>
+          <span className="text-xs font-medium text-white/60">by {BRAND.company}</span>
         </div>
 
         <div className="rounded-3xl bg-card text-card-foreground p-6 sm:p-8 shadow-2xl space-y-6">
@@ -72,7 +73,7 @@ export default async function SuscripcionPage() {
           {isOwner ? (
             wa && (
               <a href={wa} target="_blank" rel="noopener noreferrer"
-                className="h-14 w-full rounded-2xl bg-[#FF5C1A] text-white text-base font-semibold inline-flex items-center justify-center gap-2
+                className="h-14 w-full rounded-2xl bg-brand-accent text-white text-base font-semibold inline-flex items-center justify-center gap-2
                            shadow-[0_14px_32px_-12px_rgba(255,92,26,0.85)] hover:brightness-110 active:scale-[0.97] transition-all">
                 <MessageCircleIcon className="size-5" />
                 {suspended ? "Escribirnos por WhatsApp" : "Activar por WhatsApp"}

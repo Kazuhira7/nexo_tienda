@@ -3,6 +3,7 @@ import { Sora, Plus_Jakarta_Sans } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import ThemeProvider from "@/components/theme-provider";
 import "./globals.css";
+import { BRAND } from "@/lib/brand";
 
 const sora = Sora({
   variable: "--font-sora",
@@ -17,14 +18,14 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Nexo",
+  title: BRAND.displayName,
   description: "Gestión para tu negocio: ventas, salón y caja",
   icons: { apple: "/icons/apple-touch-icon.png" },
-  appleWebApp: { capable: true, title: "Nexo", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: BRAND.displayName, statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#1B4FFF",
+  themeColor: BRAND.colors.primary,
 };
 
 export default function RootLayout({

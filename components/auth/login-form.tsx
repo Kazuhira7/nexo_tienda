@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { BRAND } from "@/lib/brand";
 
 export default function LoginForm({ autoFocus }: { autoFocus?: boolean }) {
   const [email, setEmail] = useState("");
@@ -38,7 +39,7 @@ export default function LoginForm({ autoFocus }: { autoFocus?: boolean }) {
 
   return (
     <form onSubmit={handleLogin} className="space-y-5">
-      <p className="text-muted-foreground">Entra a tu negocio en nexo.</p>
+      <p className="text-muted-foreground">Entra a tu negocio en {BRAND.name}.</p>
 
       <div className="space-y-2">
         <Label htmlFor="email">Correo electrónico</Label>

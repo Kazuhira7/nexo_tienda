@@ -5,6 +5,7 @@ import { getMoney } from "@/lib/get-currency";
 import { requireModule } from "@/lib/require-module";
 import { getOrgContext } from "@/lib/org-context";
 import { currentFortnight, isDayString, localPeriodRange, periodLabel } from "@/lib/dates";
+import { BRAND } from "@/lib/brand";
 
 const PAYMENT_LABELS: Record<string, string> = {
   cash: "Efectivo",
@@ -81,8 +82,8 @@ export default async function ReportePage({ params, searchParams }: Props) {
         {/* Encabezado */}
         <div className="flex justify-between items-start mb-8">
           <div>
-            <p className="text-2xl font-bold text-[#1B4FFF]" >
-              nexo
+            <p className="text-2xl font-bold text-brand" >
+              {BRAND.name}
             </p>
             <p className="text-xs text-gray-500 mt-0.5">Sistema de Tienda Colectiva</p>
           </div>
@@ -209,7 +210,7 @@ export default async function ReportePage({ params, searchParams }: Props) {
 
         {/* Pie */}
         <div className="text-xs text-gray-400 text-center pt-4 border-t">
-          <p>Reporte generado por nexo · sistema de gestión de tienda colectiva</p>
+          <p>Reporte generado por {BRAND.name} · sistema de gestión de tienda colectiva</p>
         </div>
       </div>
 
