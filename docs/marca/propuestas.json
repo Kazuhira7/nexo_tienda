@@ -1,0 +1,46 @@
+{
+  "ventti": {
+    "name": "ventti",
+    "displayName": "Ventti",
+    "tagline": "Vende más, sin sumar a mano.",
+    "idea": "Una V que es también un ✓: la venta hecha y el negocio que sube.",
+    "colors": {
+      "primary": "#5B2EFF",
+      "accent": "#F2542D",
+      "deep": "#170B4D",
+      "bright": "#7A5CFF",
+      "mid": "#4420DB"
+    },
+    "names": {
+      "primary": "Violeta Ventti",
+      "accent": "Coral",
+      "deep": "Medianoche",
+      "bright": "Lavanda",
+      "mid": "Índigo"
+    },
+    "markPath": "M120 196L228 348L396 128",
+    "markWidth": 64
+  },
+  "tiangue": {
+    "name": "tiangue",
+    "displayName": "Tiangue",
+    "tagline": "El mercado de tu negocio, en orden.",
+    "idea": "Una T con toldo de mercado: el puesto de siempre, ahora digital.",
+    "colors": {
+      "primary": "#0E7C66",
+      "accent": "#E4572E",
+      "deep": "#06352C",
+      "bright": "#14A383",
+      "mid": "#0B6553"
+    },
+    "names": {
+      "primary": "Verde Tiangue",
+      "accent": "Terracota",
+      "deep": "Selva",
+      "bright": "Jade",
+      "mid": "Pino"
+    },
+    "markPath": "M88 144H424M88 144A56 56 0 0 0 200 144A56 56 0 0 0 312 144A56 56 0 0 0 424 144M256 200V420",
+    "markWidth": 46
+  }
+}
