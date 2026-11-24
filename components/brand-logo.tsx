@@ -6,7 +6,7 @@ export function BrandName({ className = "" }: { className?: string }) {
 }
 
 /** The "n" mark alone, e.g. inside a circle or as an app icon. */
-export function BrandMark({ className, color = "currentColor", strokeWidth = 64 }: {
+export function BrandMark({ className, color = "currentColor", strokeWidth = BRAND.markStroke }: {
   className?: string; color?: string; strokeWidth?: number;
 }) {
   return (

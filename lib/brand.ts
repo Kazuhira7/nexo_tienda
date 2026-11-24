@@ -18,6 +18,8 @@ export const BRAND = {
   },
   /** Logo mark (the "n"), drawn on a 512×512 grid as a single stroked path. */
   markPath: "M168 376V196M168 268c0-56 38-92 92-92s88 36 88 96v104",
+  /** Stroke width of the mark on that grid. */
+  markStroke: 64,
 } as const;
 
 /** "Restaurante · nexo" style titles. */

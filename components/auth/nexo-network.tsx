@@ -65,7 +65,7 @@ export default function NexoNetwork({ className }: { className?: string }) {
       <g className="nx-center">
         <circle cx={CENTER.x} cy={CENTER.y} r={46} fill="#fff" />
         <svg x={CENTER.x - 30} y={CENTER.y - 30} width={60} height={60} viewBox="0 0 512 512" aria-hidden>
-          <path d={BRAND.markPath} style={{ stroke: "var(--color-brand)" }} strokeWidth={64}
+          <path d={BRAND.markPath} style={{ stroke: "var(--color-brand)" }} strokeWidth={BRAND.markStroke}
             strokeLinecap="round" strokeLinejoin="round" fill="none" />
         </svg>
       </g>

@@ -65,7 +65,7 @@ export default async function OpengraphImage() {
             boxShadow: "0 0 0 18px rgba(255,255,255,0.12)",
           }}>
             <svg width="150" height="150" viewBox="0 0 512 512">
-              <path d={BRAND.markPath} stroke={C.primary} strokeWidth={64}
+              <path d={BRAND.markPath} stroke={C.primary} strokeWidth={BRAND.markStroke}
                 strokeLinecap="round" strokeLinejoin="round" fill="none" />
             </svg>
           </div>
